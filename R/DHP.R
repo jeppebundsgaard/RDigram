@@ -1,0 +1,35 @@
+#' @title Diabetes Health profile (DHP)
+#' @description The DHP is a multidimensional patient self-completion diabetes-specific inventory designed to identify
+#'     psychosocial dysfunction among adult insulin dependent and insulin requiring patients. Factor
+#'     analyses have suggested that responses to DHP items depend on three latent variables representing
+#'     Psychological distress, Barriers to Activity and Disinhibited eating. Chwalow et.al (2007) describe
+#'     a randomized study of the quality of life of type 2 diabetic patients.
+#' @docType data
+#' @keywords datasets
+#' @name DHP
+#' @usage data(DHP)
+#' @return DHP is an object of class digram.object.
+#' @format A data frame with 185 rows and 8 variables.
+#' \describe{
+#' The Disinhibited eating (DE) subscale summarizing responses to the
+#' following five questions with four ordinal response categories that were coded in such a way that 0
+#' represents no dysfunction and 3 represents a high degree of dysfunction:
+#'  \item{A: DHP32}{Do you wish there were not so many things to eat?
+#'   Responses: a) “Not at all”, b) “A little”, c) “A lot”, d) “Very much”}
+#' \item{B: DHP34}{How likely are you to eat something extra when you feel bored or fed up?
+#'   Responses: a) “Not at all likely”, b) “Not very likely”, c) “Quite likely”, d) “Very likely”}
+#' \item{C: DHP36}{When you start eating, how easy do you find it to stop?
+#'   Responses: a) “Very easy”, b) “Quite easy”, c) “Not very easy”, d) “Not at all easy”}
+#' \item{D: DHP38}{Do you have problems keeping to you diet because you eat to cheer yourself up?
+#'   Responses: a) “Never”, b) “Sometimes”, c) “Usually”, d) “Always”}
+#' \item{E: DHP39}{Do you have problems keeping to your diet because you find it hard saying no to food
+#'   you like?
+#'   Responses: a) “Never”, b) “Sometimes”, c) “Usually”, d) “Always”}
+#' In addition to the items, the DHP project also includes information on sex and age.
+#' }
+#' @source The \code{DHP} data were obtained from
+#'     Chwalow J., Meadows K., Mesbah M., Coliche V., Mollett E., (2007) Empirical validation of a quality of life
+#'     instrument: empirical internal validation and analysi of a quality of life instrument in French diabetic
+#'     patients during an educational intervention. In C. Huber, N. Limnios, M. Mesbah, N. Nikulin (eds).
+#'     *Mathematical Methods in Survival Analysis, Reliability and Quality of Life.* London: Hernes.
+NULL

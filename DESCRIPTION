@@ -1,0 +1,21 @@
+Package: RDigram
+Type: Package
+Title: Analysis of Items from Tests and Surveys
+Version: 0.1.0
+Date: 2019-12-06
+Author: Jeppe Bundsgaard & Svend Kreiner
+Maintainer: Jeppe Bundsgaard <jebu@edu.au.dk>
+Description: Functions for analysis categorical data from achievement tests and surveys
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.0.1
+Roxygen: list(markdown = TRUE)
+Imports:
+  car,
+  MESS,
+  DescTools,
+  stringr
+Suggests:
+  TAM,
+  iarm
