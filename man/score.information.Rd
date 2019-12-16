@@ -4,11 +4,7 @@
 \alias{score.information}
 \title{Print score information}
 \usage{
-<<<<<<< HEAD
 score.information(do=NULL,recoded=NULL,items=1:length(do$variables),accept.na = F)
-=======
-score.information(do=NULL,recoded=NULL,items=1:length(do$variables))
->>>>>>> 828497a089c4831be5f2b6b3c5e41b0e2862a181
 }
 \arguments{
 \item{do}{An object of class \code{digram.object}}
@@ -16,11 +12,8 @@ score.information(do=NULL,recoded=NULL,items=1:length(do$variables))
 \item{recoded}{A data.frame or matrix of recoded data (only used if \code{do} is \code{NULL})}
 
 \item{items}{A vector of columns from the recoded data to include in the analysis \emph{or} a character vector of variable labels}
-<<<<<<< HEAD
 
 \item{accept.na}{A boolean. Include cases with missing values in responses}
-=======
->>>>>>> 828497a089c4831be5f2b6b3c5e41b0e2862a181
 }
 \value{
 Returns NULL.
