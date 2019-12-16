@@ -12,15 +12,9 @@
 #' @details
 #' First step in item screening: Analysis of consistency (Positive correlations)
 #' \describe{
-<<<<<<< HEAD
 #' \item{M1}{Yi and Yj are positively correlated for all pairs of items}
 #' \item{M2}{Ya is positively monotonically related to the rest-score Ra and all subscores SB where Ya is not an element in B}
 #' \item{M3}{If X is positively related to Θ, then X will also be positively related to S, to all subscores, SA , and all item responses Yi}
-=======
-#' \item{M1 Yi and Yj are positively correlated for all pairs of items}
-#' \item{M2 Ya is positively monotonically related to the rest-score Ra and all subscores SB where Ya is not an element in B}
-#' \item{M3 If X is positively related to Θ, then X will also be positively related to S, to all subscores, SA , and all item responses Yi}
->>>>>>> 828497a089c4831be5f2b6b3c5e41b0e2862a181
 #' }
 #' @return Returns a list of correlations
 #' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
