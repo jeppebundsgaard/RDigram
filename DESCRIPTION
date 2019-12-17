@@ -15,7 +15,8 @@ Imports:
   car,
   MESS,
   DescTools,
-  stringr
+  stringr,
+  diagram
 Suggests:
   TAM,
   iarm
