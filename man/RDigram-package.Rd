@@ -3,6 +3,7 @@
 \docType{package}
 \name{RDigram-package}
 \alias{RDigram-package}
+\alias{_PACKAGE}
 \alias{RDigram}
 \title{Functions for item analysis}
 \description{

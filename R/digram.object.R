@@ -77,3 +77,11 @@ digram.recode<-function(data,variables,filter.conditions=NULL) {
 }
 # a<-digram.recode(DHP$data,DHP$variables)
 # all(a==DHP$recoded)
+get.labels<-function(do,items) {
+  if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
+  if(is.null(items)) items<-colnames(do$recoded) else {
+    if(is.numeric(items)) items<-colnames(do$recoded)[items]
+  }
+  all.vars<-t(sapply(do$variables,function(x) c(x$variable.name,x$variable.label)))
+  apply(matrix(items),1,function(x) all.vars[all.vars[,1]==x,2])
+}

@@ -2,8 +2,9 @@
 
 S3method(print,digram.object)
 S3method(summary,digram.object)
+S3method(update,variable)
 export(digram.object)
 export(item.correlations)
-export(local.dependency)
+export(local.independency)
 export(read.digram)
 export(score.information)

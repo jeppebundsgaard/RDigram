@@ -7,4 +7,4 @@
 #' @docType package
 #' @name RDigram-package
 #' @aliases RDigram
-NULL
+"_PACKAGE"
