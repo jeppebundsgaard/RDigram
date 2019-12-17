@@ -51,7 +51,8 @@ item.correlations<-function(do=NULL,recoded=NULL,items=NULL,exo=NULL,accept.na=F
     }
   }
   BH.items <- matrix(p.adjust(pval.matrix, "BH"),nrow=num.items)
-  items.print<-print.corr.matrix(corr.items,BH.items,colnames(selected),verbose = verbose)
+  item.labels<-get.labels(do,items)
+  items.print<-print.corr.matrix(corr.matrix = corr.items,pvals = BH.items,cnames = item.labels,rnames=paste(item.labels,colnames(selected),sep = ": "),verbose = verbose)
   neg.corr<-which(corr.items<0)
   no.corr<-which(BH.items>0.05)
   if(length(neg.corr)>0) {
@@ -152,7 +153,7 @@ item.correlations<-function(do=NULL,recoded=NULL,items=NULL,exo=NULL,accept.na=F
     } else if(length(neg.exo)==0) {
       cat("\nAll correlations are significantly positive.")
     }
-  }
+  } else corr.exo<-BH.exo<-exo.print<-c()
   invisible(list(corr.items=corr.items,BH.items=BH.items,items.print=items.print,
       corr.rest=corr.rest,BH.rest=BH.rest,rest.print=rest.print,
       corr.exo=corr.exo,BH.exo=BH.exo,exo.print=exo.print))

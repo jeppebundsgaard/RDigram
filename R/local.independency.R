@@ -33,6 +33,8 @@ local.independency<-function(do=NULL,recoded=NULL,items=NULL,exo=NULL,p.adj= c("
     if(is.null(items)) items<-colnames(recoded)
     if(is.null(exo)) exo<-c()
   }
+  header<-header.format("Test of local independence")
+
   selected<-na.omit(recoded[,items])
   sums<-apply(selected,2,sum,na.rm=T)
   if(!all(sums>0)) {
@@ -67,20 +69,20 @@ local.independency<-function(do=NULL,recoded=NULL,items=NULL,exo=NULL,p.adj= c("
     warning(paste0("\nLocal dependence between\n",paste(rels,collapse = "\n")))
 
   }
+  gammas<-dep.matrix[,,"gamma"]
+  nsign<-which(apply(dep.matrix[,,"p.adj"],1:2,function(x) ifelse(x>0.05,T,F)))
+  gammas[nsign]<-NA
   item.labels<-get.labels(do,colnames(gammas))
+  rownames(gammas)<-item.labels
+
   if(verbose)
     print.corr.matrix(corr.matrix=dep.matrix[order.rows,order.cols,"gamma"],pvals = dep.matrix[order.rows,order.cols,"p.adj"],cnames = item.labels[order.cols],rnames=paste(item.labels[order.rows],rownames(dep.matrix)[order.rows],sep = ": "),digits = digits)
 
-  nsign<-which(apply(dep.matrix[,,"p.adj"],1:2,function(x) ifelse(x>0.05,T,F)))
-  gammas<-dep.matrix[,,"gamma"]
-  gammas[nsign]<-NA
-  rownames(gammas)<-item.labels
-  plotmat(A = round(gammas,2),
+  diagram::plotmat(A = round(gammas,2),
               pos = num.col, curve = 0.7, lwd = 1,shadow.size = 0,
               arr.len = 0.3, arr.width = 0.15, my = 0.2,
               box.size = 0.03, arr.type = "curved", dtext = 0.25,
               main = "Significant partial gamma coefficients between items")
-  #print.corr.matrix(corr.matrix=matrix(dep.matrix[,,"gamma"]),ncol = num.col,byrow = T),pvals = matrix(as.numeric(dep.matrix[,,"p.adj"]),ncol = num.col,byrow = T),cnames = colnames(dep.matrix))
   invisible(orig.result)
 }
 #local.independency(do=proces.do,items = grep(paste0("^",m), colnames(proces.do$recoded)))

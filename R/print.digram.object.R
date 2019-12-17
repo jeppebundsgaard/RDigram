@@ -13,7 +13,7 @@ print.digram.object <- function(do=NULL) {
   if(!class(do)=="digram.object") stop("You need to provide a digram.object")
   lsep<-"###############################"
   cat(lsep,"\n# Project: ",do$project,"\n",lsep,sep="")
-  cat("\nDescription:\n",do$comments,"",sep = "")
+  cat("\nDescription:\n",do$comments,"\n",sep = "")
   cat(lsep,"\n",ncol(do$data)," variables in the dataset",sep="")
   cat("\n",length(do$variables)," project variables:",sep="")
   for(x in do$variables) {if(!is.null(x)) cat("\n",x$variable.label," ",x$variable.name,"\t",x$ncat,x$variable.type,"categories")}
