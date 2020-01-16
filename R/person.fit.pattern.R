@@ -92,11 +92,12 @@ gamma.pattern<-function(xs,item.params) {
   # Create all response patterns that result in total score R
   patterns<-all.patterns(maxscores = maxscores,target = R)
   # Calculate the sum of the products of delta.item for these patterns and Returns a gamma for this total score (response)
-  cat("\n")
+  it<-0
   gamma<-sum(
     apply(patterns,1,
       function(y) {
-        cat("-")
+        it<<-it+1;
+        if(it>1000) {it<--0;cat(".")}
         prod(sapply(
             1:length(y),
             function(item) { delta.item(single.item.params = item.params[item,],x=y[item])}
@@ -105,6 +106,7 @@ gamma.pattern<-function(xs,item.params) {
       }
     )
   )
+  cat("\n")
   list(gamma=gamma,patterns=patterns)
 }
 #' Create all possible response patterns
@@ -119,8 +121,8 @@ gamma.pattern<-function(xs,item.params) {
 #' @references Jeppe Bundsgaard & Svend Kreiner (2019). *Undersøgelse af De Nationale Tests måleegenskaber*. 2nd Ed. Copenhagen: DPU, Aarhus University.
 #' @examples all.patterns(maxscores,target=5)
 all.patterns<-function(maxscores=c(),target=NULL) {
-  cat("\n")
   p<-internal.patterns(maxscores = maxscores,target = target)
+  cat("\n")
   if(!is.null(target)) p<-p[apply(p,1,sum)==target,]
 }
 internal.patterns<-function(maxscores=c(),pattern=matrix(data=0,ncol = length(maxscores)),i=1,target=NULL) {
