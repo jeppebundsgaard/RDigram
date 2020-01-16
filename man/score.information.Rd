@@ -4,12 +4,12 @@
 \alias{score.information}
 \title{Print score information}
 \usage{
-score.information(do=NULL,recoded=NULL,items=1:length(do$variables),accept.na = F)
+score.information(do=NULL,resp=NULL,items=1:length(do$variables),accept.na = F)
 }
 \arguments{
 \item{do}{An object of class \code{digram.object}}
 
-\item{recoded}{A data.frame or matrix of recoded data (only used if \code{do} is \code{NULL})}
+\item{resp}{A data.frame or matrix of recoded data (only used if \code{do} is \code{NULL})}
 
 \item{items}{A vector of columns from the recoded data to include in the analysis \emph{or} a character vector of variable labels}
 

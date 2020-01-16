@@ -19,7 +19,7 @@ read.digram<-function(project=NULL,path=""){
   num.cols<-as.numeric(def[1,1])
   is.file.def<-F
   custom.datfile<-paste0(project,".dat")
-  filter.conditions<-list()
+  filter.conditions<-data.frame(variable.number=numeric(0),min=numeric(0),max=numeric(0))
   if(nrow(def)>1) {
     for(i in 2:nrow(def)) {
       if(substr(x = def[i,1],1,3)=="FIL") {
@@ -28,8 +28,8 @@ read.digram<-function(project=NULL,path=""){
         if(is.file.def) {
           if(def[i,1]=="D") custom.datfile<-def[i,2]
         } else {
-          nextrow<-nrow(minmax)+1
-          filter.conditions[[nextrow]]<-as.numeric(def[i,2:3])
+          nextrow<-nrow(filter.conditions)+1
+          filter.conditions[nextrow]<-c(i,as.numeric(def[i,2:3]))
         }
       }
     }
@@ -73,28 +73,9 @@ read.digram<-function(project=NULL,path=""){
     # Categories from .CAT-file
     category.names<-categories[categories[,1]==variable.label,2:3]
     colnames(category.names)<-c("Category","Name")
-    # Make data into factor with category.names
-    #values<-unique(data[,column.number])
-    #levels<-unique(recode(var = values,recodes = paste(apply(category.names,1,paste,collapse="="),collapse = ";")))
-    #data[,column.number]<-factor(data[,column.number],levels = levels)
 
-    variables[[i]]<-list(variable.name=variable.name,variable.label=variable.label,ncat=ncat,category.names=category.names,variable.type=variable.type,minimum=minimum,maximum=maximum,cutpoints=cutpoints)
-    # Recode data
-    # cutpoints2<-matrix(c(minimum,cutpoints+1,cutpoints,maximum),ncol = 2,byrow = F)
-    # froms<-apply(cutpoints2,1,paste,collapse=":")
-    # tos<-0:(length(cutpoints))
-    # recodestr<-paste(apply(matrix(c(froms,tos),ncol=2,byrow = F),1,paste,collapse="="),collapse=";")
-    # datacol<-data[,column.number]
-    # if(length(filter.conditions)>=column.number) {
-    #   if(length(filter.conditions[[column.number]])>0) {
-    #     minval<-filter.conditions[[column.number]][1]
-    #     maxval<-filter.conditions[[column.number]][2]
-    #     # Only cases, for which all values of filter variables belong to the intervals defined by the corresponding minimum and maximum values (both included), will be used in the analysis.
-    #     datacol<-recode(datacol,paste0("lo:",(minval-.000001),"=NA;",(maxval+.000001),":hi=NA"))
-    #   }
-    # }
-    # recoded[,i]<-recode(datacol,recodestr)
-    # colnames(recoded)[i]<-variable.name
+    variables[[i]]<-list(variable.name=variable.name,variable.label=variable.label,column.number=column.number,ncat=ncat,category.names=category.names,variable.type=variable.type,minimum=minimum,maximum=maximum,cutpoints=cutpoints)
+
   }
   # Recode
   recoded<-digram.recode(data,variables,filter.conditions)

@@ -158,21 +158,3 @@ item.correlations<-function(do=NULL,recoded=NULL,items=NULL,exo=NULL,accept.na=F
       corr.rest=corr.rest,BH.rest=BH.rest,rest.print=rest.print,
       corr.exo=corr.exo,BH.exo=BH.exo,exo.print=exo.print))
 }
-print.corr.matrix<-function(corr.matrix=NULL,pvals=NULL,cnames=NULL,rnames=NULL,verbose=T,digits=2) {
-  symp <- symnum(pvals, corr = F,
-                 cutpoints = c(0,  .001,.01,.05, .1, 1),
-                 symbols = c("***","**","*","."," "),na = F)
-  corr.matrix.print<-gsub("NA","",matrix(paste(round(corr.matrix,digits = digits), symp),nrow = length(if(is.null(rnames)) cnames else rnames)))
-  corr.matrix.print<-data.frame(corrs=corr.matrix.print)
-  if(length(dim(corr.matrix))==2) {
-    kablecnames<-cnames
-    if(!is.null(rnames)) rownames(corr.matrix.print)<-rnames else rownames(corr.matrix.print)<-cnames
-  } else {
-    kablecnames<-c("Rest")
-    rownames(corr.matrix.print)<-cnames
-  }
-  p<-knitr::kable(x = corr.matrix.print,col.names = kablecnames,row.names = T)
-  if(verbose)
-    print(p)
-  invisible(p)
-}

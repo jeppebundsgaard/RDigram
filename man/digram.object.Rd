@@ -4,7 +4,7 @@
 \alias{digram.object}
 \title{Create DIGRAM Object}
 \usage{
-digram.object(project=NULL,data=data.frame(),variables=colnames(data),filter.conditions=list(),recursive.structure=c(),comments="")
+digram.object(project=NULL,data=data.frame(),variables=colnames(data),filter.conditions=data.frame(variable.number=numeric(0),min=numeric(0),max=numeric(0)),recursive.structure=c(),comments="")
 }
 \arguments{
 \item{project}{The name of the DIGRAM project}
@@ -13,7 +13,7 @@ digram.object(project=NULL,data=data.frame(),variables=colnames(data),filter.con
 
 \item{variables}{A vector of column names or numbers from the dataset to include in the recoded dataset (the order matters in the recoded data) \emph{or} a list of variables each element in the form list(variable.name="",variable.label="",ncat=0,category.names=c(),variable.type=c("nominal","ordinal"),minimum=0,maximum=1,cutpoints=c())}
 
-\item{filter.conditions}{A list where names are variable numbers and values are \code{c(max,min)}. Only cases, for which all values of filter variables belong to the intervals defined by the corresponding minimum and maximum values (both included), will be used in the analysis.}
+\item{filter.conditions}{A data.frame with three columns: variable.number, max, and min. Only cases, for which all values of filter variables belong to the intervals defined by the corresponding minimum and maximum values (both included), will be used in the analysis.}
 
 \item{recursive.structure}{A vector of cutpoints to define the recursive blocks}
 
