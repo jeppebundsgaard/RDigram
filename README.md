@@ -6,6 +6,7 @@ RDigram is an implementation of a subset of the functions in the DIGRAM statisti
 
 # Howto
 ```
+install.packages("devtools")
 library(devtools)
 install_github("jeppebundsgaard/RDigram")
 ```
