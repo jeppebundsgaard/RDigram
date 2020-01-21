@@ -21,7 +21,7 @@ person.fit.pattern<-function(do=NULL,resp=NULL,items=NULL,item.params=matrix()) 
   resp<-resp[,items]
   if(class(item.params)!="matrix") item.params<-as.matrix(item.params)
   respondent<-0
-  apply(resp,1,function(xs) {
+  res<-apply(resp,1,function(xs) {
     respondent<<-respondent+1
     nona<-!is.na(xs)
     if(sum(nona)==0) {
@@ -41,6 +41,8 @@ person.fit.pattern<-function(do=NULL,resp=NULL,items=NULL,item.params=matrix()) 
       list(prob.actual=prob.actual,montecarlo=montecarlo)
     }
   })
+  df<-t(sapply(res,function(x) c(x$prob.actual,x$montecarlo)))
+  colnames(df)<-c("prob.actual","montecarlo")
 }
 #' deltas calculated from betas of the PCM of items in a given response pattern
 #'

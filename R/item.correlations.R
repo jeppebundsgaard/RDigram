@@ -1,9 +1,9 @@
 #' @title Item correlations
 #' @name item.correlations
 #' @description Calculate item correlations, item-rest correlations and correlations between items and exogenous variables
-#' @usage item.correlations(do=NULL,recoded=NULL,items=1:do$recursive.structure[1],exo=(do$recursive.structure[1]+1):do$recursive.structure[2])
+#' @usage item.correlations(do=NULL,resp=NULL,items=1:do$recursive.structure[1],exo=(do$recursive.structure[1]+1):do$recursive.structure[2])
 #' @param do an object of class \code{digram.object}
-#' @param recoded A data.frame or matrix of recoded data (only used if \code{do} is \code{NULL})
+#' @param resp A data.frame or matrix of recoded data (only used if \code{do} is \code{NULL})
 #' @param items A vector of columns from the recoded data to include as items in the analysis *or* a character vector of variable labels
 #' @param exo A vector of columns from the recoded data to include as exogenous variables in the analysis *or* a character vector of variable labels
 #' @param accept.na A boolean. Include cases with missing values in responses
@@ -24,19 +24,20 @@
 #' item.correlations(do)
 #' @references
 #' Kreiner, S. & Christensen, K.B. (2011). Item Screening in Graphical Loglinear Rasch Models. *Psychometrika*, vol. 76, no. 2, pp. 228-256. DOI: 10.1007/s11336-9203-Y
-item.correlations<-function(do=NULL,recoded=NULL,items=NULL,exo=NULL,accept.na=F,verbose=T){
+item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,verbose=T){
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
-    recoded<-do$recoded
+    resp<-do$recoded
     if(is.null(items)) items<-1:do$recursive.structure[1]
-    if(is.null(exo)) exo<-if(length(do$recursive.structure)>1) (do$recursive.structure[1]+1):do$recursive.structure[2] else c()
+    if(is.null(exo)) exo<-if(ncol(resp)>do$recursive.structure[1]) (do$recursive.structure[1]+1):ncol(resp) else NULL
+    #if(is.null(exo)) exo<-if(length(do$recursive.structure)>1) (do$recursive.structure[1]+1):do$recursive.structure[2] else c()
   } else {
-    if(is.null(items)) items<-colnames(recoded)
+    if(is.null(items)) items<-colnames(resp)
     if(is.null(exo)) exo<-c()
   }
-  selected<-if(accept.na) recoded[,items] else na.omit(recoded[,items])
+  selected<-if(accept.na) resp[,items] else na.omit(resp[,items])
   if(nrow(selected)==0) stop("No cases without NA's. Try setting accept.na to TRUE")
-  selectedexo<-na.omit(recoded[,c(items,exo)])
+  selectedexo<-na.omit(resp[,c(items,exo)])
   num.items<-length(items)
   num.exo<-length(exo)
 
@@ -52,7 +53,9 @@ item.correlations<-function(do=NULL,recoded=NULL,items=NULL,exo=NULL,accept.na=F
   }
   BH.items <- matrix(p.adjust(pval.matrix, "BH"),nrow=num.items)
   item.labels<-get.labels(do,items)
-  items.print<-print.corr.matrix(corr.matrix = corr.items,pvals = BH.items,cnames = item.labels,rnames=paste(item.labels,colnames(selected),sep = ": "),verbose = verbose)
+  var.names<-get.variable.names(do,items)
+  exo.names<-get.variable.names(do,exo)
+  items.print<-print.corr.matrix(corr.matrix = corr.items,pvals = BH.items,cnames = item.labels,rnames=paste(item.labels,var.names,sep = ": "),verbose = verbose)
   neg.corr<-which(corr.items<0)
   no.corr<-which(BH.items>0.05)
   if(length(neg.corr)>0) {
@@ -114,14 +117,14 @@ item.correlations<-function(do=NULL,recoded=NULL,items=NULL,exo=NULL,accept.na=F
     pval.exo<-corr.exo<-matrix(rep(NA,(num.items*num.exo)),nrow = num.items)
     for(i in 1:num.items) {
       for(j in 1:num.exo) {
-        tab<-table(selectedexo[,c(i,num.items+j)])
+        tab<-table(selected[,i],selectedexo[,j])
         acor<-MESS::gkgamma(tab,conf.level = 0.95)
         corr.exo[i,j]<-acor$estimate
         pval.exo[i,j]<-acor$p.value
       }
     }
     BH.exo <- matrix(p.adjust(pval.exo, "BH"),nrow = num.items)
-    exo.print<-print.corr.matrix(corr.exo,BH.exo,colnames(selectedexo[,exo]),colnames(selectedexo[,items]),verbose = verbose)
+    exo.print<-print.corr.matrix(corr.exo,BH.exo,cnames= exo.names,rnames=var.names,verbose = verbose)
     # stargazer::stargazer(corr.exo,na.print = "",type = "text",rownames = T,colnames = T)
     neg.exo<-which(corr.exo<0)
     pos.exo<-which(corr.exo>0)
