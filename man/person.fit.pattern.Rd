@@ -8,7 +8,10 @@ person.fit.pattern(
   do = NULL,
   resp = NULL,
   items = NULL,
-  item.params = matrix()
+  item.params = matrix(),
+  param.type = c("pcm", "log.item.score", "multiplicative", "xsi"),
+  num.montecarlo = 0,
+  verbose = T
 )
 }
 \arguments{
@@ -18,16 +21,23 @@ person.fit.pattern(
 
 \item{items}{a vector of items to use}
 
-\item{item.params}{a matrix of item parameters (using the PCM parametrisation). Items in rows, threshold values in columns}
+\item{item.params}{a matrix of item parameters. Items in rows, thresholds in columns}
+
+\item{param.type}{Type of item parameters given. One of pcm (RUMM2030), log.item.score (?), multiplicative (DIGRAM or RDigram, xsi (Conquest or TAM))}
+
+\item{num.montecarlo}{the number of iterations if the calculation of alternative patterns should be done using a montecarlo solution. 0 to do all patterns.}
+
+\item{verbose}{set to TRUE if you want to follow the progression}
 }
 \value{
-Returns a list of results for each respondent, consisting of response pattern probability and the sum of probabilities of patterns with lower probability (montecarlo probability)
+Returns a list of results for each respondent, consisting of response pattern probability and the p-value of getting this pattern or a pattern of lower probability.
 }
 \description{
 Person fit based on response pattern
 }
 \examples{
-person.fit.pattern(do=do, item.params=item.params)
+data(DHP)
+person.fit.pattern(do=DHP, item.params=item.params)
 }
 \references{
 Jeppe Bundsgaard & Svend Kreiner (2019). \emph{Undersøgelse af De Nationale Tests måleegenskaber}. 2nd Ed. Copenhagen: DPU, Aarhus University.

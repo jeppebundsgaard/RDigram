@@ -37,7 +37,9 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
   }
   selected<-if(accept.na) resp[,items] else na.omit(resp[,c(items,exo)])
   if(nrow(selected)==0) stop("No cases without NA's. Try setting accept.na to TRUE")
-  selectedexo<-na.omit(resp[,c(items,exo)])
+  exona<-!is.na(resp[,c(items,exo)])
+  selecteditemsexo<-resp[exona,items]
+  selectedexo<-resp[exona,exo]
   num.items<-length(items)
   num.exo<-length(exo)
 
@@ -117,7 +119,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
     pval.exo<-corr.exo<-matrix(rep(NA,(num.items*num.exo)),nrow = num.items)
     for(i in 1:num.items) {
       for(j in 1:num.exo) {
-        tab<-table(selected[,i],selectedexo[,j])
+        tab<-table(selecteditemsexo[,i],selectedexo[,j])
         acor<-MESS::gkgamma(tab,conf.level = 0.95)
         corr.exo[i,j]<-acor$estimate
         pval.exo[i,j]<-acor$p.value

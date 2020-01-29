@@ -4,12 +4,12 @@
 \alias{item.correlations}
 \title{Item correlations}
 \usage{
-item.correlations(do=NULL,recoded=NULL,items=1:do$recursive.structure[1],exo=(do$recursive.structure[1]+1):do$recursive.structure[2])
+item.correlations(do=NULL,resp=NULL,items=1:do$recursive.structure[1],exo=(do$recursive.structure[1]+1):do$recursive.structure[2])
 }
 \arguments{
 \item{do}{an object of class \code{digram.object}}
 
-\item{recoded}{A data.frame or matrix of recoded data (only used if \code{do} is \code{NULL})}
+\item{resp}{A data.frame or matrix of recoded data (only used if \code{do} is \code{NULL})}
 
 \item{items}{A vector of columns from the recoded data to include as items in the analysis \emph{or} a character vector of variable labels}
 
