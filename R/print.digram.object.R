@@ -14,7 +14,7 @@ print.digram.object <- function(do=NULL) {
   lsep<-ifelse(knitr::is_latex_output() || knitr::is_html_output(),"-","###############################")
   newline<-ifelse(knitr::is_latex_output() || knitr::is_html_output(),"\n\n","\n")
   cat(lsep,newline,"## ",do$project,newline,lsep,sep="")
-  if(!is.null(do$comments)) cat(newline,"Description:",newline,do$comments,newline,lsep,sep = "")
+  if(class(do$comments)=="character") cat(newline,"Description:",newline,do$comments,newline,lsep,sep = "")
   cat(newline,ncol(do$data)," variables in the dataset",sep="")
   cat(newline,length(do$variables)," project variables:",sep="")
   print(ifelse(knitr::is_latex_output() || knitr::is_html_output(),"","rst"))

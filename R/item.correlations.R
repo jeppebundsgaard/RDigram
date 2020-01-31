@@ -35,7 +35,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
     if(is.null(items)) items<-colnames(resp)
     if(is.null(exo)) exo<-c()
   }
-  selected<-if(accept.na) resp[,items] else na.omit(resp[,c(items,exo)])
+  selected<-if(accept.na) resp[,items] else na.omit(resp[,items])
   if(nrow(selected)==0) stop("No cases without NA's. Try setting accept.na to TRUE")
   exona<-!is.na(resp[,c(items,exo)])
   selecteditemsexo<-resp[exona,items]
