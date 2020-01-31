@@ -69,7 +69,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
     rels<-c()
     for(i in neg.corr) {
       r<-((i-1) %% num.items)+1
-      rels<-c(rels,paste(colnames(selected)[r],"and",colnames(selected)[ceiling(i/num.items)]))
+      rels<-c(rels,paste(var.names[r],"and",var.names[ceiling(i/num.items)]))
     }
     warning(paste0(header,"\nNegative correlation between\n",paste(rels,collapse = "\n")))
   }
@@ -77,7 +77,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
     rels<-c()
     for(i in no.corr) {
       r<-((i-1) %% num.items)+1
-      rels=c(rels,paste(colnames(selected)[r],"and",colnames(selected)[ceiling(i/num.items)]))
+      rels=c(rels,paste(var.names[r],"and",var.names[ceiling(i/num.items)]))
     }
     warning(paste0(header,"\nNo significant correlation between\n",paste(rels,collapse = "\n")))
 
@@ -96,14 +96,14 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
       pval.rest[i]<-acor$p.value
   }
   BH.rest <- p.adjust(pval.rest, "BH")
-  rest.print<-print.corr.matrix(corr.rest,BH.rest,colnames(selected),verbose = verbose)
+  rest.print<-print.corr.matrix(corr.rest,BH.rest,var.names,verbose = verbose)
   neg.rest<-which(corr.rest<0)
   no.rest<-which(BH.rest>0.05)
   if(length(neg.rest)>0) {
     rels<-c()
     for(i in neg.rest) {
       r<-((i-1) %% num.items)+1
-      rels<-c(rels,paste(colnames(selected)[r],"and",colnames(selected)[ceiling(i/num.items)]))
+      rels<-c(rels,paste(var.names[r],"and",var.names[ceiling(i/num.items)]))
     }
     warning(paste0(header,"\nNegative correlation between\n",paste(rels,collapse = "\n")))
   }
@@ -111,7 +111,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
     rels<-c()
     for(i in no.rest) {
       r<-((i-1) %% num.items)+1
-      rels=c(rels,paste(colnames(selected)[r],"and",colnames(selected)[ceiling(i/num.items)]))
+      rels=c(rels,paste(var.names[r],"and",var.names[ceiling(i/num.items)]))
     }
     warning(paste0(header,"\nNo significant correlation between\n",paste(rels,collapse = "\n")))
 
@@ -137,16 +137,18 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
     pos.exo<-which(corr.exo>0)
     no.exo<-which(BH.exo>0.05)
     if(length(neg.exo)>0 && length(pos.exo)>0) {
+      # Go through columns in corr - i.e. exos
       for(j in 1:ceiling(max(pos.exo,neg.exo)/num.items)) {
         relsneg<-c()
         relspos<-c()
+        # Go through rows in corr - i.e. items
         for(i in neg.exo[neg.exo>num.items*(j-1) & neg.exo<=num.items*j]) {
           r<-((i-1) %% num.items)+1
-          relsneg<-c(relsneg,paste(colnames(exoselected)[r],"and",colnames(exoselected)[ceiling(i/num.items)+num.items]))
+          relsneg<-c(relsneg,paste(var.names[r],"and",exo.names[ceiling(i/num.items)]))
         }
         for(i in pos.exo[pos.exo>num.items*(j-1) & pos.exo<=num.items*j]) {
           r<-((i-1) %% num.items)+1
-          relspos<-c(relspos,paste(colnames(exoselected)[r],"and",colnames(exoselected)[ceiling(i/num.items)+num.items]))
+          relspos<-c(relspos,paste(var.names[r],"and",exo.names[ceiling(i/num.items)]))
         }
         if(!is.null(relsneg) && !is.null(relspos))
           warning(paste0(header,"\nNegative correlation between\n",paste(relsneg,collapse = "\n"),"\nBut positive correlation between\n",paste(relspos,collapse = "\n")))
@@ -156,7 +158,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
       rels<-c()
       for(i in no.exo) {
         r<-((i-1) %% num.items)+1
-        rels=c(rels,paste(colnames(exoselected)[r],"and",colnames(exoselected)[ceiling(i/num.items)+num.items]))
+        rels=c(rels,paste(var.names[r],"and",exo.names[ceiling(i/num.items)]))
       }
       warning(paste0(header,"\nNo significant correlation between\n",paste(rels,collapse = "\n")))
 
