@@ -39,7 +39,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
   if(nrow(selected)==0) stop("No cases without NA's. Try setting accept.na to TRUE")
   exona<-!is.na(resp[,c(items,exo)])
   selecteditemsexo<-resp[exona,items]
-  selectedexo<-resp[exona,exo]
+  exoselected<-resp[exona,exo]
   num.items<-length(items)
   num.exo<-length(exo)
 
@@ -124,7 +124,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
     pval.exo<-corr.exo<-matrix(rep(NA,(num.items*num.exo)),nrow = num.items)
     for(i in 1:num.items) {
       for(j in 1:num.exo) {
-        tab<-table(selecteditemsexo[,i],selectedexo[,j])
+        tab<-table(selecteditemsexo[,i],exoselected[,j])
         acor<-MESS::gkgamma(tab,conf.level = 0.95)
         corr.exo[i,j]<-acor$estimate
         pval.exo[i,j]<-acor$p.value
@@ -142,11 +142,11 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
         relspos<-c()
         for(i in neg.exo[neg.exo>num.items*(j-1) & neg.exo<=num.items*j]) {
           r<-((i-1) %% num.items)+1
-          relsneg<-c(relsneg,paste(colnames(selectedexo)[r],"and",colnames(selectedexo)[ceiling(i/num.items)+num.items]))
+          relsneg<-c(relsneg,paste(colnames(exoselected)[r],"and",colnames(exoselected)[ceiling(i/num.items)+num.items]))
         }
         for(i in pos.exo[pos.exo>num.items*(j-1) & pos.exo<=num.items*j]) {
           r<-((i-1) %% num.items)+1
-          relspos<-c(relspos,paste(colnames(selectedexo)[r],"and",colnames(selectedexo)[ceiling(i/num.items)+num.items]))
+          relspos<-c(relspos,paste(colnames(exoselected)[r],"and",colnames(exoselected)[ceiling(i/num.items)+num.items]))
         }
         if(!is.null(relsneg) && !is.null(relspos))
           warning(paste0(header,"\nNegative correlation between\n",paste(relsneg,collapse = "\n"),"\nBut positive correlation between\n",paste(relspos,collapse = "\n")))
@@ -156,7 +156,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
       rels<-c()
       for(i in no.exo) {
         r<-((i-1) %% num.items)+1
-        rels=c(rels,paste(colnames(selectedexo)[r],"and",colnames(selectedexo)[ceiling(i/num.items)+num.items]))
+        rels=c(rels,paste(colnames(exoselected)[r],"and",colnames(exoselected)[ceiling(i/num.items)+num.items]))
       }
       warning(paste0(header,"\nNo significant correlation between\n",paste(rels,collapse = "\n")))
 
