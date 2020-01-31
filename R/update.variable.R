@@ -21,17 +21,19 @@
 #' DHP<-variable.update(do=DHP,variable.to.update="dhp36",cutpoints=c(2,3))
 #' @references
 #' Kreiner, S. (2003). *Introduction to DIGRAM*. Dept. of Biostatistics, University of Copenhagen.
-variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,variable.label=NULL,category.names=NULL,variable.type=NULL,minimum=NULL,maximum=NULL,cutpoints=NULL) {
+variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,variable.label=NULL,category.names=NULL,variable.type=c("nominal","ordinal"),minimum=NULL,maximum=NULL,cutpoints=NULL) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   if(is.null(variable.to.update)) stop("You need to provide a number or name of the variable to update")
+  variable.type<-match.arg(variable.type)
   #data<-as.data.frame(data)
   variable.num<-if(class(variable.to.update)=="numeric") variable.to.update else which(sapply(do$variables,function(x) x[["variable.name"]]==variable.to.update))
   variable<-do$variables[[variable.num]]
   do$variables[[variable.num]]<-list(variable.name=ifelse(is.null(variable.name),variable$variable.name,variable.name),
        variable.label=ifelse(is.null(variable.label),variable$variable.label,variable.label),
+       column.number=variable$column.number,
        ncat=variable$ncat,
-       variable.type=ifelse(is.null(variable.type),variable$variable.type,variable.type),
        category.names=if(is.null(category.names)) variable$category.names else category.names,
+       variable.type=ifelse(is.null(variable.type),variable$variable.type,variable.type),
        minimum=ifelse(is.null(minimum),variable$minimum,minimum),
        maximum=ifelse(is.null(maximum),variable$maximum,maximum),
        cutpoints=if(is.null(cutpoints)) variable$cutpoints else cutpoints)
