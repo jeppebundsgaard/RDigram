@@ -57,6 +57,11 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
   item.labels<-get.labels(do,items)
   var.names<-get.variable.names(do,items)
   exo.names<-get.variable.names(do,exo)
+  exos<-make.exo.dummies(do,exo,exoselected,exo.names)
+  exoselected<-exos$exoselected
+  exo.names<-exos$exo.names
+
+
   items.print<-print.corr.matrix(corr.matrix = corr.items,pvals = BH.items,cnames = item.labels,rnames=paste(item.labels,var.names,sep = ": "),verbose = verbose)
   neg.corr<-which(corr.items<0)
   no.corr<-which(BH.items>0.05)

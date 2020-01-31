@@ -63,17 +63,10 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   }
   if(ncol(exoselected)==0) stop("No exogeneous variable given. Can't do DIF analysis without.")
   # Make dummies out of nominal variables
-  for(i in exo) {
-    if(do$variables[[i]]$variable.type=="nominal") {
-      exonum<-i-do$recursive.structure[1]
-      dummies<-psych::dummy.code(exoselected[,exonum])
-      colnames(dummies)<-paste(do$variables[[i]]$variable.name,colnames(dummies),sep = ", ")
-      exoselected<-cbind(exoselected[,-exonum],dummies)
-      exo.names<-c(exo.names[-exonum],colnames(dummies))
-      exo.labels<-c(exo.labels[-exonum],paste0(exo.labels[exonum],1:ncol(dummies)))
-      colnames(exoselected)<-exo.names
-    }
-  }
+  exos<-make.exo.dummies(do,exo,exoselected,exo.names,exo.labels)
+  exoselected<-exos$exoselected
+  exo.labels<-exos$exo.labels
+  exo.names<-exos$exo.names
   # Remove exos with no cases
   exoselected<-as.data.frame(exoselected[,apply(exoselected,2,sum)>0])
   sink("/dev/null")
@@ -125,3 +118,18 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
 
 }
 #item.DIF(do=proces.do,items = grep(paste0("^",m), colnames(proces.do$recoded)))
+make.exo.dummies<-function(do,exo,exoselected,exo.names,exo.labels=NULL) {
+  # Make dummies out of nominal variables
+  for(i in exo) {
+    if(do$variables[[i]]$variable.type=="nominal") {
+      exonum<-i-do$recursive.structure[1]
+      dummies<-psych::dummy.code(exoselected[,exonum])
+      colnames(dummies)<-paste(do$variables[[i]]$variable.name,colnames(dummies),sep = ", ")
+      exoselected<-cbind(exoselected[,-exonum],dummies)
+      exo.names<-c(exo.names[-exonum],colnames(dummies))
+      if(!is.null(exo.labels)) exo.labels<-c(exo.labels[-exonum],paste0(exo.labels[exonum],1:ncol(dummies)))
+      colnames(exoselected)<-exo.names
+    }
+  }
+  list(exoselected=exoselected,exo.names=exo.names,exo.labels=exo.labels)
+}
