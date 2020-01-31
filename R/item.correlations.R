@@ -40,6 +40,14 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
   exona<-!is.na(resp[,c(items,exo)])
   selecteditemsexo<-resp[exona,items]
   exoselected<-resp[exona,exo]
+
+  item.labels<-get.labels(do,items)
+  var.names<-get.variable.names(do,items)
+  exo.names<-get.variable.names(do,exo)
+  exos<-make.exo.dummies(do,exo,exoselected,exo.names)
+  exoselected<-exos$exoselected
+  exo.names<-exos$exo.names
+  exo<-exos$exo
   num.items<-length(items)
   num.exo<-length(exo)
 
@@ -54,12 +62,6 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,accept.na=F,ve
     }
   }
   BH.items <- matrix(p.adjust(pval.matrix, "BH"),nrow=num.items)
-  item.labels<-get.labels(do,items)
-  var.names<-get.variable.names(do,items)
-  exo.names<-get.variable.names(do,exo)
-  exos<-make.exo.dummies(do,exo,exoselected,exo.names)
-  exoselected<-exos$exoselected
-  exo.names<-exos$exo.names
 
 
   items.print<-print.corr.matrix(corr.matrix = corr.items,pvals = BH.items,cnames = item.labels,rnames=paste(item.labels,var.names,sep = ": "),verbose = verbose)

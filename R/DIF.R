@@ -67,6 +67,7 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   exoselected<-exos$exoselected
   exo.labels<-exos$exo.labels
   exo.names<-exos$exo.names
+  exo<-exos$exo
   # Remove exos with no cases
   exoselected<-as.data.frame(exoselected[,apply(exoselected,2,sum)>0])
   sink("/dev/null")
@@ -131,5 +132,6 @@ make.exo.dummies<-function(do,exo,exoselected,exo.names,exo.labels=NULL) {
       colnames(exoselected)<-exo.names
     }
   }
-  list(exoselected=exoselected,exo.names=exo.names,exo.labels=exo.labels)
+  exo<-do$recursive.structure[1]+(1:ncol(exoselected))
+  list(exoselected=exoselected,exo=exo,exo.names=exo.names,exo.labels=exo.labels)
 }
