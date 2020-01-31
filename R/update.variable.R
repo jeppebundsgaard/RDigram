@@ -1,7 +1,7 @@
 #' @title Update variable
-#' @name update.variable
+#' @name variable.update
 #' @description Update variable in DIGRAM Object.
-#' @usage update.variable(do=NULL,variable=NULL,variable.name=NULL,variable.label=NULL,category.names=c(),variable.type=c("ordinal","nominal"),minimum=NULL,maximum=NULL,cutpoints=c())
+#' @usage variable.update(do=NULL,variable=NULL,variable.name=NULL,variable.label=NULL,category.names=c(),variable.type=c("ordinal","nominal"),minimum=NULL,maximum=NULL,cutpoints=c())
 #' @param do A digram.object
 #' @param variable.to.update The number or name of the variable that should be updated
 #' @param variable.name New name for the variable (string)
@@ -18,18 +18,18 @@
 #' @return Returns a DIGRAM object with an updated variable
 #' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
 #' @examples
-#' DHP<-update.variable(do=DHP,variable=2,cutpoints=c(2,3))
+#' DHP<-variable.update(do=DHP,variable.to.update="dhp36",cutpoints=c(2,3))
 #' @references
 #' Kreiner, S. (2003). *Introduction to DIGRAM*. Dept. of Biostatistics, University of Copenhagen.
-update.variable<-function(do=NULL,variable.num=NULL,variable.name=NULL,variable.label=NULL,category.names=NULL,variable.type=NULL,minimum=NULL,maximum=NULL,cutpoints=NULL) {
+variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,variable.label=NULL,category.names=NULL,variable.type=NULL,minimum=NULL,maximum=NULL,cutpoints=NULL) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
-  if(is.null(variable.num)) stop("You need to provide a variable number")
+  if(is.null(variable.to.update)) stop("You need to provide a number or name of the variable to update")
   #data<-as.data.frame(data)
   variable.num<-if(class(variable.to.update)=="numeric") variable.to.update else which(sapply(do$variables,function(x) x[["variable.name"]]==variable.to.update))
   variable<-do$variables[[variable.num]]
   do$variables[[variable.num]]<-list(variable.name=ifelse(is.null(variable.name),variable$variable.name,variable.name),
        variable.label=ifelse(is.null(variable.label),variable$variable.label,variable.label),
-       ncat=ifelse(is.null(ncat),variable$ncat,ncat),
+       ncat=variable$ncat,
        variable.type=ifelse(is.null(variable.type),variable$variable.type,variable.type),
        category.names=if(is.null(category.names)) variable$category.names else category.names,
        minimum=ifelse(is.null(minimum),variable$minimum,minimum),
