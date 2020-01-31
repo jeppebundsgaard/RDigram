@@ -41,3 +41,20 @@ variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,var
   do$recoded<-digram.recode(do$data,do$variables,do$filter.conditions)
   do
 }
+#' Get column number of a variable in the recoded data
+#'
+#' @param do A DIGRAM object
+#' @param variable.name.num The number or name of the variable to search for
+#'
+#' @return Returns the column.number
+#' @export
+#'
+#' @examples
+#' data(DHP)
+#' get.column.no(DHP,"dhp36")
+get.column.no<-function(do,variable.name.num) {
+  if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
+  if(is.null(variable.name.num)) stop("You need to provide a number or name of the variable")
+  variable.num<-if(class(variable.name.num)=="numeric") variable.name.num else which(sapply(do$variables,function(x) x[["variable.name"]]==variable.name.num))
+  do$variables[[variable.num]]$column.number
+}
