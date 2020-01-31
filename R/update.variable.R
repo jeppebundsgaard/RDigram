@@ -3,7 +3,7 @@
 #' @description Update variable in DIGRAM Object.
 #' @usage update.variable(do=NULL,variable=NULL,variable.name=NULL,variable.label=NULL,category.names=c(),variable.type=c("ordinal","nominal"),minimum=NULL,maximum=NULL,cutpoints=c())
 #' @param do A digram.object
-#' @param variable.num A variable number
+#' @param variable.to.update The number or name of the variable that should be updated
 #' @param variable.name New name for the variable (string)
 #' @param variable.label New label for the variable (one or more uppercase letters)
 #' @param variable.type Type of variable ("ordinal" or "nominal")
@@ -15,7 +15,7 @@
 #' ...
 #' Category N: cutpoint(n) < values <= maximum
 #' @export
-#' @return Returns a variable for a digram.object
+#' @return Returns a DIGRAM object with an updated variable
 #' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
 #' @examples
 #' DHP<-update.variable(do=DHP,variable=2,cutpoints=c(2,3))
@@ -25,6 +25,7 @@ update.variable<-function(do=NULL,variable.num=NULL,variable.name=NULL,variable.
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   if(is.null(variable.num)) stop("You need to provide a variable number")
   #data<-as.data.frame(data)
+  variable.num<-if(class(variable.to.update)=="numeric") variable.to.update else which(sapply(do$variables,function(x) x[["variable.name"]]==variable.to.update))
   variable<-do$variables[[variable.num]]
   do$variables[[variable.num]]<-list(variable.name=ifelse(is.null(variable.name),variable$variable.name,variable.name),
        variable.label=ifelse(is.null(variable.label),variable$variable.label,variable.label),

@@ -9,8 +9,6 @@ update.variable(do=NULL,variable=NULL,variable.name=NULL,variable.label=NULL,cat
 \arguments{
 \item{do}{A digram.object}
 
-\item{variable.num}{A variable number}
-
 \item{variable.name}{New name for the variable (string)}
 
 \item{variable.label}{New label for the variable (one or more uppercase letters)}
@@ -26,9 +24,11 @@ Category 1: minimum <= values <= cutpoint(1)
 Category 2: cutpoint(1) < values <= cutpoint(2)
 ...
 Category N: cutpoint(n) < values <= maximum}
+
+\item{variable.to.update}{The number or name of the variable that should be updated}
 }
 \value{
-Returns a variable for a digram.object
+Returns a DIGRAM object with an updated variable
 }
 \description{
 Update variable in DIGRAM Object.
