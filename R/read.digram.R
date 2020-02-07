@@ -5,7 +5,7 @@
 #' @param project The name of the DIGRAM project from which to load data
 #' @param path Path to the project files
 #' @export
-#' @return Returns a digram.object
+#' @return A digram.object
 #' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
 #' @examples do<-read.digram("DHP",path = "DHP")
 #' @references
@@ -92,9 +92,10 @@ read.digram<-function(project=NULL,path=""){
 #' @param path Path to where to save the files
 #' @param filename Optional. Set to project name if not set.
 #' @export
-#' @return Returns TRUE on success
+#' @return Returns nothing
+#' @details DIGRAM is a Windows based program. Therefore it expects CRLF (\\r\\n) newlines. If you edit the files in Linux after export, your might need to take care to keep the CRLF newlines.
 #' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
-#' @examples do<-write.digram(do,path = "DHP")
+#' @examples write.digram(do = DHP,path = "DHP")
 #' @references
 #' Kreiner, S. (2003). *Introduction to DIGRAM*. Dept. of Biostatistics, University of Copenhagen.
 write.digram<-function(do=NULL,path="",filename=do$project){
@@ -107,19 +108,18 @@ write.digram<-function(do=NULL,path="",filename=do$project){
   catfile<-paste0(basefile,".CAT")
 
   ndatcol<-ncol(do$data)
-  cat(ndatcol,"\n",file = deffile)
-  #Included in VAR-file...? for(i in 1:ndatcol) cat(i," ",do$variables[[i]]$minimum," ",do$variables[[i]]$maximum,"\n",file = deffile)
+  cat(ndatcol,"\r\n",file = deffile)
+  #Included in VAR-file...? for(i in 1:ndatcol) cat(i," ",do$variables[[i]]$minimum," ",do$variables[[i]]$maximum,"\r\n",file = deffile)
 
-  cat(paste(apply(do$data,1,paste,collapse=" "),collapse = "\n"),file=datfile)
+  cat(paste(apply(do$data,1,paste,collapse=" "),collapse = "\r\n"),file=datfile)
 
   nvar<-length(do$variables)
-  cat(nvar,"\n",file = varfile)
-  cat(paste(sapply(do$variables,function(x) {paste0(x$variable.label," ",x$column.number," ",x$ncat," ",ifelse(x$variable.type=="nominal",2,3),"\n",x$minimum," ",paste(as.vector(x$cutpoints),collapse = " ")," ",x$maximum)}),collapse = "\n"),"\n",file = varfile,append = T)
-  cat(paste0(do$recursive.blocks,"\n",paste(do$recursive.structure,collapse = " "),"\n"),file = varfile,append = T)
-  cat(do$comments,"\n",file=varfile,append = T)
-  cat("VARIABLES\n",file = varfile,append = T)
-  cat(paste(sapply(do$variables,function(x) {paste(x$variable.label,x$variable.name)}),collapse = "\n"),"\n",file = varfile,append = T)
+  cat(nvar,"\r\n",file = varfile)
+  cat(paste(sapply(do$variables,function(x) {paste0(x$variable.label," ",x$column.number," ",x$ncat," ",ifelse(x$variable.type=="nominal",2,3),"\r\n",x$minimum," ",paste(as.vector(x$cutpoints),collapse = " ")," ",x$maximum)}),collapse = "\r\n"),"\r\n",file = varfile,append = T)
+  cat(paste0(do$recursive.blocks,"\r\n",paste(do$recursive.structure,collapse = " "),"\r\n"),file = varfile,append = T)
+  cat(do$comments,"\r\n",file=varfile,append = T)
+  cat("VARIABLES\r\n",file = varfile,append = T)
+  cat(paste(sapply(do$variables,function(x) {paste(x$variable.label,x$variable.name)}),collapse = "\r\n"),"\r\n",file = varfile,append = T)
 
-  cat(paste(sapply(do$variables,function(x) {paste(x$variable.label,apply(x$category.names,1,function(y) {paste(y["Category"],y["Name"])}),collapse = "\n")}),collapse = "\n"),file = catfile)
-  T
+  cat(paste(sapply(do$variables,function(x) {paste(x$variable.label,apply(x$category.names,1,function(y) {paste(y["Category"],y["Name"])}),collapse = "\r\n")}),collapse = "\r\n"),file = catfile)
 }

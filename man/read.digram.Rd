@@ -12,7 +12,7 @@ read.digram(project=NULL,path="")
 \item{path}{Path to the project files}
 }
 \value{
-Returns a digram.object
+A digram.object
 }
 \description{
 Reads data from DIGRAM files and create a digram.object.

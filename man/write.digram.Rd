@@ -14,13 +14,16 @@ write.digram(do = NULL, path = "", filename = do$project)
 \item{filename}{Optional. Set to project name if not set.}
 }
 \value{
-Returns TRUE on success
+Returns nothing
 }
 \description{
 Writes a RDigram object to DIGRAM files.
 }
+\details{
+DIGRAM is a Windows based program. Therefore it expects CRLF (\\r\\n) newlines. If you edit the files in Linux after export, your might need to take care to keep the CRLF newlines.
+}
 \examples{
-do<-write.digram(do,path = "DHP")
+write.digram(do = DHP,path = "DHP")
 }
 \references{
 Kreiner, S. (2003). \emph{Introduction to DIGRAM}. Dept. of Biostatistics, University of Copenhagen.
