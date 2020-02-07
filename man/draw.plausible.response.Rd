@@ -2,12 +2,13 @@
 % Please edit documentation in R/gamma.R
 \name{draw.plausible.response}
 \alias{draw.plausible.response}
-\title{Draw a plausible response based on item parameters}
+\title{Draw plausible responses based on item parameters}
 \usage{
 draw.plausible.response(
   item.params,
   param.type = c("pcm", "log.item.score", "multiplicative", "xsi"),
-  R = 0
+  R = 0,
+  num.responses = 1
 )
 }
 \arguments{
@@ -16,14 +17,16 @@ draw.plausible.response(
 \item{param.type}{Type of item parameters. One of pcm (RUMM2030), log.item.score (?), multiplicative (DIGRAM or RDigram, xsi (Conquest or TAM))}
 
 \item{R}{Total score of the response}
+
+\item{num.responses}{The number of response patterns to return}
 }
 \value{
-Returns a plausible response pattern
+Returns a matrix of plausible response patterns
 }
 \description{
-Draw a plausible response based on item parameters
+Draw plausible responses based on item parameters
 }
 \examples{
 item.params<-matrix(c(1,.5,1,1,1,2,1,4),nrow=4)
-draw.plausible.response(item.params=item.params,param.type="multiplicative",R=2)
+draw.plausible.response(item.params=item.params,param.type="multiplicative",R=2,num.responses=10)
 }

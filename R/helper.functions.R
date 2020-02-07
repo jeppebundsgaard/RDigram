@@ -25,7 +25,7 @@ print.corr.matrix<-function(corr.matrix=NULL,pvals=NULL,cnames=NULL,rnames=NULL,
   }
   #print(kablecnames)
   p<-knitr::kable(x = corr.matrix.print,col.names = as.character(kablecnames),row.names = T,booktabs=T,longtable=ncol(corr.matrix.print)<=8,format=ifelse(knitr::is_html_output(),"html",ifelse(knitr::is_latex_output(),"latex","markdown")))
-  if(ncol(corr.matrix.print)>8 && knitr::is_latex_output()) {
+  if(ncol(corr.matrix.print)>6 && knitr::is_latex_output()) {
     p <-p %>%
       kable_styling(latex_options = c("scale_down")) %>% landscape()
   }

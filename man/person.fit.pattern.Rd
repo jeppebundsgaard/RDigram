@@ -37,7 +37,13 @@ Person fit based on response pattern
 }
 \examples{
 data(DHP)
-person.fit.pattern(do=DHP, item.params=item.params)
+item.params<-matrix(c(1.000,2.283,1.150,0.509,
+                      1.000,1.117,2.630,6.082,
+                      1.000,1.380,4.105,2.058,
+                      1.000,0.276,0.127,0.070,
+                      1.000,2.141,0.330,0.472,
+                      1.000,10.304,2.963,4.784),byrow=T,nrow=6)
+person.fit.pattern(do=DHP, item.params=item.params,param.type="multiplicative")
 }
 \references{
 Jeppe Bundsgaard & Svend Kreiner (2019). \emph{Undersøgelse af De Nationale Tests måleegenskaber}. 2nd Ed. Copenhagen: DPU, Aarhus University.

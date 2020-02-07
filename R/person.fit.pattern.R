@@ -13,7 +13,13 @@
 #' @references Jeppe Bundsgaard & Svend Kreiner (2019). *Undersøgelse af De Nationale Tests måleegenskaber*. 2nd Ed. Copenhagen: DPU, Aarhus University.
 #' @examples
 #' data(DHP)
-#' person.fit.pattern(do=DHP, item.params=item.params)
+#' item.params<-matrix(c(1.000,2.283,1.150,0.509,
+#'                       1.000,1.117,2.630,6.082,
+#'                       1.000,1.380,4.105,2.058,
+#'                       1.000,0.276,0.127,0.070,
+#'                       1.000,2.141,0.330,0.472,
+#'                       1.000,10.304,2.963,4.784),byrow=T,nrow=6)
+#' person.fit.pattern(do=DHP, item.params=item.params,param.type="multiplicative")
 person.fit.pattern<-function(do=NULL,resp=NULL,items=NULL,item.params=matrix(),param.type=c("pcm","log.item.score","multiplicative","xsi"),num.montecarlo=0,verbose=T) {
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
@@ -29,7 +35,7 @@ person.fit.pattern<-function(do=NULL,resp=NULL,items=NULL,item.params=matrix(),p
     respondent<<-respondent+1
     nona<-!is.na(xs)
     if(sum(nona)==0) {
-      warning("A respondent didn't have any responses")
+      warning(paste("Respondent",respondent,"didn't have any responses"))
     } else {
       xs<-xs[nona]
       R<-sum(xs)
@@ -38,20 +44,10 @@ person.fit.pattern<-function(do=NULL,resp=NULL,items=NULL,item.params=matrix(),p
       # Gamma calculation
       if(num.montecarlo>0) {
         g<-gamma.matrix(item.params = resp.item.params,param.type = "multiplicative", R = R)
-        #print(R)
         # Probability of actual response pattern
         conditional.probability<-prod(xs.item.params(xs,resp.item.params),na.rm = T)/g
-        #print(conditional.probability)
-        is.smaller<-0
-        for(i in 1:num.montecarlo) {
-          pattern<-draw.plausible.response(item.params = resp.item.params,param.type = "multiplicative",6)
-          #print(pattern)
-          # Probability of response pattern
-          draw.probalility<-prod(xs.item.params(pattern,resp.item.params),na.rm = T)/g
-          #print(draw.probalility)
-          is.smaller<-is.smaller+as.numeric(draw.probalility<conditional.probability)
-          #print(is.smaller)
-        }
+        patterns<-draw.plausible.response(item.params = resp.item.params,param.type = "multiplicative",R = 6,num.responses = num.montecarlo)
+        is.smaller<-sum(apply(patterns,1,function(x) {(prod(xs.item.params(x,resp.item.params),na.rm = T)/g)<=conditional.probability}))
         p.val<-is.smaller/num.montecarlo
       } else {
         gp<-gamma.pattern(item.params = resp.item.params,param.type = "multiplicative", R = R)
@@ -62,7 +58,7 @@ person.fit.pattern<-function(do=NULL,resp=NULL,items=NULL,item.params=matrix(),p
         conditional.probability<-prod(xs.item.params(xs,resp.item.params),na.rm = T)/g
 
         # Sum of all pattern probabilities smaller than ds
-        p.val<-sum(prob.all[prob.all<=conditional.probability])-conditional.probability
+        p.val<-sum(prob.all[prob.all<=conditional.probability])#-conditional.probability
 
       }
       r<-c(conditional.probability=conditional.probability,p.val=p.val)

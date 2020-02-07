@@ -86,3 +86,40 @@ read.digram<-function(project=NULL,path=""){
   class(do)<-"digram.object"
   do
 }
+#' @title Write DIGRAM Object
+#' @description Writes a RDigram object to DIGRAM files.
+#' @param do The digram.object
+#' @param path Path to where to save the files
+#' @param filename Optional. Set to project name if not set.
+#' @export
+#' @return Returns TRUE on success
+#' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
+#' @examples do<-write.digram(do,path = "DHP")
+#' @references
+#' Kreiner, S. (2003). *Introduction to DIGRAM*. Dept. of Biostatistics, University of Copenhagen.
+write.digram<-function(do=NULL,path="",filename=do$project){
+  if(!class(do)=="digram.object") stop("You need to provide a digram.object")
+  path<-sub("^/$","./",paste0(sub(pattern = "/$","",x = path),"/"))
+  basefile=paste0(path,do$project)
+  deffile<-paste0(basefile,".DEF")
+  varfile<-paste0(basefile,".VAR")
+  datfile<-paste0(basefile,".DAT")
+  catfile<-paste0(basefile,".CAT")
+
+  ndatcol<-ncol(do$data)
+  cat(ndatcol,"\n",file = deffile)
+  #Included in VAR-file...? for(i in 1:ndatcol) cat(i," ",do$variables[[i]]$minimum," ",do$variables[[i]]$maximum,"\n",file = deffile)
+
+  cat(paste(apply(do$data,1,paste,collapse=" "),collapse = "\n"),file=datfile)
+
+  nvar<-length(do$variables)
+  cat(nvar,"\n",file = varfile)
+  cat(paste(sapply(do$variables,function(x) {paste0(x$variable.label," ",x$column.number," ",x$ncat," ",ifelse(x$variable.type=="nominal",2,3),"\n",x$minimum," ",paste(as.vector(x$cutpoints),collapse = " ")," ",x$maximum)}),collapse = "\n"),"\n",file = varfile,append = T)
+  cat(paste0(do$recursive.blocks,"\n",paste(do$recursive.structure,collapse = " "),"\n"),file = varfile,append = T)
+  cat(do$comments,"\n",file=varfile,append = T)
+  cat("VARIABLES\n",file = varfile,append = T)
+  cat(paste(sapply(do$variables,function(x) {paste(x$variable.label,x$variable.name)}),collapse = "\n"),"\n",file = varfile,append = T)
+
+  cat(paste(sapply(do$variables,function(x) {paste(x$variable.label,apply(x$category.names,1,function(y) {paste(y["Category"],y["Name"])}),collapse = "\n")}),collapse = "\n"),file = catfile)
+  T
+}

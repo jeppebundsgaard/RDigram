@@ -41,7 +41,9 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
   }
   items.scores[,c(2:4)]<-apply(items.scores[,c(2:4)],2,as.numeric)
   if(knitr::is_latex_output() || knitr::is_html_output()){
-    print(knitr::kable(items.scores,col.names = c("Items","n","Mean","Mean (complete)","Item range"),booktabs=T,longtable=T))#%>%
+    print(knitr::kable(items.scores,col.names = c("Items","n","Mean","Mean (complete)","Item range"),booktabs=T,longtable=T)%>%
+            kable_styling(latex_options = c("scale_down")))
+    #%>%
 #    kableExtra::add_header_above(header = c(" "=3,"Complete cases"=2))
   } else stargazer::stargazer(items.scores,type = "text",summary = F,digit.separator = "",digits = 2,rownames = F)
 

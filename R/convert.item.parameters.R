@@ -15,7 +15,7 @@ xsi.to.multiplicative<-function(item.params) {
   # Set the beta of score 0 to 0
   item.params<-cbind(data.frame(xsi.0=rep(0,nrow(item.params))),item.params)
   # Get the deltas
-  t(apply(item.params,1,delta.item))
+  t(apply(item.params,1,xsi.to.delta.item))
 }
 #' Delta of the multiplicative parametrization calculated from xsi parameter(Conquest parametrization)
 #'
@@ -28,12 +28,28 @@ xsi.to.multiplicative<-function(item.params) {
 
 #' @examples
 #' single.item.params<-c(1,1,0.5)
-#' delta.item(single.item.params=single.item.params)
-delta.item<-function(single.item.params) {
+#' xsi.to.delta.item(single.item.params=single.item.params)
+xsi.to.delta.item<-function(single.item.params) {
   sigma<--sapply(1:length(single.item.params),function(i) sum(single.item.params[1:i]))
   # Returns deltas for this item
   sapply(sigma,exp)
 }
+multiplicative.to.xsi<-function(item.params) {
+  # Remove the 1's
+  item.params<-item.params[,-1]
+  # Get the xsi's
+  t(apply(item.params,1,delta.to.xsi.item))
+}
+delta.to.xsi.item<-function(single.item.params) {
+  sigma<-sapply(single.item.params,log)
+  -sapply(1:length(sigma),function(i) sigma[i]-ifelse(i==1,0,sigma[i-1]))
+}
+# Interpreting Ordered Partition Model Parameters from ConQuest. Nathaniel J. S. Brown. October 2004
+#andersen.to.xsi.item<-function(single.item.params) {
+#   item.levels<-length(single.item.params)
+#   item.param<-1/item.levels*sum(single.item.params)
+#   single.item.params-item.param
+# }
 
 #' Convert item parameters from one parametrization to another
 #'
@@ -55,6 +71,10 @@ item.param.convert<-function(item.params=c(),from=c("pcm","log.item.score","mult
   switch(from,
          "xsi"=switch(to,
                       "multiplicative"=xsi.to.multiplicative(item.params = item.params),
+                      stop("This conversion is not implemented yet, sorry!")
+         ),
+         "multiplicative"=switch(to,
+                      "xsi"=multiplicative.to.xsi(item.params = item.params),
                       stop("This conversion is not implemented yet, sorry!")
          ),
          stop("This conversion is not implemented yet, sorry!")
