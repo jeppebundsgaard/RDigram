@@ -1,10 +1,10 @@
 #' Not exported
 header.format<-function(t="",margin=0) {
   if(knitr::is_latex_output() || knitr::is_html_output()) {
-    cat("\n\n",rep("#",4-margin)," ",t,sep="")
+    cat("\n",rep("#",4-margin)," ",t,sep="")
   } else {
     tw<-stringr::str_length(t)
-    cat("\n\n+",rep("-",tw+2),"+",rep(paste("\n|",stringr::str_pad(" ",tw),"|",collapse=""),margin),"\n| ",t," |\n",rep(paste("|",stringr::str_pad(" ",tw),"|\n",collapse=""),margin),"+",rep("-",tw+2),"+\n",sep="")
+    cat("\n+",rep("-",tw+2),"+",rep(paste("\n|",stringr::str_pad(" ",tw),"|",collapse=""),margin),"\n| ",t," |\n",rep(paste("|",stringr::str_pad(" ",tw),"|\n",collapse=""),margin),"+",rep("-",tw+2),"+\n",sep="")
   }
   t
 }
@@ -30,7 +30,7 @@ print.corr.matrix<-function(corr.matrix=NULL,pvals=NULL,cnames=NULL,rnames=NULL,
       kable_styling(latex_options = c("scale_down")) %>% landscape()
   }
   if(verbose){
-    cat("\n")
+    #cat("\n")
     print(p)
     }
   invisible(p)

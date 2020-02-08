@@ -85,10 +85,9 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
 
   has.DIF<-which(result$p.adj<0.05)
   if(length(has.DIF)>0) {
-    rels<-c()
-    for(i in has.DIF) {
-      rels=c(rels,paste(result$Item[i],"and",result$Var[i]))
-    }
+    item<-unique(result$Item[has.DIF])
+    rels<-paste(item,"and",sapply(item,function(x) paste(result$Var[!is.na(result$p.adj) & result$p.adj<0.05 & result$Item == x],collapse = ", ")))
+
     warning(paste0("\nDifferential Item Functioning between\n",paste(rels,collapse = "\n")))
     if(knitr::is_html_output() || knitr::is_latex_output()) cat("\n\n### Differential Item Functioning\n\n",paste(rels,collapse = "\n\n"))
   }

@@ -1,7 +1,7 @@
-#' @title Detect local dependency
-#' @name local.independency
+#' @title Detect local dependence
+#' @name local.independence
 #' @description Investigate items for local independence
-#' @usage local.independency(do=NULL,resp=NULL,items=1:do$recursive.structure[1],digits=2,verbose=T)
+#' @usage local.independence(do=NULL,resp=NULL,items=1:do$recursive.structure[1],digits=2,verbose=T)
 #' @param do an object of class \code{digram.object}
 #' @param resp A data.frame or matrix of recoded data (only used if \code{do} is \code{NULL})
 #' @param items A vector of columns from the recoded data to include as items in the analysis *or* a character vector of variable labels
@@ -11,7 +11,7 @@
 #' @param verbose Print results
 #' @export
 #' @details
-#' Second step in item screening: Analysis of DIF and local dependency
+#' Second step in item screening: Analysis of DIF and local dependence
 #' \describe{
 #' \item{C2}{Y i ⊥X j |S for all i = 1 . . . k and j = 1 ...m}
 #' \item{C4}{Y a ⊥Y b |R a and Y a ⊥Y b |R b}
@@ -21,10 +21,10 @@
 #' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
 #' @seealso \code{\link{partgam_LD}}
 #' @examples
-#' local.independency(DHP)
+#' local.independence(DHP)
 #' @references
 #' Kreiner, S. & Christensen, K.B. (2011). Item Screening in Graphical Loglinear Rasch Models. *Psychometrika*, vol. 76, no. 2, pp. 228-256. DOI: 10.1007/s11336-9203-Y
-local.independency<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", "hochberg", "hommel", "bonferroni", "BY", "none"),digits=2,only.significant=F,verbose=T){
+local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", "hochberg", "hommel", "bonferroni", "BY", "none"),digits=2,only.significant=F,verbose=T){
   p.adj <- match.arg(p.adj)
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
@@ -38,12 +38,31 @@ local.independency<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
   item.names<-get.variable.names(do,items)
   item.labels<-get.labels(do,items)
   header<-header.format("Test of local independence")
+  # Combine items with LD
+  if(!is.null(do$LD)) {
+    for(LDs in do$LD){
+      newitem<-ncol(resp)+1
+      items<-c(items,newitem)
+      olditems<-which(items %in% LDs)
+      # Recode
+      resp[,newitem]<-apply(resp[,LDs],1,sum)
+      # Combine names and labels
+      newname<-paste(item.names[olditems],collapse = "+")
+      item.names<-c(item.names,newname)
+      colnames(resp)[newitem]<-newname
+      item.labels<-c(item.labels,paste(item.labels[olditems],collapse = "+"))
+      item.names<-item.names[-olditems]
+      item.labels<-item.labels[-olditems]
+      # Remove item-nums
+      items<-c(items[-olditems])
+      }
+  }
 
   selected<-na.omit(resp[,items])
   sums<-apply(selected,2,sum,na.rm=T)
   if(!all(sums>0)) {
     removecols<-sums==0
-    warning(paste("Some items had no variation. The following items have been removed:",item.names[removecols]))
+    warning(paste("Some items had no variation. The following items have been removed:",paste(item.names[removecols],collapse = ", ")))
     item.names<-item.names[!removecols]
     item.labels<-item.labels[!removecols]
     selected<-selected[,!removecols]
@@ -55,7 +74,7 @@ local.independency<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
   result<-orig.result
   missing.item1<-colnames(selected)[!colnames(selected) %in% unique(result$Item1)]
   missing.item2<-colnames(selected)[!colnames(selected) %in% unique(result$Item2)]
-  result[nrow(result)+1,]<-c(missing.item1,missing.item2,rep(NA,6))
+  result[nrow(result)+1,]<-c(missing.item1,missing.item2,rep(" ",6))
   colnames(result)[5]<-"p.adj"
   molten<-reshape2::melt(data = result[,-6],id.vars=c("Item1","Item2"),na.rm=T)
   # tonum<-!molten$variable %in% c("sig")
@@ -65,10 +84,8 @@ local.independency<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
 
   is.dependant<-which(orig.result$p.adj<0.05)
   if(length(is.dependant)>0) {
-    rels<-c()
-    for(i in is.dependant) {
-      rels=c(rels,paste(orig.result$Item1[i],"and",orig.result$Item2[i]))
-    }
+    item1<-unique(orig.result$Item1[is.dependant])
+    rels<-paste(item1,"and",sapply(item1,function(x) paste(orig.result$Item2[!is.na(orig.result$p.adj) & orig.result$p.adj<0.05 & orig.result$Item1 == x],collapse = ", ")))
     warning(paste0("\nLocal dependence between\n",paste(rels,collapse = "\n")))
     if(knitr::is_html_output() || knitr::is_latex_output()) cat("\n\n### Local dependence\n\n",paste(rels,collapse = "\n\n"))
   }
@@ -97,7 +114,7 @@ local.independency<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
   sigval<-(result$sig!=" " & !is.na(result$gamma))
 
   nodes<-DiagrammeR::create_node_df(n=nitem,label=item.labels,fillcolor="ivory")
-  edges<-DiagrammeR::create_edge_df(from = froms,to=tos,rel="DIF",label=ifelse(sigval,round(as.numeric(result$gamma),2)," "),color=rgb(.8,.8,0,ifelse(sigval,abs(car::recode(as.numeric(result$gamma),"NaN=1")),0)))
+  edges<-DiagrammeR::create_edge_df(from = froms,to=tos,label=ifelse(sigval,round(as.numeric(result$gamma),2)," "),color=rgb(.8,.8,0,ifelse(sigval,abs(car::recode(as.numeric(result$gamma),"NaN=1")),0)))
   LD.graph<-DiagrammeR::create_graph()%>%DiagrammeR::add_node_df(nodes)%>%DiagrammeR::add_edge_df(edges)
   if(knitr::is_latex_output() || knitr::is_html_output()) {
     file_name<-paste0("LD_",do$project,".png")
@@ -112,4 +129,4 @@ local.independency<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
   #             main = "Significant partial gamma coefficients between items")
   invisible(orig.result)
 }
-#local.independency(do=proces.do,items = grep(paste0("^",m), colnames(proces.do$recoded)))
+#local.independence(do=proces.do,items = grep(paste0("^",m), colnames(proces.do$recoded)))
