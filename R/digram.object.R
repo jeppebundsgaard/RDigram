@@ -86,7 +86,9 @@ digram.recode<-function(data,variables,filter.conditions=NULL) {
 #'
 #' @return Returns a digram.object with the revised LD-data.frame.
 #' @export
-#'
+#' @details Local dependence is often caused by items sharing a common stimulus. This is called testlets or item bundles (Wang & Wilson 2006. Coding for Local Dependence is the same as identifying a testlet or an item bundle.
+#' @references
+#' Wang, W.-C., & Wilson, M. (2005). The Rasch Testlet Model. *Applied Psychological Measurement*, 29(2), 126–149. https://doi.org/10.1177/0146621604271053
 #' @examples
 #' data(DHP)
 #' do<-code.LD(do=DHP,LD=c("ab,dhp36 dhp37,5 6"))
