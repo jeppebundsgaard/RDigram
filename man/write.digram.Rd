@@ -20,7 +20,9 @@ Returns nothing
 Writes a RDigram object to DIGRAM files.
 }
 \details{
-DIGRAM is a Windows based program. Therefore it expects CRLF (\\r\\n) newlines. If you edit the files in Linux after export, your might need to take care to keep the CRLF newlines.
+DIGRAM is a Windows based program. Therefore it expects CRLF (\r\n) newlines. If you edit the files in Linux after export, your might need to take care to keep the CRLF newlines.
+DIGRAM doesn't accept labels with more than one character. Therefore two-character labels are converted starting from AA->a. Labels from BA are special characters, starting from BA->ü. DIGRAM might not like RDigram's choice of characters.
+DIGRAM doesn't accept more than 58 categories. Therefore variables with more than 58 categories are re-coded to include only 58 categories.
 }
 \examples{
 write.digram(do = DHP,path = "DHP")

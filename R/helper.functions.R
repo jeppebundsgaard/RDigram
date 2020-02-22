@@ -1,7 +1,7 @@
 #' Not exported
 header.format<-function(t="",margin=0) {
   if(knitr::is_latex_output() || knitr::is_html_output()) {
-    cat("\n",rep("#",4-margin)," ",t,sep="")
+    cat("\n\n",rep("#",4-margin)," ",t,sep="")
   } else {
     tw<-stringr::str_length(t)
     cat("\n+",rep("-",tw+2),"+",rep(paste("\n|",stringr::str_pad(" ",tw),"|",collapse=""),margin),"\n| ",t," |\n",rep(paste("|",stringr::str_pad(" ",tw),"|\n",collapse=""),margin),"+",rep("-",tw+2),"+\n",sep="")
@@ -25,7 +25,7 @@ print.corr.matrix<-function(corr.matrix=NULL,pvals=NULL,cnames=NULL,rnames=NULL,
   }
   #print(kablecnames)
   p<-knitr::kable(x = corr.matrix.print,col.names = as.character(kablecnames),row.names = T,booktabs=T,longtable=ncol(corr.matrix.print)<=8,format=ifelse(knitr::is_html_output(),"html",ifelse(knitr::is_latex_output(),"latex","markdown")))
-  if(ncol(corr.matrix.print)>6 && knitr::is_latex_output()) {
+  if(ncol(corr.matrix.print)>3 && knitr::is_latex_output()) {
     p <-p %>%
       kable_styling(latex_options = c("scale_down")) %>% landscape()
   }

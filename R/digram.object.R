@@ -33,6 +33,7 @@ digram.object<-function(project=NULL,data=data.frame(),variables=NULL,filter.con
       column.number<-which(colnames(data)%in%vars[i])
       # Test for integer/float/character...
       categories<-na.omit(unique(data[,vars[i]]))
+      categories<-categories[order(categories)]
       ncat<-length(categories)
       variable.type<-ifelse(inherits(categories,"numeric") | inherits(categories,"integer"),"ordinal","nominal")
       minimum<-if(variable.type=="ordinal") min(categories) else 0
@@ -40,8 +41,16 @@ digram.object<-function(project=NULL,data=data.frame(),variables=NULL,filter.con
       # Record 2: <Minimum> <Cutpoint(1)>...<Last cutpoint> ... <Maximum>
       cutpoints<-if(variable.type=="ordinal") categories[order(categories)] else 0:(ncat-1)
       cutpoints<-cutpoints[-ncat]
-      # Categories from .CAT-file
-      category.names<-data.frame(Category=0:(ncat-1),Name=categories[order(categories)])
+      # Categories
+      if(ncat<1) stop(paste("Not enough categories in",variable.name))
+      category.names<-data.frame(Category=0:(ncat-1),Name=categories)
+      if(class(data[,vars[i]])!="numeric") {
+        r2<-paste(apply(category.names,1,function(x) {
+          paste0("'",x["Name"],"'=",x["Category"])
+        }),collapse = ";")
+        data[,vars[i]]<-car::recode(data[,vars[i]],r2,as.numeric = T)
+      }
+
       variables[[i]]<-list(variable.name=variable.name,variable.label=variable.label,column.number=column.number,ncat=ncat,category.names=category.names,variable.type=variable.type,minimum=minimum,maximum=maximum,cutpoints=cutpoints)
     }
   }

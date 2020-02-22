@@ -45,7 +45,7 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
       items<-c(items,newitem)
       olditems<-which(items %in% LDs)
       # Recode
-      resp[,newitem]<-apply(resp[,LDs],1,sum)
+      resp[,newitem]<-apply(resp[,LDs],1,sum,na.rm=T)
       # Combine names and labels
       newname<-paste(item.names[olditems],collapse = "+")
       item.names<-c(item.names,newname)
@@ -68,65 +68,69 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
     selected<-selected[,!removecols]
   }
   if(sum(complete.cases(selected))==0) stop("There are no complete cases in the dataset. Complete cases are needed for calculation of partial gamma.")
-  sink("/dev/null")
-  orig.result<-iarm::partgam_LD(selected,p.adj = p.adj)
-  sink()
-  result<-orig.result
-  missing.item1<-colnames(selected)[!colnames(selected) %in% unique(result$Item1)]
-  missing.item2<-colnames(selected)[!colnames(selected) %in% unique(result$Item2)]
-  result[nrow(result)+1,]<-c(missing.item1,missing.item2,rep(" ",6))
-  colnames(result)[5]<-"p.adj"
-  molten<-reshape2::melt(data = result[,-6],id.vars=c("Item1","Item2"),na.rm=T)
-  # tonum<-!molten$variable %in% c("sig")
-  molten$value<-as.numeric(molten$value)
-  dep.matrix<-reshape2::acast(data = molten,formula = Item1~Item2~variable,drop = F)
-  num.col<-ncol(dep.matrix)
+  if(ncol(selected)<=2) {
+    warning("More that two items are needed for analysis of local independency.")
+  } else {
+    sink("/dev/null")
+    orig.result<-iarm::partgam_LD(selected,p.adj = p.adj)
+    sink()
+    result<-orig.result
+    missing.item1<-colnames(selected)[!colnames(selected) %in% unique(result$Item1)]
+    missing.item2<-colnames(selected)[!colnames(selected) %in% unique(result$Item2)]
+    result[nrow(result)+1,]<-c(missing.item1,missing.item2,rep(" ",6))
+    colnames(result)[5]<-"p.adj"
+    molten<-reshape2::melt(data = result[,-6],id.vars=c("Item1","Item2"),na.rm=T)
+    # tonum<-!molten$variable %in% c("sig")
+    molten$value<-as.numeric(molten$value)
+    dep.matrix<-reshape2::acast(data = molten,formula = Item1~Item2~variable,drop = F)
+    num.col<-ncol(dep.matrix)
 
-  is.dependant<-which(orig.result$p.adj<0.05)
-  if(length(is.dependant)>0) {
-    item1<-unique(orig.result$Item1[is.dependant])
-    rels<-paste(item1,"and",sapply(item1,function(x) paste(orig.result$Item2[!is.na(orig.result$p.adj) & orig.result$p.adj<0.05 & orig.result$Item1 == x],collapse = ", ")))
-    warning(paste0("\nLocal dependence between\n",paste(rels,collapse = "\n")))
-    if(knitr::is_html_output() || knitr::is_latex_output()) cat("\n\n### Local dependence\n\n",paste(rels,collapse = "\n\n"))
+    is.dependant<-which(orig.result$p.adj<0.05)
+    if(length(is.dependant)>0) {
+      item1<-unique(orig.result$Item1[is.dependant])
+      rels<-paste(item1,"and",sapply(item1,function(x) paste(orig.result$Item2[!is.na(orig.result$p.adj) & orig.result$p.adj<0.05 & orig.result$Item1 == x],collapse = ", ")))
+      warning(paste0("\nLocal dependence between\n",paste(rels,collapse = "\n")))
+      if(knitr::is_html_output() || knitr::is_latex_output()) cat("\n\n### Local dependence\n\n",paste(rels,collapse = "\n\n"))
+    }
+    siggammas<-gammas<-as.numeric(dep.matrix[,,"gamma"])
+    nsign<-if(only.significant) which(apply(dep.matrix[,,"p.adj"],1:2,function(x) ifelse(x<0.05,T,F))) else c()
+    siggammas[nsign]<-NA
+
+    order.cols<-order(apply(dep.matrix[,,"gamma"],2,function(x) sum(is.na(x))-sum(is.nan(x))),decreasing = T)
+    order.rows<-order(apply(dep.matrix[,,"gamma"],1,function(x) sum(is.na(x))-sum(is.nan(x))),decreasing = F)
+    order.names<-match(rownames(dep.matrix[,,"gamma"])[order.rows],colnames(selected))
+    order.labels<-match(colnames(dep.matrix[,,"gamma"])[order.cols],colnames(selected))
+    #item.labels<-as.factor(get.labels(do,items = items))
+    #item.labels<-get.labels(do,colnames(siggammas))
+    #rownames(siggammas)<-item.labels
+
+    if(verbose)
+      print.corr.matrix(corr.matrix=dep.matrix[order.rows,order.cols,"gamma"],pvals = dep.matrix[order.rows,order.cols,"p.adj"],cnames = item.labels[order.labels],rnames=paste(item.labels[order.names],item.names[order.names],sep = ": "),digits = digits) #rownames(dep.matrix) erstattet af item.names
+    #print.corr.matrix(corr.matrix=dep.matrix[order.rows,order.cols,"gamma"],pvals = dep.matrix[order.rows,order.cols,"p.adj"],cnames = item.labels[order.cols],rnames=paste(item.labels[order.rows],item.names[order.rows],sep = ": "),digits = digits) #rownames(dep.matrix) erstattet af item.names
+
+    # Draw graph
+    nitem<-length(items)
+    #item.labels<-as.factor(get.labels(do,items = items))
+    froms<-as.numeric(factor(result$Item1,levels = colnames(selected)))
+    tos<-as.numeric(factor(result$Item2,levels = colnames(selected)))
+
+    sigval<-(result$sig!=" " & !is.na(result$gamma))
+
+    nodes<-DiagrammeR::create_node_df(n=nitem,label=item.labels,fillcolor="ivory")
+    edges<-DiagrammeR::create_edge_df(from = froms,to=tos,label=ifelse(sigval,round(as.numeric(result$gamma),2)," "),color=rgb(.8,.8,0,ifelse(sigval,abs(car::recode(as.numeric(result$gamma),"NaN=1")),0)))
+    LD.graph<-DiagrammeR::create_graph()%>%DiagrammeR::add_node_df(nodes)%>%DiagrammeR::add_edge_df(edges)
+    g<-DiagrammeR::render_graph(graph = LD.graph,layout = "kk")
+    if(knitr::is_latex_output() || knitr::is_html_output()) {
+      file_name<-paste0("LD_",do$project,"_",items[1],".png")
+      # Thanks to https://github.com/rich-iannone/DiagrammeR/issues/344
+      g %>%
+        DiagrammeRsvg::export_svg() %>%
+        charToRaw() %>%
+        rsvg::rsvg_png(file_name)
+      cat("\n![](",file_name,")\n")
+    } else print(g)
+
+    invisible(orig.result)
   }
-  siggammas<-gammas<-as.numeric(dep.matrix[,,"gamma"])
-  nsign<-if(only.significant) which(apply(dep.matrix[,,"p.adj"],1:2,function(x) ifelse(x<0.05,T,F))) else c()
-  siggammas[nsign]<-NA
-
-  order.cols<-order(apply(dep.matrix[,,"gamma"],2,function(x) sum(is.na(x))-sum(is.nan(x))),decreasing = T)
-  order.rows<-order(apply(dep.matrix[,,"gamma"],1,function(x) sum(is.na(x))-sum(is.nan(x))),decreasing = F)
-  order.names<-match(rownames(dep.matrix[,,"gamma"])[order.rows],colnames(selected))
-  order.labels<-match(colnames(dep.matrix[,,"gamma"])[order.cols],colnames(selected))
-  #item.labels<-as.factor(get.labels(do,items = items))
-  #item.labels<-get.labels(do,colnames(siggammas))
-  #rownames(siggammas)<-item.labels
-
-  if(verbose)
-    print.corr.matrix(corr.matrix=dep.matrix[order.rows,order.cols,"gamma"],pvals = dep.matrix[order.rows,order.cols,"p.adj"],cnames = item.labels[order.labels],rnames=paste(item.labels[order.names],item.names[order.names],sep = ": "),digits = digits) #rownames(dep.matrix) erstattet af item.names
-  #print.corr.matrix(corr.matrix=dep.matrix[order.rows,order.cols,"gamma"],pvals = dep.matrix[order.rows,order.cols,"p.adj"],cnames = item.labels[order.cols],rnames=paste(item.labels[order.rows],item.names[order.rows],sep = ": "),digits = digits) #rownames(dep.matrix) erstattet af item.names
-
-  # Draw graph
-  nitem<-length(items)
-  #item.labels<-as.factor(get.labels(do,items = items))
-  froms<-as.numeric(factor(result$Item1,levels = colnames(selected)))
-  tos<-as.numeric(factor(result$Item2,levels = colnames(selected)))
-
-  sigval<-(result$sig!=" " & !is.na(result$gamma))
-
-  nodes<-DiagrammeR::create_node_df(n=nitem,label=item.labels,fillcolor="ivory")
-  edges<-DiagrammeR::create_edge_df(from = froms,to=tos,label=ifelse(sigval,round(as.numeric(result$gamma),2)," "),color=rgb(.8,.8,0,ifelse(sigval,abs(car::recode(as.numeric(result$gamma),"NaN=1")),0)))
-  LD.graph<-DiagrammeR::create_graph()%>%DiagrammeR::add_node_df(nodes)%>%DiagrammeR::add_edge_df(edges)
-  if(knitr::is_latex_output() || knitr::is_html_output()) {
-    file_name<-paste0("LD_",do$project,".png")
-    DiagrammeR::export_graph(graph = LD.graph,file_name = file_name,file_type = "png")
-    # print(knitr::include_graphics(path = file_name))
-  } else print(DiagrammeR::render_graph(graph = LD.graph,layout = "kk" ))
-
-  # diagram::plotmat(A = round(gammas,2),
-  #             pos = num.col, curve = 0.7, lwd = 1,shadow.size = 0,
-  #             arr.len = 0.3, arr.width = 0.15, my = 0.2,
-  #             box.size = 0.03, arr.type = "curved", dtext = 0.25,
-  #             main = "Significant partial gamma coefficients between items")
-  invisible(orig.result)
 }
 #local.independence(do=proces.do,items = grep(paste0("^",m), colnames(proces.do$recoded)))

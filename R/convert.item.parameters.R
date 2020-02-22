@@ -1,4 +1,85 @@
+# Tau
+tau.to.beta<-function(item.params) {
 
+}
+tau.to.andersen<-function(item.params) {
+
+}
+tau.to.multiplicative<-function(item.params) {
+
+}
+tau.to.xsi<-function(item.params) {
+
+}
+# Beta
+beta.to.tau<-function(item.params) {
+
+}
+beta.to.andersen<-function(item.params) {
+
+}
+beta.to.multiplicative<-function(item.params) {
+
+}
+beta.to.xsi<-function(item.params) {
+
+}
+#Andersen
+andersen.to.tau<-function(item.params) {
+
+}
+andersen.to.beta<-function(item.params) {
+
+}
+andersen.to.multiplicative<-function(item.params) {
+
+}
+andersen.to.xsi<-function(item.params) {
+
+}
+# multiplicative
+multiplicative.to.tau<-function(item.params) {
+
+}
+multiplicative.to.beta<-function(item.params) {
+
+}
+multiplicative.to.andersen<-function(item.params) {
+
+}
+
+multiplicative.to.xsi<-function(item.params) {
+  # Remove the 1's
+  item.params<-item.params[,-1]
+  # Get the xsi's
+  t(apply(item.params,1,delta.to.xsi.item))
+}
+
+# xsi
+xsi.to.tau<-function(item.params=NULL,tamobj=NULL) {
+  if(!is.null(tamobj)) {
+    item.params.and.se<-get.thresholds(tamobj = tamobj)
+    item.params<-item.params.and.se[,1:(ncol(item.params.and.se)/2)]
+  }
+
+}
+xsi.to.beta<-function(item.params=NULL,tamobj=NULL) {
+  if(!is.null(tamobj)) {
+    item.params.and.se<-get.thresholds(tamobj = tamobj)
+    item.params<-item.params.and.se[,1:(ncol(item.params.and.se)/2)]
+  }
+
+}
+xsi.to.andersen<-function(item.params=NULL,tamobj=NULL) {
+  if(!is.null(tamobj)) {
+    item.params.and.se<-get.thresholds(tamobj = tamobj)
+    item.params<-item.params.and.se[,1:(ncol(item.params.and.se)/2)]
+  }
+  # Returns a matrix of deltas for all items
+  # Set the beta of score 0 to 0
+  # Get the sigmas
+  t(apply(item.params,1,xsi.to.sigma.item))
+}
 #' Multiplicative item parameters calculated from xsi parameters (so-called Conquest parametrization)
 #'
 #' @param item.params a matrix of xsi item parameters (using the Conquest parametrisation). Items in rows, threshold values in columns
@@ -10,13 +91,33 @@
 #' @examples
 #' item.params<-matrix(c(1,.5,1,1,1,2,1,4),nrow=4)
 #' xsi.to.multiplicative(item.params)
-xsi.to.multiplicative<-function(item.params) {
+xsi.to.multiplicative<-function(item.params=NULL,tamobj=NULL,standardize=c("none","items","cases")) {
+  standardize<-match.arg(standardize)
+  print(standardize)
+  if(!is.null(tamobj)) {
+    item.params.and.se<-get.thresholds(tamobj = tamobj)
+    item.params<-item.params.and.se[,1:(ncol(item.params.and.se)/2)]
+  }
   # Returns a matrix of deltas for all items
   # Set the beta of score 0 to 0
-  item.params<-cbind(data.frame(xsi.0=rep(0,nrow(item.params))),item.params)
+  # item.params<-cbind(data.frame(xsi.0=rep(0,nrow(item.params))),item.params)
   # Get the deltas
-  t(apply(item.params,1,xsi.to.delta.item))
+  unstandardized<-t(apply(item.params,1,xsi.to.delta.item))
+  switch(standardize,
+          "items"={
+            #In case of no LD and DIF, standidardize by setting sum of thresholds to 0
+            sumofall<-sum(unstandardized)
+            correction<-sumofall/sum(!apply(unstandardized,1:2,is.na))
+            standardized<-unstandardized-correction},
+          "cases"=standardized<-unstandardized, # No idea how to do this correctly
+          "none"=standardized<-unstandardized
+         )
+  cbind(
+    data.frame(xsi.0=rep(1,nrow(item.params))),
+    standardized
+    )
 }
+
 #' Delta of the multiplicative parametrization calculated from xsi parameter(Conquest parametrization)
 #'
 #' @param single.item.params a vector of item parameters (thresholds) (using the Conquest parametrisation)
@@ -29,16 +130,21 @@ xsi.to.multiplicative<-function(item.params) {
 #' @examples
 #' single.item.params<-c(1,1,0.5)
 #' xsi.to.delta.item(single.item.params=single.item.params)
+#' xsi.to.delta.item(single.item.params=single.item.params)
 xsi.to.delta.item<-function(single.item.params) {
-  sigma<--sapply(1:length(single.item.params),function(i) sum(single.item.params[1:i]))
+  #sigma<--sapply(1:length(single.item.params),function(i) sum(single.item.params[1:i]))
   # Returns deltas for this item
-  sapply(sigma,exp)
+  #sapply(sigma,exp)
+  sigma.to.delta(xsi.to.sigma.item(single.item.params))
 }
-multiplicative.to.xsi<-function(item.params) {
-  # Remove the 1's
-  item.params<-item.params[,-1]
-  # Get the xsi's
-  t(apply(item.params,1,delta.to.xsi.item))
+xsi.to.sigma.item<-function(single.item.params) {
+  single.item.params<-single.item.params[!is.na(single.item.params)]
+  mean.param<-mean(as.numeric(single.item.params))
+  sapply(1:length(single.item.params),function(i) mean.param+single.item.params[i])
+}
+sigma.to.delta<-function(sigma) {
+# Returns deltas for this item
+  sapply(sigma,exp)
 }
 delta.to.xsi.item<-function(single.item.params) {
   sigma<-sapply(single.item.params,log)

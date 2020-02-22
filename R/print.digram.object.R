@@ -25,7 +25,7 @@ print.digram.object <- function(do=NULL) {
   first<-1
   for(i in 1:do$recursive.blocks) {
     if(i!=1) cat(" <- ")
-    for(j in first:do$recursive.structure[i]) cat(ifelse(nchar(do$variables[[j]]$variable.label)>1 && j>first,".",""),do$variables[[j]]$variable.label,sep="")
+    for(j in first:do$recursive.structure[i]) cat(ifelse(nchar(do$variables[[j]]$variable.label)>1 && j>first," ",""),do$variables[[j]]$variable.label,sep="")
     first<-do$recursive.structure[i]+1
 
   }

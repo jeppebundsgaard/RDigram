@@ -4,12 +4,22 @@
 \alias{digram.estimate}
 \title{Estimate RDigram object using TAM}
 \usage{
-digram.estimate(do, items = NULL)
+digram.estimate(
+  do,
+  items = NULL,
+  constraint = "cases",
+  use.package = c("TAM", "eRm"),
+  tam.control = list(),
+  verbose = T,
+  ...
+)
 }
 \arguments{
 \item{do}{A digram.object}
 
 \item{items}{The items to include in the analysis}
+
+\item{constraint}{Constraint on "cases" or "items"}
 }
 \value{
 Returns a TAM result object

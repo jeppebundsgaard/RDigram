@@ -18,6 +18,7 @@ Delta of the multiplicative parametrization calculated from xsi parameter(Conque
 \examples{
 single.item.params<-c(1,1,0.5)
 xsi.to.delta.item(single.item.params=single.item.params)
+xsi.to.delta.item(single.item.params=single.item.params)
 }
 \references{
 Jeppe Bundsgaard & Svend Kreiner (2019). \emph{Undersøgelse af De Nationale Tests måleegenskaber}. 2nd Ed. Copenhagen: DPU, Aarhus University.

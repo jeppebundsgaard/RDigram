@@ -93,12 +93,17 @@ read.digram<-function(project=NULL,path=""){
 #' @param filename Optional. Set to project name if not set.
 #' @export
 #' @return Returns nothing
-#' @details DIGRAM is a Windows based program. Therefore it expects CRLF (\\r\\n) newlines. If you edit the files in Linux after export, your might need to take care to keep the CRLF newlines.
+#' @details
+#' DIGRAM is a Windows based program. Therefore it expects CRLF (\r\n) newlines. If you edit the files in Linux after export, your might need to take care to keep the CRLF newlines.
+#' DIGRAM doesn't accept labels with more than one character. Therefore two-character labels are converted starting from AA->a. Labels from BA are special characters, starting from BA->ü. DIGRAM might not like RDigram's choice of characters.
+#' DIGRAM doesn't accept more than 58 categories. Therefore variables with more than 58 categories are re-coded to include only 58 categories.
 #' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
 #' @examples write.digram(do = DHP,path = "DHP")
 #' @references
 #' Kreiner, S. (2003). *Introduction to DIGRAM*. Dept. of Biostatistics, University of Copenhagen.
 write.digram<-function(do=NULL,path="",filename=do$project){
+  # Settings
+  maxcats<-10
   if(!class(do)=="digram.object") stop("You need to provide a digram.object")
   path<-sub("^/$","./",paste0(sub(pattern = "/$","",x = path),"/"))
   basefile=paste0(path,do$project)
@@ -108,18 +113,50 @@ write.digram<-function(do=NULL,path="",filename=do$project){
   catfile<-paste0(basefile,".CAT")
 
   ndatcol<-ncol(do$data)
-  cat(ndatcol,"\r\n",file = deffile)
+  cat(e(paste0(ndatcol,"\r\n")),file = deffile)
   #Included in VAR-file...? for(i in 1:ndatcol) cat(i," ",do$variables[[i]]$minimum," ",do$variables[[i]]$maximum,"\r\n",file = deffile)
-
-  cat(paste(apply(do$data,1,paste,collapse=" "),collapse = "\r\n"),file=datfile)
+  cat(e(paste(apply(apply(do$data,1:2,function(x) ifelse(is.na(x),-9999,x)),1,paste,collapse=" "),collapse = "\r\n")),file=datfile)
 
   nvar<-length(do$variables)
-  cat(nvar,"\r\n",file = varfile)
-  cat(paste(sapply(do$variables,function(x) {paste0(x$variable.label," ",x$column.number," ",x$ncat," ",ifelse(x$variable.type=="nominal",2,3),"\r\n",x$minimum," ",paste(as.vector(x$cutpoints),collapse = " ")," ",x$maximum)}),collapse = "\r\n"),"\r\n",file = varfile,append = T)
-  cat(paste0(do$recursive.blocks,"\r\n",paste(do$recursive.structure,collapse = " "),"\r\n"),file = varfile,append = T)
-  cat(do$comments,"\r\n",file=varfile,append = T)
-  cat("VARIABLES\r\n",file = varfile,append = T)
-  cat(paste(sapply(do$variables,function(x) {paste(x$variable.label,x$variable.name)}),collapse = "\r\n"),"\r\n",file = varfile,append = T)
+  items<-1:do$recursive.structure[1]
+  maxcat<-max(sapply(items,function(i) do$variables[[i]]$ncat))
+  cat(e(paste0(nvar,"\r\n")),file = varfile)
+  cat(e(paste(sapply(do$variables,function(x) {
+    if(x$ncat>maxcats) {  # Recode when too many categories
+      vardata<-unique(as.numeric(do$data[,x$column.number]))
+      ordereddata<-vardata[order(vardata)]
+      catsize<-floor(x$maximum/maxcats)
+      #print(catsize)
+      largecat<-x$maximum-catsize*maxcats
+      cats<-(1:(maxcats-1-largecat))*catsize
+      if(largecat>1)
+        cats<-c(cats,((maxcats-1-largecat+1):(maxcats-1))*(catsize+1))
+      x$cutpoints<-cats
+      x$ncat<-maxcats
+    }
+    if(x %in% items && x$ncat!=maxcat) { # Create dummy categories
+      x$cutpoints<-c(x$cutpoints,(x$ncat-1):(maxcat-2))
+      x$maximum<-maxcat-1
+    }
+    paste0(l(x$variable.label)," ",x$column.number," ",x$ncat," ",ifelse(x$variable.type=="nominal",2,3),"\r\n",x$minimum," ",paste(as.vector(x$cutpoints),collapse = " ")," ",x$maximum)
+  }),collapse = "\r\n")),file = varfile,append = T)
+  cat(e(paste0(do$recursive.blocks,"\r\n",paste(do$recursive.structure,collapse = " "),"\r\n")),file = varfile,append = T)
+  cat(e(paste0(do$comments,"\r\n")),file=varfile,append = T)
+  cat(e(paste("VARIABLES\r\n")),file = varfile,append = T)
+  vars<-paste0(sapply(do$variables,function(x) {paste(l(x$variable.label),x$variable.name)}),collapse = "\r\n")
+  cat(e(vars),file = varfile,append = T)
 
-  cat(paste(sapply(do$variables,function(x) {paste(x$variable.label,apply(x$category.names,1,function(y) {paste(y["Category"],y["Name"])}),collapse = "\r\n")}),collapse = "\r\n"),file = catfile)
+  cat(e(paste(sapply(do$variables,function(x) {
+      paste(l(x$variable.label),apply(x$category.names,1,function(y) {
+        paste(y["Category"],y["Name"])
+      }),collapse = "\r\n")
+    }),collapse = "\r\n")),"\r\n",file = catfile)
+}
+e<-function(t) {gsub("\\x0d\\x0a","\r\n",stringi::stri_encode(t,to="cp865"))} # Encode to ASCII Nordic https://www.ascii-codes.com/cp865.html#extended_character_set
+l<-function(a) {
+  if(nchar(a)>1) {
+    a<-97+(utf8ToInt(a)[1]-65)*26+(utf8ToInt(a)[2]-65)
+    if(a>122 && a<128) a<-a+6
+    intToUtf8(a)
+  } else a
 }

@@ -16,7 +16,11 @@ Imports:
   MESS,
   DescTools,
   stringr,
-  diagram
-Suggests:
+  stringi,
+  DiagrammeR,
+  DiagrammeRsvg,
+  knitr,
+  kableExtra,
+  iarm, 
   TAM,
-  iarm
+  eRm

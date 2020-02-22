@@ -110,11 +110,16 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   nodes<-rbind(item.nodes,exo.nodes)
   edges<-DiagrammeR::create_edge_df(from = froms,to=tos,rel="DIF",label=ifelse(result$sig==" "," ",round(result$gamma,2)),color=rgb(.8,.8,0,ifelse(result$sig==" ",0, car::recode(abs(result$gamma),"NaN=1"))))
   DIF.graph<-DiagrammeR::create_graph()%>%DiagrammeR::add_node_df(nodes)%>%DiagrammeR::add_edge_df(edges)
+  g<-DiagrammeR::render_graph(graph = DIF.graph,layout = "kk")
   if(knitr::is_latex_output() || knitr::is_html_output()) {
-    file_name<-paste0("DIF_",do$project,".png")
-    DiagrammeR::export_graph(graph = DIF.graph,file_name = file_name,file_type = "png")
-    # print(knitr::include_graphics(path = file_name))
-  } else print(DiagrammeR::render_graph(graph = DIF.graph,layout = "kk" ))
+    file_name<-paste0("DIF_",do$project,"_",items[1],".png")
+    # Thanks to https://github.com/rich-iannone/DiagrammeR/issues/344
+    g %>%
+      DiagrammeRsvg::export_svg() %>%
+      charToRaw() %>%
+      rsvg::rsvg_png(file_name)
+    cat("\n![](",file_name,")\n")
+  } else print(g)
 
 }
 #item.DIF(do=proces.do,items = grep(paste0("^",m), colnames(proces.do$recoded)))

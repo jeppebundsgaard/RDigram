@@ -4,7 +4,11 @@
 \alias{xsi.to.multiplicative}
 \title{Multiplicative item parameters calculated from xsi parameters (so-called Conquest parametrization)}
 \usage{
-xsi.to.multiplicative(item.params)
+xsi.to.multiplicative(
+  item.params = NULL,
+  tamobj = NULL,
+  standardize = c("none", "items", "cases")
+)
 }
 \arguments{
 \item{item.params}{a matrix of xsi item parameters (using the Conquest parametrisation). Items in rows, threshold values in columns}
