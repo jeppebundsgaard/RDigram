@@ -41,21 +41,24 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
   # Combine items with LD
   if(!is.null(do$LD)) {
     for(LDs in do$LD){
-      newitem<-ncol(resp)+1
-      items<-c(items,newitem)
-      olditems<-which(items %in% LDs)
-      # Recode
-      resp[,newitem]<-apply(resp[,LDs],1,sum,na.rm=T)
-      # Combine names and labels
-      newname<-paste(item.names[olditems],collapse = "+")
-      item.names<-c(item.names,newname)
-      colnames(resp)[newitem]<-newname
-      item.labels<-c(item.labels,paste(item.labels[olditems],collapse = "+"))
-      item.names<-item.names[-olditems]
-      item.labels<-item.labels[-olditems]
-      # Remove item-nums
-      items<-c(items[-olditems])
+        LDs<-(LDs[LDs %in% items])
+        if(length(LDs)>0) {
+        newitem<-ncol(resp)+1
+        items<-c(items,newitem)
+        olditems<-which(items %in% LDs)
+        # Recode
+        resp[,newitem]<-apply(resp[,LDs],1,sum,na.rm=T)
+        # Combine names and labels
+        newname<-paste(item.names[olditems],collapse = "+")
+        item.names<-c(item.names,newname)
+        colnames(resp)[newitem]<-newname
+        item.labels<-c(item.labels,paste(item.labels[olditems],collapse = "+"))
+        item.names<-item.names[-olditems]
+        item.labels<-item.labels[-olditems]
+        # Remove item-nums
+        items<-c(items[-olditems])
       }
+    }
   }
 
   selected<-na.omit(resp[,items])
