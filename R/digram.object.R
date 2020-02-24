@@ -44,7 +44,7 @@ digram.object<-function(project=NULL,data=data.frame(),variables=NULL,filter.con
       # Categories
       if(ncat<1) stop(paste("Not enough categories in",variable.name))
       category.names<-data.frame(Category=0:(ncat-1),Name=categories)
-      if(class(data[,vars[i]])!="numeric") {
+      if(!(class(data[,vars[i]]) %in% c("integer","numeric)"))) {
         r2<-paste(apply(category.names,1,function(x) {
           paste0("'",x["Name"],"'=",x["Category"])
         }),collapse = ";")

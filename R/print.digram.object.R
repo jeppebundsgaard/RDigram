@@ -17,8 +17,8 @@ print.digram.object <- function(do=NULL) {
   if(class(do$comments)=="character") cat(newline,"Description:",newline,do$comments,newline,lsep,sep = "")
   cat(newline,ncol(do$data)," variables in the dataset",sep="")
   cat(newline,length(do$variables)," project variables:",sep="")
-  print(ifelse(knitr::is_latex_output() || knitr::is_html_output(),"","rst"))
-  print(knitr::kable(x = t(sapply(do$variables,function(x) c(x$variable.label,x$variable.name,paste(x$ncat,x$variable.type,"categories")))),col.names = c("Label","Variable","Categories"),booktabs=T,longtable=T))
+
+  print(knitr::kable(x = t(sapply(do$variables,function(x) c(x$variable.label,x$variable.name,paste(x$ncat,x$variable.type,"categories")))),col.names = c("Label","Variable","Categories"),booktabs=T,longtable=T,format = "markdown"))
   #for(x in do$variables) {if(!is.null(x)) cat(newline,x$variable.label," ",x$variable.name,"\t",x$ncat,x$variable.type,"categories")}
   # Recursive blocks
   cat("\n\n")
