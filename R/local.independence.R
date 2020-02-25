@@ -49,7 +49,7 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
         # Recode
         resp[,newitem]<-apply(resp[,LDs],1,sum,na.rm=T)
         # Combine names and labels
-        newname<-paste(item.names[olditems],collapse = "+")
+        newname<-paste(item.names[olditems],collapse = " + ")
         item.names<-c(item.names,newname)
         colnames(resp)[newitem]<-newname
         item.labels<-c(item.labels,paste(item.labels[olditems],collapse = "+"))
