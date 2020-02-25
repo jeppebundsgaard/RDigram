@@ -27,6 +27,13 @@ Returns a TAM result object
 \description{
 Estimate RDigram object using TAM
 }
+\details{
+Uses either the package TAM or eRm to estimate the model.
+If items have been coded as local dependent, a bifactorial model is used, when using the TAM package. A slight change was necessary in the package. Therefore you need to get the custom version:
+library(devtools)
+install_github("jeppebundsgaard/TAM")
+In eRm, local dependence is managed by collapsing the locally dependent items into a superitem.
+}
 \examples{
 data(DHP)
 do<-DHP

@@ -87,10 +87,10 @@ digram.recode<-function(data,variables,filter.conditions=NULL) {
 # a<-digram.recode(DHP$data,DHP$variables)
 # all(a==DHP$recoded)
 
-#' Code items as local dependant
+#' Code items as a testlet/local dependant
 #'
 #' @param do A digram.object
-#' @param LD String. The item pairs that are local dependent. Give as a list of comma separated variable numbers, variable labels or variable names
+#' @param LD String. The item pairs that are part of a testlet/are local dependant. Give as a list of comma separated variable numbers, variable labels or variable names
 #' @param append Logical. Append new LD variables to the existing ones.
 #'
 #' @return Returns a digram.object with the revised LD-data.frame.
@@ -100,8 +100,8 @@ digram.recode<-function(data,variables,filter.conditions=NULL) {
 #' Wang, W.-C., & Wilson, M. (2005). The Rasch Testlet Model. *Applied Psychological Measurement*, 29(2), 126–149. https://doi.org/10.1177/0146621604271053
 #' @examples
 #' data(DHP)
-#' do<-code.LD(do=DHP,LD=c("ab,dhp36 dhp37,5 6"))
-code.LD<-function(do,LD,append=F) {
+#' do<-code.testlet(do=DHP,LD=c("ab,dhp36 dhp37,5 6"))
+code.testlet<-function(do,LD,append=F) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   if(is.null(LD)) stop("You need to provide a list of variables which are local dependent")
   pairs<-strsplit(x = LD, split =" *, *")[[1]]
@@ -119,20 +119,20 @@ code.LD<-function(do,LD,append=F) {
 
   do
 }
-#' Code items as having DIF
+#' Code items to be split (as having DIF)
 #'
 #' @param do A digram.object
-#' @param DIF.var String. The variables having DIF. A comma separated list of variable numbers, labels or names.
-#' @param DIF.exo String. The variables causing DIF. A comma separated list of exogenous variable numbers, labels or names.
+#' @param DIF.var String. The variables to split (having DIF). A comma separated list of variable numbers, labels or names.
+#' @param DIF.exo String. The exogenous variables to split on (causing DIF). A comma separated list of exogenous variable numbers, labels or names.
 #' @param append Logical.
-#' @details If more variables and exogenous variables are given, all possible combinations of these are set to exibit DIF.
+#' @details If more variables and exogenous variables are given, all possible combinations of these are split.
 #' @return
 #' @export
 #'
 #' @examples
 #' data(DHP)
-#' do<-code.DIF(DHP,"a,b","under60")
-code.DIF<-function(do,DIF.var,DIF.exo,append=F) {
+#' do<-code.split(DHP,"a,b","under60")
+code.split<-function(do,DIF.var,DIF.exo,append=F) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   if(is.null(DIF.var)) stop("You need to provide one or more variables which have DIF")
   if(is.null(DIF.exo)) stop("You need to provide one or more exogenous variables which cause DIF")
