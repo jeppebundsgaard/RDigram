@@ -8,16 +8,18 @@
 #' @param exo A vector of columns from the recoded data to include as exogenous variables in the analysis *or* a character vector of variable labels
 #' @param p.adj the kind of multiple p-value testing adjustment to be used (one of "BH","holm", "hochberg", "hommel", "bonferroni", "BY", "none").
 #' @param digits Number of digits in table
+#' @param max.name.length Maximum length of item names (to be printed in tables)
 #' @param only.significant Only list fit values significantly different from 1
 #' @param verbose Print results
 #' @export
 #' @details
 #' Second step in item screening: Analysis of DIF and local dependency
 #' \describe{
-#' \item{C2}{Y i ⊥X j |S for all i = 1 . . . k and j = 1 ...m}
-#' \item{C4}{Y a ⊥Y b |R a and Y a ⊥Y b |R b}
+#' \item{C2}{\eqn{Y_i \perp X_j \divides S}{Y_i ⊥ X_j | S} for all \eqn{i = 1} \eqn{\ldots}{...} \eqn{k} and \eqn{j = 1} \eqn{\ldots}{...} \eqn{m}}
+#' \item{C4}{\eqn{Y_a \perp Y_b \divides R_a}{Y_a ⊥ Y_b |R_a} and \eqn{Y_a \perp Y_b \divides R_b}{Y_a ⊥ Y_b | R_b}}
+#' Conditional independence of A and B given C is denoted as \eqn{A \perp B \divides C}{A ⊥ B | C}.
 #' }
-#' Use local.dependency() to detect local dependency
+#' Use local.independence() to detect local dependency
 #' @return Returns a list of DIF-information
 #' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
 #' @seealso \code{\link{partgam_DIF}}
@@ -25,7 +27,7 @@
 #' item.DIF(DHP)
 #' @references
 #' Kreiner, S. & Christensen, K.B. (2011). Item Screening in Graphical Loglinear Rasch Models. *Psychometrika*, vol. 76, no. 2, pp. 228-256. DOI: 10.1007/s11336-9203-Y
-item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "hochberg", "hommel", "bonferroni", "BY", "none"),digits=2,only.significant=F,verbose=T){
+item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "hochberg", "hommel", "bonferroni", "BY", "none"),max.name.length=30,digits=2,only.significant=F,verbose=T){
   p.adj <- match.arg(p.adj)
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
@@ -53,6 +55,8 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
     item.names<-item.names[-removecols]
     item.labels<-item.labels[-removecols]
   }
+  item.names<-sapply(item.names, function(x) ifelse(nchar(x)>max.name.length,paste(substr(x,start = 1,stop = max.name.length),"..."),x))
+
   exoselected<-resp[no.na,exo]
   removeexo<-setdiff(colnames(resp[,exo]),colnames(exoselected))
   if(length(removeexo)>0) {

@@ -17,6 +17,8 @@ local.independence(do=NULL,resp=NULL,items=1:do$recursive.structure[1],digits=2,
 
 \item{digits}{Number of digits in table}
 
+\item{max.name.length}{Maximum length of item names (to be printed in tables)}
+
 \item{only.significant}{Only list fit values significantly different from 1}
 
 \item{verbose}{Print results}
@@ -30,8 +32,9 @@ Investigate items for local independence
 \details{
 Second step in item screening: Analysis of DIF and local dependence
 \describe{
-\item{C2}{Y i ⊥X j |S for all i = 1 . . . k and j = 1 ...m}
-\item{C4}{Y a ⊥Y b |R a and Y a ⊥Y b |R b}
+\item{C2}{\eqn{Y_i \perp X_j \divides S}{Y_i ⊥ X_j | S} for all \eqn{i = 1} \eqn{\ldots}{...} \eqn{k} and \eqn{j = 1} \eqn{\ldots}{...} \eqn{m}}
+\item{C4}{\eqn{Y_a \perp Y_b \divides R_a}{Y_a ⊥ Y_b | R_a} and \eqn{Y_a \perp Y_b \divides R_b}{Y_a ⊥ Y_b | R_b}}
+Conditional independence of A and B given C is denoted as \eqn{A \perp B \divides C}{A ⊥ B | C}.
 }
 #' Use item.DIF() for detection of Differential Item Functioning
 }

@@ -1,4 +1,4 @@
-#' @title Read DIGRAM Object
+#' @title Read DIGRAM files into digram.object
 #' @name read.digram
 #' @description Reads data from DIGRAM files and create a digram.object.
 #' @usage read.digram(project=NULL,path="")

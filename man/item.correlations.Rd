@@ -15,6 +15,8 @@ item.correlations(do=NULL,resp=NULL,items=1:do$recursive.structure[1],exo=(do$re
 
 \item{exo}{A vector of columns from the recoded data to include as exogenous variables in the analysis \emph{or} a character vector of variable labels}
 
+\item{max.name.length}{Maximum length of item names (to be printed in tables)}
+
 \item{accept.na}{A boolean. Include cases with missing values in responses}
 
 \item{verbose}{Print results}
@@ -28,9 +30,9 @@ Calculate item correlations, item-rest correlations and correlations between ite
 \details{
 First step in item screening: Analysis of consistency (Positive correlations)
 \describe{
-\item{M1}{Yi and Yj are positively correlated for all pairs of items}
-\item{M2}{Ya is positively monotonically related to the rest-score Ra and all subscores SB where Ya is not an element in B}
-\item{M3}{If X is positively related to Θ, then X will also be positively related to S, to all subscores, SA , and all item responses Yi}
+\item{M1}{\eqn{Y_i} and \eqn{Y_j} are positively correlated for all pairs of items}
+\item{M2}{\eqn{Y_a} is positively monotonically related to the rest-score \eqn{R_a} and all subscores \eqn{S_B} where \eqn{Y_a} \eqn{\not\in}{is not an element in} B}
+\item{M3}{If \eqn{X} is positively related to \eqn{\theta}, then \eqn{X} will also be positively related to \eqn{S}, to all subscores, \eqn{S_A}, and all item responses \eqn{Y_i}}
 }
 }
 \examples{

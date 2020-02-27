@@ -2,7 +2,7 @@
 % Please edit documentation in R/read.digram.R
 \name{read.digram}
 \alias{read.digram}
-\title{Read DIGRAM Object}
+\title{Read DIGRAM files into digram.object}
 \usage{
 read.digram(project=NULL,path="")
 }
