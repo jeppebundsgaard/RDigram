@@ -35,24 +35,51 @@ print.corr.matrix<-function(corr.matrix=NULL,pvals=NULL,cnames=NULL,rnames=NULL,
     }
   invisible(p)
 }
+#' Get variable labels
+#'
+#' @param do A digram.object
+#' @param items The variable.numbers of the items or exogeneous variables to provide the labels for
+#'
+#' @return Returns the variable.labels of the items/exogeneous variables .
+#' @export
+#'
+#' @examples
+#' get.labels(DHP,1:2)
 get.labels<-function(do,items=NULL) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   l<-sapply(do$variables,function(x) x$variable.label)
   if(!is.null(items)) l<-l[items]
   l
-
-  # if(is.null(items)) items<-colnames(do$recoded) else {
-  #   if(is.numeric(items)) items<-colnames(do$recoded)[items]
-  # }
-  # if(inherits(items,"character")) items<-which(items %in% colnames(recoded))
-  # sapply(do$variables,function(x) x$variable.label)
-
-  #all.vars<-t(sapply(do$variables,function(x) c(x$variable.name,x$variable.label)))
-  #apply(matrix(items),1,function(x) all.vars[all.vars[,1]==x,2])
 }
+
+#' Get variable names
+#'
+#' @param do A digram.object
+#' @param items The variable.numbers of the items or exogeneous variables to provide the names for
+#'
+#' @return Returns the variable.names of the items/exogeneous variables .
+#' @export
+#'
+#' @examples
+#' get.variable.names(DHP,1:2)
 get.variable.names<-function(do,items=NULL) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   n<-sapply(do$variables,function(x) x$variable.name)
   if(!is.null(items)) n<-n[items]
   n
+}
+item.names.shorten<-function(item.names,max.name.length) {
+  item.names<-sapply(item.names, function(x)
+    ifelse(nchar(x)>max.name.length,
+           paste0(substr(x,start = 1,stop = floor(max.name.length/2)-2),"...",substr(x,start = nchar(x)-floor(max.name.length/2)+2,stop = nchar(x))),
+           x)
+  )
+  dups<-which(duplicated(item.names))
+  numdup<-0
+  while(length(dups)>0) {
+    numdup<-numdup+1
+    item.names[dups]<-paste0(apply(array(item.names[dups]),1,substr,start=1,stop=max.name.length-numdup),rep("x",numdup))
+    dups<-which(duplicated(item.names))
+  }
+  item.names
 }

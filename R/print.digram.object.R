@@ -30,11 +30,21 @@ print.digram.object <- function(do=NULL) {
 
   }
   cat("\n\n",nrow(do$data)," cases in the dataset",sep="")
-  if(!is.null(do$LD)) {
-    cat("\n\nTestlets:\n *",paste(lapply(do$LD,function(x) paste(sapply(x,function(y) do$variables[[y]]["variable.name"]),collapse = " + ")),collapse = "\n * "))
+  if(!is.null(do$testlets)) {
+    cat("\n\nTestlets:\n *",
+        paste(
+          lapply(do$testlets,function(x)
+            paste0(x$label,": ",x$name,"\n",
+                   paste(sapply(x$testlet,function(y)
+                     do$variables[[y]]["variable.name"]),
+                     collapse = " + ")
+                   )
+            ),
+            collapse = "\n * ")
+    )
   }
-  if(!is.null(do$DIF)) {
-    cat("\n\nSplit items:\n *",paste(apply(do$DIF,1,function(x) paste(do$variables[[x[["var"]]]]$variable.name,"by",do$variables[[x[["exo"]]]]$variable.name)),collapse = "\n * "))
+  if(!is.null(do$splits)) {
+    cat("\n\nSplit items:\n *",paste(apply(do$split,1,function(x) paste(do$variables[[x[["var"]]]]$variable.name,"by",do$variables[[x[["exo"]]]]$variable.name)),collapse = "\n * "))
   }
 }
 #print(do)

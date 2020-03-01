@@ -20,8 +20,8 @@
 #'   \item{G:}{Are you able to wash thelower part of the body?}
 #'   \item{H:}{Are you able to cut your toenails?}
 #'   \item{I:}{Are you able to go to the toilet yourself?}
-#'   \item{J:}{Are You able to dress the lower part of the body?}
-#'   \item{K:Are you able to take shoes/stockings on/off?}
+#'   \item{J:}{Are you able to dress the lower part of the body?}
+#'   \item{K:}{Are you able to take shoes/stockings on/off?}
 #' Upper limb function
 #'   \item{L:}{Are you able to wash the upper part of the body?}
 #'   \item{M:}{Are you able to cut your fingernails?}

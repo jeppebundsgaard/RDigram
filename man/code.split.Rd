@@ -4,14 +4,14 @@
 \alias{code.split}
 \title{Code items to be split (as having DIF)}
 \usage{
-code.split(do, DIF.var, DIF.exo, append = F)
+code.split(do, split.var, split.on, append = F)
 }
 \arguments{
 \item{do}{A digram.object}
 
-\item{DIF.var}{String. The variables to split (having DIF). A comma separated list of variable numbers, labels or names.}
+\item{split.var}{String. The variables to split (having DIF). A comma separated list of variable numbers, labels or names.}
 
-\item{DIF.exo}{String. The exogenous variables to split on (causing DIF). A comma separated list of exogenous variable numbers, labels or names.}
+\item{split.on}{String. The exogenous variables to split on (causing DIF). A comma separated list of exogenous variable numbers, labels or names.}
 
 \item{append}{Logical.}
 }

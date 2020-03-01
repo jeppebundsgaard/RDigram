@@ -32,11 +32,21 @@ Investigate items for local independence
 \details{
 Second step in item screening: Analysis of DIF and local dependence
 \describe{
-\item{C2}{\eqn{Y_i \perp X_j \divides S}{Y_i ⊥ X_j | S} for all \eqn{i = 1} \eqn{\ldots}{...} \eqn{k} and \eqn{j = 1} \eqn{\ldots}{...} \eqn{m}}
-\item{C4}{\eqn{Y_a \perp Y_b \divides R_a}{Y_a ⊥ Y_b | R_a} and \eqn{Y_a \perp Y_b \divides R_b}{Y_a ⊥ Y_b | R_b}}
-Conditional independence of A and B given C is denoted as \eqn{A \perp B \divides C}{A ⊥ B | C}.
+\item{C4}{\eqn{Y_a \bot Y_b \mid R_a}{Y_a ⊥ Y_b | R_a} and \eqn{Y_a \bot Y_b \mid R_b}{Y_a ⊥ Y_b | R_b}}
+Conditional independence of A and B given C is denoted as \eqn{A \bot B \mid C}{A ⊥ B | C}.
 }
-#' Use item.DIF() for detection of Differential Item Functioning
+Use \code{\link[=item.DIF]{item.DIF()}} for detection of Differential Item Functioning
+
+If you want to use this function in R Markdown or Bookdown, you need to use xelatex as latex engine, and you need to force dev to use cairo_pdf or png.
+Add this in you yaml header:
+
+\code{output:\cr
+  pdf_document: \cr
+    latex_engine: xelatex}
+
+Add this in your setup chunck:
+
+\code{knitr::opts_chunk$set(echo = TRUE, dev = "cairo_pdf", dpi = 300)}
 }
 \examples{
 local.independence(DHP)
@@ -45,7 +55,7 @@ local.independence(DHP)
 Kreiner, S. & Christensen, K.B. (2011). Item Screening in Graphical Loglinear Rasch Models. \emph{Psychometrika}, vol. 76, no. 2, pp. 228-256. DOI: 10.1007/s11336-9203-Y
 }
 \seealso{
-\code{\link{partgam_LD}}
+\code{\link[=partgam_LD]{partgam_LD()}}, \code{\link[=item.DIF]{item.DIF()}}
 }
 \author{
 Jeppe Bundsgaard \href{mailto:jebu@edu.au.dk}{jebu@edu.au.dk}

@@ -44,10 +44,10 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
 
   item.labels<-get.labels(do,items)
   item.names<-get.variable.names(do,items)
-  item.names<-sapply(item.names, function(x) ifelse(nchar(x)>max.name.length,paste(substr(x,start = 1,stop = max.name.length),"..."),x))
+  item.names<-item.names.shorten(item.names,max.name.length)
 
   exo.names<-get.variable.names(do,exo)
-  exo.names<-sapply(exo.names, function(x) ifelse(nchar(x)>max.name.length,paste(substr(x,start = 1,stop = max.name.length),"..."),x))
+  exo.names<-item.names.shorten(exo.names,max.name.length)
 
   exos<-make.exo.dummies(do,exo,exoselected,exo.names)
   exoselected<-exos$exoselected

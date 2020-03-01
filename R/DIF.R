@@ -15,14 +15,25 @@
 #' @details
 #' Second step in item screening: Analysis of DIF and local dependency
 #' \describe{
-#' \item{C2}{\eqn{Y_i \perp X_j \divides S}{Y_i ⊥ X_j | S} for all \eqn{i = 1} \eqn{\ldots}{...} \eqn{k} and \eqn{j = 1} \eqn{\ldots}{...} \eqn{m}}
-#' \item{C4}{\eqn{Y_a \perp Y_b \divides R_a}{Y_a ⊥ Y_b |R_a} and \eqn{Y_a \perp Y_b \divides R_b}{Y_a ⊥ Y_b | R_b}}
-#' Conditional independence of A and B given C is denoted as \eqn{A \perp B \divides C}{A ⊥ B | C}.
+#' \item{C2}{\eqn{Y_i \perp X_j \mid S}{Y_i ⊥ X_j | S} for all \eqn{i = 1} \eqn{\ldots}{...} \eqn{k} and \eqn{j = 1} \eqn{\ldots}{...} \eqn{m}}
+#' \item{C4}{\eqn{Y_a \perp Y_b \mid R_a}{Y_a ⊥ Y_b |R_a} and \eqn{Y_a \perp Y_b \mid R_b}{Y_a ⊥ Y_b | R_b}}
+#' Conditional independence of A and B given C is denoted as \eqn{A \perp B \mid C}{A ⊥ B | C}.
 #' }
-#' Use local.independence() to detect local dependency
+#' Use [local.independence()] to detect local dependency
+#'
+#' If you want to use this function in R Markdown or Bookdown, you need to use xelatex as latex engine, and you need to force dev to use cairo_pdf or png.
+#' Add this in you yaml header:
+#'
+#' \code{output:\cr
+#'   pdf_document: \cr
+#'     latex_engine: xelatex}
+#'
+#' Add this in your setup chunck:
+#'
+#' \code{knitr::opts_chunk$set(echo = TRUE, dev = "cairo_pdf", dpi = 300)}
 #' @return Returns a list of DIF-information
 #' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
-#' @seealso \code{\link{partgam_DIF}}
+#' @seealso [partgam_LD()], [local.independence()]
 #' @examples
 #' item.DIF(DHP)
 #' @references
@@ -38,9 +49,17 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   } else {
     if(is.null(items)) items<-colnames(resp)
   }
+
   item.names<-get.variable.names(do,items)
+  if(inherits(items,"character")) items<-match(items,item.names)
   item.labels<-get.labels(do,items)
+
+  # Combine items with LD
+  environment(collapse.testlets) <- environment()
+  collapse.testlets()
+
   exo.names<-get.variable.names(do,exo)
+  if(inherits(exo,"character")) exo<-match(exo,exo.names)
   exo.labels<-get.labels(do,exo)
 
   header<-header.format("Test of Differential Item Functioning")
@@ -55,7 +74,8 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
     item.names<-item.names[-removecols]
     item.labels<-item.labels[-removecols]
   }
-  item.names<-sapply(item.names, function(x) ifelse(nchar(x)>max.name.length,paste(substr(x,start = 1,stop = max.name.length),"..."),x))
+  item.names<-item.names.shorten(item.names,max.name.length)
+  colnames(selected)<-item.names
 
   exoselected<-resp[no.na,exo]
   removeexo<-setdiff(colnames(resp[,exo]),colnames(exoselected))
@@ -70,7 +90,8 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   exos<-make.exo.dummies(do,exo,exoselected,exo.names,exo.labels)
   exoselected<-exos$exoselected
   exo.labels<-exos$exo.labels
-  exo.names<-exos$exo.names
+  exo.names<-item.names.shorten(exos$exo.names,max.name.length)
+
   exo<-exos$exo
   # Remove exos with no cases
   exoselected<-as.data.frame(exoselected[,apply(exoselected,2,sum)>0])
@@ -104,29 +125,23 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   #print.corr.matrix(corr.matrix=DIF.matrix[order.rows,order.cols,"gamma"],pvals = DIF.matrix[order.rows,order.cols,"p.adj"],cnames = exo.names[order.cols],rnames=item.names[order.rows],digits = digits)
 
   # Draw graph
-  nitem<-length(item.labels)
-  nexo<-length(exo.labels)
-  froms<-as.numeric(factor(result$Var,levels = colnames(exoselected)))+nitem
-  tos<-as.numeric(factor(result$Item,levels = colnames(selected)))
+  dograph<-as_tbl_graph(do,DIF=result[result[,5]<0.05,1:3])
+  p<-
+    ggraph::ggraph(dograph,layout="fr")+
+    ggraph::geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),round(abs(gamma),digits),""),alpha=ifelse(!is.na(gamma),abs(gamma),.4),color=is.na(gamma)),
+                   angle_calc="along",label_dodge=unit(.25,"cm"),end_cap = ggraph::square(.5, 'cm'),start_cap = ggraph::square(.5, 'cm'),arrow = arrow(angle=10,length=unit(.2,"cm")))+
+    ggraph::geom_node_label(mapping = aes(label=label,color=type)) +
+    theme_void()+
+    theme(legend.position = "none")+
+    ggraph::scale_edge_color_brewer(palette = "Set1" ,limits=c(FALSE,TRUE))+
+    scale_color_brewer(palette = "Set2")# ,limits=c(FALSE,TRUE))
 
-  item.nodes<-DiagrammeR::create_node_df(n=nitem,label=item.labels,fillcolor="ivory")
-  exo.nodes<-DiagrammeR::create_node_df(n=nexo,label=exo.labels,fillcolor="snow")
-  nodes<-rbind(item.nodes,exo.nodes)
-  edges<-DiagrammeR::create_edge_df(from = froms,to=tos,rel="DIF",label=ifelse(result$sig==" "," ",round(result$gamma,2)),color=rgb(.8,.8,0,ifelse(result$sig==" ",0, car::recode(abs(result$gamma),"NaN=1"))))
-  DIF.graph<-DiagrammeR::create_graph()%>%DiagrammeR::add_node_df(nodes)%>%DiagrammeR::add_edge_df(edges)
-  g<-DiagrammeR::render_graph(graph = DIF.graph,layout = "kk")
+
   if(knitr::is_latex_output() || knitr::is_html_output()) {
-    file_name<-paste0("DIF_",do$project,"_",items[1],".png")
-    # Thanks to https://github.com/rich-iannone/DiagrammeR/issues/344
-    g %>%
-      DiagrammeRsvg::export_svg() %>%
-      charToRaw() %>%
-      rsvg::rsvg_png(file_name)
-    cat("\n![](",file_name,")\n")
-  } else print(g)
+    print(p)
+  } else print(p)
 
 }
-#item.DIF(do=proces.do,items = grep(paste0("^",m), colnames(proces.do$recoded)))
 make.exo.dummies<-function(do,exo,exoselected,exo.names,exo.labels=NULL) {
   # Make dummies out of nominal variables
   for(i in exo) {

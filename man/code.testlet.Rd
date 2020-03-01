@@ -4,17 +4,19 @@
 \alias{code.testlet}
 \title{Code items as a testlet/local dependant}
 \usage{
-code.testlet(do, LD, append = F)
+code.testlet(do, testlet = NULL, names = NULL, labels = NULL, append = F)
 }
 \arguments{
 \item{do}{A digram.object}
 
-\item{LD}{String. The item pairs that are part of a testlet/are local dependant. Give as a list of comma separated variable numbers, variable labels or variable names}
+\item{testlet}{String. The items that are part of a testlet/are local dependant. Give as a list of comma separated variable numbers, variable labels or variable names}
 
-\item{append}{Logical. Append new LD variables to the existing ones.}
+\item{names}{A vector of strings naming the testlets. If names are not given, they are composed of the testlet item names.}
+
+\item{append}{Logical. Append new testlet variables to the existing ones.}
 }
 \value{
-Returns a digram.object with the revised LD-data.frame.
+Returns a digram.object with the revised testlet-data.frame.
 }
 \description{
 Code items as a testlet/local dependant
@@ -24,7 +26,7 @@ Local dependence is often caused by items sharing a common stimulus. This is cal
 }
 \examples{
 data(DHP)
-do<-code.testlet(do=DHP,LD=c("ab,dhp36 dhp37,5 6"))
+do<-code.testlet(do=DHP,testlet=c("ab,dhp36 dhp37,5 6"))
 }
 \references{
 Wang, W.-C., & Wilson, M. (2005). The Rasch Testlet Model. \emph{Applied Psychological Measurement}, 29(2), 126–149. https://doi.org/10.1177/0146621604271053

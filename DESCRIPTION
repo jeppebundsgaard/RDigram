@@ -11,16 +11,20 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.0.2
 Roxygen: list(markdown = TRUE,roclets = c("rd", "collate","namespace","vignette"))
+VignetteBuilder: knitr 
 Imports:
   car,
   MESS,
   DescTools,
   stringr,
   stringi,
-  DiagrammeR,
-  DiagrammeRsvg,
+  ggraph,
+  ggplot2,
   knitr,
   kableExtra,
   iarm, 
   TAM,
   eRm
+Depends:
+  tidygraph,
+  ggplot2

@@ -14,14 +14,24 @@
 #' @details
 #' Second step in item screening: Analysis of DIF and local dependence
 #' \describe{
-#' \item{C2}{\eqn{Y_i \perp X_j \divides S}{Y_i ⊥ X_j | S} for all \eqn{i = 1} \eqn{\ldots}{...} \eqn{k} and \eqn{j = 1} \eqn{\ldots}{...} \eqn{m}}
-#' \item{C4}{\eqn{Y_a \perp Y_b \divides R_a}{Y_a ⊥ Y_b | R_a} and \eqn{Y_a \perp Y_b \divides R_b}{Y_a ⊥ Y_b | R_b}}
-#' Conditional independence of A and B given C is denoted as \eqn{A \perp B \divides C}{A ⊥ B | C}.
+#' \item{C4}{\eqn{Y_a \bot Y_b \mid R_a}{Y_a ⊥ Y_b | R_a} and \eqn{Y_a \bot Y_b \mid R_b}{Y_a ⊥ Y_b | R_b}}
+#' Conditional independence of A and B given C is denoted as \eqn{A \bot B \mid C}{A ⊥ B | C}.
 #' }
-#' #' Use item.DIF() for detection of Differential Item Functioning
+#' Use [item.DIF()] for detection of Differential Item Functioning
+#'
+#'If you want to use this function in R Markdown or Bookdown, you need to use xelatex as latex engine, and you need to force dev to use cairo_pdf or png.
+#' Add this in you yaml header:
+#'
+#' \code{output:\cr
+#'   pdf_document: \cr
+#'     latex_engine: xelatex}
+#'
+#' Add this in your setup chunck:
+#'
+#' \code{knitr::opts_chunk$set(echo = TRUE, dev = "cairo_pdf", dpi = 300)}
 #' @return Returns a list of local dependencies
 #' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
-#' @seealso \code{\link{partgam_LD}}
+#' @seealso [partgam_LD()], [item.DIF()]
 #' @examples
 #' local.independence(DHP)
 #' @references
@@ -36,37 +46,20 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
   } else {
     if(is.null(items)) items<-colnames(resp)
   }
-  if(inherits(items,"character")) items<-match(items,item.names)
   item.names<-get.variable.names(do,items)
+  if(inherits(items,"character")) items<-match(items,item.names)
   item.labels<-get.labels(do,items)
   header<-header.format("Test of local independence")
   # Combine items with LD
-  if(!is.null(do$LD)) {
-    for(LDs in do$LD){
-        LDs<-(LDs[LDs %in% items])
-        if(length(LDs)>0) {
-        newitem<-ncol(resp)+1
-        items<-c(items,newitem)
-        olditems<-which(items %in% LDs)
-        # Recode
-        resp[,newitem]<-apply(resp[,LDs],1,sum,na.rm=T)
-        # Combine names and labels
-        newname<-paste(item.names[olditems],collapse = " + ")
-        item.names<-c(item.names,newname)
-        colnames(resp)[newitem]<-newname
-        item.labels<-c(item.labels,paste(item.labels[olditems],collapse = "+"))
-        item.names<-item.names[-olditems]
-        item.labels<-item.labels[-olditems]
-        # Remove item-nums
-        items<-c(items[-olditems])
-      }
-    }
-  }
-  item.names<-sapply(item.names, function(x) ifelse(nchar(x)>max.name.length,paste(substr(x,start = 1,stop = max.name.length),"..."),x))
+  environment(collapse.testlets) <- environment()
+  collapse.testlets()
+
+  item.names<-item.names.shorten(item.names,max.name.length)
   selected<-na.omit(resp[,items])
   sums<-apply(selected,2,sum,na.rm=T)
   if(!all(sums>0)) {
     removecols<-sums==0
+    items<-items[!removecols]
     warning(paste("Some items had no variation. The following items have been removed:",paste(item.names[removecols],collapse = ", ")))
     item.names<-item.names[!removecols]
     item.labels<-item.labels[!removecols]
@@ -76,6 +69,7 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
   if(ncol(selected)<=2) {
     warning("More that two items are needed for analysis of local independency.")
   } else {
+    colnames(selected)<-item.names
     sink("/dev/null")
     orig.result<-iarm::partgam_LD(selected,p.adj = p.adj)
     sink()
@@ -113,27 +107,21 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
       print.corr.matrix(corr.matrix=dep.matrix[order.rows,order.cols,"gamma"],pvals = dep.matrix[order.rows,order.cols,"p.adj"],cnames = item.labels[order.labels],rnames=paste(item.labels[order.names],item.names[order.names],sep = ": "),digits = digits) #rownames(dep.matrix) erstattet af item.names
     #print.corr.matrix(corr.matrix=dep.matrix[order.rows,order.cols,"gamma"],pvals = dep.matrix[order.rows,order.cols,"p.adj"],cnames = item.labels[order.cols],rnames=paste(item.labels[order.rows],item.names[order.rows],sep = ": "),digits = digits) #rownames(dep.matrix) erstattet af item.names
 
-    # Draw graph
-    nitem<-length(items)
-    #item.labels<-as.factor(get.labels(do,items = items))
-    froms<-as.numeric(factor(result$Item1,levels = colnames(selected)))
-    tos<-as.numeric(factor(result$Item2,levels = colnames(selected)))
 
-    sigval<-(result$sig!=" " & !is.na(result$gamma))
+    dograph<-as_tbl_graph(do,LD=orig.result[orig.result[,5]<0.05,1:3])
+    p<-
+      ggraph::ggraph(dograph,layout="fr")+
+      ggraph::geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),round(abs(gamma),digits),""),alpha=ifelse(!is.na(gamma),abs(gamma),.4),color=is.na(gamma)),
+                     angle_calc="along",label_dodge=unit(.25,"cm"),end_cap = ggraph::square(.5, 'cm'),start_cap = ggraph::square(.5, 'cm'),arrow = arrow(angle=10,length=unit(.2,"cm")))+
+      ggraph::geom_node_label(mapping = aes(label=label,color=type)) +
+      theme_void()+
+      theme(legend.position = "none")+
+      ggraph::scale_edge_color_brewer(palette = "Set1" ,limits=c(FALSE,TRUE))+
+      scale_color_brewer(palette = "Set2")# ,limits=c(FALSE,TRUE))
 
-    nodes<-DiagrammeR::create_node_df(n=nitem,label=item.labels,fillcolor="ivory")
-    edges<-DiagrammeR::create_edge_df(from = froms,to=tos,label=ifelse(sigval,round(as.numeric(result$gamma),2)," "),color=rgb(.8,.8,0,ifelse(sigval,abs(car::recode(as.numeric(result$gamma),"NaN=1")),0)))
-    LD.graph<-DiagrammeR::create_graph()%>%DiagrammeR::add_node_df(nodes)%>%DiagrammeR::add_edge_df(edges)
-    g<-DiagrammeR::render_graph(graph = LD.graph,layout = "kk")
-    if(knitr::is_latex_output() || knitr::is_html_output()) {
-      file_name<-paste0("LD_",do$project,"_",items[1],".png")
-      # Thanks to https://github.com/rich-iannone/DiagrammeR/issues/344
-      g %>%
-        DiagrammeRsvg::export_svg() %>%
-        charToRaw() %>%
-        rsvg::rsvg_png(file_name)
-      cat("\n![](",file_name,")\n")
-    } else print(g)
+   if(knitr::is_latex_output() || knitr::is_html_output()) {
+     print(p)
+    } else print(p)
 
     invisible(orig.result)
   }

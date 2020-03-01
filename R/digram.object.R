@@ -84,46 +84,177 @@ digram.recode<-function(data,variables,filter.conditions=NULL) {
     return(recoded)
   }))
 }
-# a<-digram.recode(DHP$data,DHP$variables)
-# all(a==DHP$recoded)
+#' Create a tidygraph object from a digram.object
+#'
+#' @param do A digram.object.
+#' @param LD A data.frame with columns for item1, item2 and gamma coefficient. Items can be variable.names, variable.columns or item numbers.
+#' @param DIF A data.frame with columns for item, exogenous variable and gamma coefficient. Items and exogenous variables can be variable.names, variable.columns or item numbers.
+#' @usage as_tbl_graph(do)
+#' @return Returns a tbl_graph
+#' @export
+#' @seealso [tidygraph::as_tbl_graph()]
+#' @examples
+#' library(ggraph)
+#' library(tidygraph)
+#' dograph<-as_tbl_graph(DHP)
+#' ggraph(dograph,layout="fr")+geom_edge_link()+geom_node_label(mapping = aes(label=label))
+#' ggraph(dograph,layout="fr")+geom_edge_link()+geom_node_label(mapping = aes(label=name))
+#'
+#' # Show arrows
+#' ggraph(dograph,layout="fr")+geom_edge_link(end_cap = square(.5, 'cm'),arrow = arrow(angle=10,length=unit(.2,"cm")))+geom_node_label(mapping = aes(label=label))
+#'
+#' # A digram.object with a testlet
+#' dograph<-as_tbl_graph(code.testlet(DHP,"a b c"))
+#' ggraph(dograph,layout="fr")+geom_edge_link(end_cap = square(.5, 'cm'),arrow = arrow(angle=10,length=unit(.2,"cm")))+geom_node_label(mapping = aes(label=label))
+#'
+#' # Local dependecy and DIF
+#' dograph<-as_tbl_graph(DHP,LD=data.frame(item1=c(5,3),item2=c(6,5),gamma=c(.53,-.38)),DIF=data.frame(item=c(4),exo=c(8),gamma=c(.27)))
+#' ggraph(dograph,layout="fr")+geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),abs(gamma),""),alpha=ifelse(!is.na(gamma),gamma,1),color=ifelse(!is.na(gamma),2,1)),angle_calc="along",label_dodge=unit(.25,"cm"),end_cap = square(.5, 'cm'),arrow = arrow(angle=10,length=unit(.2,"cm")))+geom_node_label(mapping = aes(label=label))
+as_tbl_graph.digram.object<-function(do,items=NULL,exo=NULL,LD=NULL,DIF=NULL){
+  if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
+  resp<-do$recoded
+  if(is.null(items)) items<-1:do$recursive.structure[1]
+  if(is.null(exo)) exo<-if(ncol(resp)>do$recursive.structure[1]) (do$recursive.structure[1]+1):ncol(resp) else NULL
 
+  item.names<-get.variable.names(do,items)
+  if(inherits(items,"character")) items<-match(items,item.names)
+  item.labels<-get.labels(do,items)
+  exo.names<-get.variable.names(do,exo)
+  if(inherits(exo,"character")) exo<-match(exo,exo.names)
+  exo.labels<-get.labels(do,exo)
+  nitems<-length(items)
+  nexo<-length(exo)
+  ntestlets<-0
+
+  if(!is.null(LD) || !is.null(DIF)) {
+    environment(collapse.testlets) <- environment()
+    collapse.testlets()
+    ntestlets<-length(do$testlets)
+  } else if(!is.null(do$testlets)) {
+    testlet.edges<-lapply(do$testlets,function(x) {
+      testlet<-x$testlet
+      nitem<-length(testlet)
+      from<-unlist(sapply(1:(nitem-1),function(y) rep(testlet[y]+2,nitem-y))) # We add 2 because we have theta and total score
+      to<-unlist(sapply(2:nitem,function(y) testlet[y:nitem]+2)) # Ditto
+      c(from,to,to,from)
+    })
+    testlet.edges<-as.data.frame(matrix(unlist(testlet.edges),ncol=2))
+    colnames(testlet.edges)<-c("from","to")
+    testlet.edges$gamma<-NA
+  }
+  if(!is.null(do$split)) {
+    warning("Graphing of split items not implemented yet.")
+  }
+  if(!is.null(LD)) {
+    if(nrow(LD)>0){
+      if(ncol(LD)!=3) stop("LD needs to have three columns: item1, item2, and gamma")
+      colnames(LD)<-c("from","to","gamma")
+      maxnl<-max(nchar(LD$from),nchar(LD$to))
+      LD$from<-apply(array(LD$from),1,function(x) which(x==item.names.shorten(item.names,maxnl))) + 2  # We add 2 because we have theta and total score
+      LD$to<-apply(array(LD$to),1,function(x) which(x==item.names.shorten(item.names,maxnl))) + 2
+    }
+  }
+  if(!is.null(DIF)) {
+    if(nrow(DIF)>0){
+      if(ncol(DIF)!=3) stop("DIF needs to have three columns: item, exo, and gamma")
+      colnames(DIF)<-c("to","from","gamma")
+      maxnl<-max(nchar(apply(array(DIF$from),1,sub,pattern=",.*",replacement="")),nchar(DIF$to))
+      DIF$from<-apply(array(DIF$from),1,function(x) which(sub(",.*","",x)==item.names.shorten(exo.names,maxnl))) + 2 + nitems # We add 2 and nitems because we have theta and total score and items before exos
+      DIF$to<-apply(array(DIF$to),1,function(x) which(x==item.names.shorten(item.names,maxnl))) + 2
+      # DIF$from<-apply(array(DIF$from),1,match,exo.names) + 2 + nitems # We add 2 and nitems because we have theta and total score and items before exos
+      # DIF$to<-apply(array(DIF$to),1,match,item.names) + 2  # We add 2 because we have theta and total score
+
+    }
+  }
+  nitems<-length(items)
+  nexo<-length(exo)
+  nodes<-rbind(data.frame(name=c("Theta","Total Score"),label=c("theta","S"),type=rep("Ability",2),stringsAsFactors = F),#,column.number=c(0,0)
+               data.frame(name=item.names,label=item.labels,type=c(rep("Item",nitems-ntestlets),rep("Testlet",ntestlets))), #t(sapply(1:do$recursive.structure[1], function(x) unlist(do$variables[[x]][c("variable.name","variable.label","column.number")]))),
+               data.frame(name=exo.names,label=exo.labels,type=rep("Exo",nexo))#t(sapply((do$recursive.structure[1]+1):do$recursive.structure[2], function(x) unlist(do$variables[[x]][c("variable.name","variable.label","column.number")])))
+  )
+
+#  nodes$type<-c(rep("Ability",2),rep("Item",do$recursive.structure[1]),rep("Exo",do$recursive.structure[2]-do$recursive.structure[1]))
+#  colnames(nodes)<-c("name","label","colnumber","type")
+  edges<-data.frame(
+    from=c(1,rep(2,nitems),(nitems+3):(nitems+nexo+2)),
+    to=c(2,3:(nitems+2),rep(1,nexo)))
+  edges$gamma<-NA
+  if(exists("testlet.edges")) edges<-rbind(edges,testlet.edges)
+  if(exists("LD")) edges<-rbind(edges,LD)
+  if(exists("DIF")) edges<-rbind(edges,DIF)
+
+  tbl_graph(nodes=nodes,edges=edges,directed = T)
+}
 #' Code items as a testlet/local dependant
 #'
 #' @param do A digram.object
-#' @param LD String. The item pairs that are part of a testlet/are local dependant. Give as a list of comma separated variable numbers, variable labels or variable names
-#' @param append Logical. Append new LD variables to the existing ones.
+#' @param testlet String. The items that are part of a testlet/are local dependant. Give as a list of comma separated variable numbers, variable labels or variable names
+#' @param names A vector of strings naming the testlets. If names are not given, they are composed of the testlet item names.
+#' @param append Logical. Append new testlet variables to the existing ones.
 #'
-#' @return Returns a digram.object with the revised LD-data.frame.
+#' @return Returns a digram.object with the revised testlet-data.frame.
 #' @export
 #' @details Local dependence is often caused by items sharing a common stimulus. This is called testlets or item bundles (Wang & Wilson 2006. Coding for Local Dependence is the same as identifying a testlet or an item bundle.
 #' @references
 #' Wang, W.-C., & Wilson, M. (2005). The Rasch Testlet Model. *Applied Psychological Measurement*, 29(2), 126–149. https://doi.org/10.1177/0146621604271053
 #' @examples
 #' data(DHP)
-#' do<-code.testlet(do=DHP,LD=c("ab,dhp36 dhp37,5 6"))
-code.testlet<-function(do,LD,append=F) {
+#' do<-code.testlet(do=DHP,testlet=c("ab,dhp36 dhp37,5 6"))
+code.testlet<-function(do,testlet=NULL,names=NULL,labels=NULL,append=F) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
-  if(is.null(LD)) stop("You need to provide a list of variables which are local dependent")
-  pairs<-strsplit(x = LD, split =" *, *")[[1]]
-  LDs<-lapply(pairs,function(x) {
-      pair<-strsplit(x," +")[[1]]
-      if(length(pair)<2) pair<-strsplit(pair,"")[[1]]
-      pair<-sapply(pair,function(x) ifelse(grepl("^[0-9]$",x),as.numeric(x),x))
-      sapply(pair,get.column.no,do=do)
+  if(is.null(testlet)) stop("You need to provide a list of variables which are local dependent")
+  testlet.strs<-strsplit(x = testlet, split =" *, *")[[1]]
+  no<-0
+  testlets<-lapply(testlet.strs,function(x) {
+      no<<-no+1
+      testlet<-strsplit(x," +")[[1]]
+      if(length(testlet)<2) testlet<-strsplit(testlet,"")[[1]]
+      testlet<-sapply(testlet,function(x) ifelse(grepl("^[0-9]$",x),as.numeric(x),x))
+      testlet<-sapply(testlet,get.column.no,do=do)
+      name<-ifelse(is.null(names[no]),
+                   paste(get.variable.names(do,testlet),collapse = " + "),
+                   names[no])
+      label<-ifelse(is.null(labels[no]),
+                   paste(get.labels(do,testlet),collapse = " + "),
+                   labels[no])
+      list(testlet=testlet,name=name,label=label)
   })
-  # rownames(do$LD)<-NULL
-  # colnames(do$LD)<-paste("var",1:ncol(do$LD))
-  if(append && !is.null(do$LD)) {
-    do$LD<-append(do$LD,LDs)
-  } else do$LD<-LDs
+  if(append && !is.null(do$testlets)) {
+    do$testlets<-append(do$testlets,testlets)
+  } else do$testlets<-testlets
 
   do
+}
+# Internal function to collapse testlets
+collapse.testlets<-function(){
+  if(!is.null(do$testlets)) {
+    for(tlist in do$testlets){
+      testlet<-tlist$testlet
+      testlet<-(testlet[testlet %in% items])
+      if(length(testlet)>0) {
+        newitem<-ncol(resp)+1
+        items<<-c(items,newitem)
+        olditems<-which(items %in% testlet)
+        # Recode
+        resp[,newitem]<<-apply(resp[,testlet],1,sum,na.rm=T)
+        # Combine names and labels
+        newname<-tlist$name
+        item.names<<-c(item.names,newname)
+        colnames(resp)[newitem]<<-newname
+        item.labels<<-c(item.labels,tlist$label)
+        item.names<<-item.names[-olditems]
+        item.labels<<-item.labels[-olditems]
+        # Remove item-nums
+        items<<-c(items[-olditems])
+      }
+    }
+  }
 }
 #' Code items to be split (as having DIF)
 #'
 #' @param do A digram.object
-#' @param DIF.var String. The variables to split (having DIF). A comma separated list of variable numbers, labels or names.
-#' @param DIF.exo String. The exogenous variables to split on (causing DIF). A comma separated list of exogenous variable numbers, labels or names.
+#' @param split.var String. The variables to split (having DIF). A comma separated list of variable numbers, labels or names.
+#' @param split.on String. The exogenous variables to split on (causing DIF). A comma separated list of exogenous variable numbers, labels or names.
 #' @param append Logical.
 #' @details If more variables and exogenous variables are given, all possible combinations of these are split.
 #' @return
@@ -132,16 +263,16 @@ code.testlet<-function(do,LD,append=F) {
 #' @examples
 #' data(DHP)
 #' do<-code.split(DHP,"a,b","under60")
-code.split<-function(do,DIF.var,DIF.exo,append=F) {
+code.split<-function(do,split.var,split.on,append=F) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
-  if(is.null(DIF.var)) stop("You need to provide one or more variables which have DIF")
-  if(is.null(DIF.exo)) stop("You need to provide one or more exogenous variables which cause DIF")
+  if(is.null(split.var)) stop("You need to provide one or more variables to split")
+  if(is.null(split.on)) stop("You need to provide one or more exogenous variables to split on")
 
-  if(append && !is.null(do$DIF)) DIFs<-do$DIF else DIFs<-c()
-  vars<-strsplit(x = DIF.var, split =" *, *")[[1]]
+  if(append && !is.null(do$splits)) splits<-do$splits else splits<-c()
+  vars<-strsplit(x = split.var, split =" *, *")[[1]]
   var.nums<-sapply(vars,get.column.no,do=do)
-  exos<-strsplit(x = DIF.exo, split =" *, *")[[1]]
+  exos<-strsplit(x = split.on, split =" *, *")[[1]]
   exo.nums<-sapply(exos,get.column.no,do=do)
-  do$DIF<-rbind(DIFs,expand.grid(var=var.nums,exo=exo.nums))
+  do$splits<-rbind(splits,expand.grid(var=var.nums,exo=exo.nums))
   do
 }
