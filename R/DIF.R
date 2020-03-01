@@ -125,7 +125,7 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   #print.corr.matrix(corr.matrix=DIF.matrix[order.rows,order.cols,"gamma"],pvals = DIF.matrix[order.rows,order.cols,"p.adj"],cnames = exo.names[order.cols],rnames=item.names[order.rows],digits = digits)
 
   # Draw graph
-  dograph<-as_tbl_graph(do,DIF=result[result[,5]<0.05,1:3])
+  dograph<-as_tbl_graph(do,items=items,exo=exo,DIF=result[result[,5]<0.05,1:3])
   p<-
     ggraph::ggraph(dograph,layout="fr")+
     ggraph::geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),round(abs(gamma),digits),""),alpha=ifelse(!is.na(gamma),abs(gamma),.4),color=is.na(gamma)),

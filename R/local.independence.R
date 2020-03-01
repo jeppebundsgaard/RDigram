@@ -108,7 +108,7 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
     #print.corr.matrix(corr.matrix=dep.matrix[order.rows,order.cols,"gamma"],pvals = dep.matrix[order.rows,order.cols,"p.adj"],cnames = item.labels[order.cols],rnames=paste(item.labels[order.rows],item.names[order.rows],sep = ": "),digits = digits) #rownames(dep.matrix) erstattet af item.names
 
 
-    dograph<-as_tbl_graph(do,LD=orig.result[orig.result[,5]<0.05,1:3])
+    dograph<-as_tbl_graph(do,items=items,LD=orig.result[orig.result[,5]<0.05,1:3])
     p<-
       ggraph::ggraph(dograph,layout="fr")+
       ggraph::geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),round(abs(gamma),digits),""),alpha=ifelse(!is.na(gamma),abs(gamma),.4),color=is.na(gamma)),
