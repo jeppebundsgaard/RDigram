@@ -168,7 +168,7 @@ as_tbl_graph.digram.object<-function(do,items=NULL,exo=NULL,LD=NULL,DIF=NULL){
   }
   nitems<-length(items)
   nexo<-length(exo)
-  nodes<-rbind(data.frame(name=c("Theta","Total Score"),label=c("theta","S"),type=rep("Ability",2),stringsAsFactors = F),#,column.number=c(0,0)
+  nodes<-rbind(data.frame(name=c("Theta","Total Score"),label=c("θ","S"),type=rep("Ability",2),stringsAsFactors = F),#,column.number=c(0,0)
                data.frame(name=item.names,label=item.labels,type=c(rep("Item",nitems-ntestlets),rep("Testlet",ntestlets))), #t(sapply(1:do$recursive.structure[1], function(x) unlist(do$variables[[x]][c("variable.name","variable.label","column.number")]))),
                data.frame(name=exo.names,label=exo.labels,type=rep("Exo",nexo))#t(sapply((do$recursive.structure[1]+1):do$recursive.structure[2], function(x) unlist(do$variables[[x]][c("variable.name","variable.label","column.number")])))
   )
