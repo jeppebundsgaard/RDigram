@@ -228,11 +228,14 @@ code.testlet<-function(do,testlet=NULL,names=NULL,labels=NULL,append=F) {
 # Internal function to collapse testlets
 collapse.testlets<-function(){
   if(!is.null(do$testlets)) {
+    testletno<-0
     for(tlist in do$testlets){
+      testletno<-testletno+1
       testlet<-tlist$testlet
       testlet<-(testlet[testlet %in% items])
+      newitem<-length(do$variables)+testletno
+      resp[,newitem]<<-NA
       if(length(testlet)>0) {
-        newitem<-ncol(resp)+1
         items<<-c(items,newitem)
         olditems<-which(items %in% testlet)
         # Recode
