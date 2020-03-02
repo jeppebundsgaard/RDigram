@@ -129,7 +129,7 @@ as_tbl_graph.digram.object<-function(do,items=NULL,exo=NULL,LD=NULL,DIF=NULL){
   if(!is.null(LD) || !is.null(DIF)) {
     environment(collapse.testlets) <- environment()
     collapse.testlets()
-    ntestlets<-length(do$testlets)
+    ntestlets<-sum(items>length(do$variables))
   } else if(!is.null(do$testlets)) {
     testlet.edges<-lapply(do$testlets,function(x) {
       testlet<-x$testlet

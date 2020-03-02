@@ -48,7 +48,12 @@ print.corr.matrix<-function(corr.matrix=NULL,pvals=NULL,cnames=NULL,rnames=NULL,
 get.labels<-function(do,items=NULL) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   l<-sapply(do$variables,function(x) x$variable.label)
-  if(!is.null(items)) l<-l[items]
+  if(!is.null(items)) {
+    if(max(items)>length(l)) { # We have testlet items
+      l<-c(l,sapply(do$testlets,function(x) x$label))
+    }
+    l<-l[items]
+  }
   l
 }
 
@@ -65,7 +70,12 @@ get.labels<-function(do,items=NULL) {
 get.variable.names<-function(do,items=NULL) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   n<-sapply(do$variables,function(x) x$variable.name)
-  if(!is.null(items)) n<-n[items]
+  if(!is.null(items)) {
+    if(max(items)>length(n)) { # We have testlet items
+      n<-c(n,sapply(do$testlets,function(x) x$name))
+    }
+    n<-n[items]
+  }
   n
 }
 item.names.shorten<-function(item.names,max.name.length) {

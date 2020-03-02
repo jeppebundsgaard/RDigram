@@ -99,15 +99,12 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
     order.rows<-order(apply(dep.matrix[,,"gamma"],1,function(x) sum(is.na(x))-sum(is.nan(x))),decreasing = F)
     order.names<-match(rownames(dep.matrix[,,"gamma"])[order.rows],colnames(selected))
     order.labels<-match(colnames(dep.matrix[,,"gamma"])[order.cols],colnames(selected))
-    #item.labels<-as.factor(get.labels(do,items = items))
-    #item.labels<-get.labels(do,colnames(siggammas))
-    #rownames(siggammas)<-item.labels
+
 
     if(verbose)
       print.corr.matrix(corr.matrix=dep.matrix[order.rows,order.cols,"gamma"],pvals = dep.matrix[order.rows,order.cols,"p.adj"],cnames = item.labels[order.labels],rnames=paste(item.labels[order.names],item.names[order.names],sep = ": "),digits = digits) #rownames(dep.matrix) erstattet af item.names
-    #print.corr.matrix(corr.matrix=dep.matrix[order.rows,order.cols,"gamma"],pvals = dep.matrix[order.rows,order.cols,"p.adj"],cnames = item.labels[order.cols],rnames=paste(item.labels[order.rows],item.names[order.rows],sep = ": "),digits = digits) #rownames(dep.matrix) erstattet af item.names
 
-
+    # Draw graph
     dograph<-as_tbl_graph(do,items=items,LD=orig.result[orig.result[,5]<0.05,1:3])
     p<-
       ggraph::ggraph(dograph,layout="fr")+

@@ -122,7 +122,6 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
 
   if(verbose)
     print.corr.matrix(corr.matrix=DIF.matrix[,,"gamma"],pvals = DIF.matrix[,,"p.adj"],cnames = colnames(DIF.matrix[,,"gamma"]),rnames=rownames(DIF.matrix[,,"gamma"]),digits = digits)
-  #print.corr.matrix(corr.matrix=DIF.matrix[order.rows,order.cols,"gamma"],pvals = DIF.matrix[order.rows,order.cols,"p.adj"],cnames = exo.names[order.cols],rnames=item.names[order.rows],digits = digits)
 
   # Draw graph
   dograph<-as_tbl_graph(do,items=items,exo=exo,DIF=result[result[,5]<0.05,1:3])
@@ -134,7 +133,7 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
     theme_void()+
     theme(legend.position = "none")+
     ggraph::scale_edge_color_brewer(palette = "Set1" ,limits=c(FALSE,TRUE))+
-    scale_color_brewer(palette = "Set2")# ,limits=c(FALSE,TRUE))
+    scale_color_brewer(palette = "Set2")
 
 
   if(knitr::is_latex_output() || knitr::is_html_output()) {
