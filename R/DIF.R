@@ -144,10 +144,10 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
 make.exo.dummies<-function(do,exo,exoselected,exo.names,exo.labels=NULL) {
   # Make dummies out of nominal variables
   for(i in exo) {
-    if(do$variables[[i]]$variable.type=="nominal") {
+    if(do$variables[[i]]$variable.type=="nominal" && do$variables[[i]]$ncat>2) {
       exonum<-i-do$recursive.structure[1]
       dummies<-psych::dummy.code(exoselected[,exonum])
-      colnames(dummies)<-paste(do$variables[[i]]$variable.name,colnames(dummies),sep = ", ")
+      colnames(dummies)<-paste(do$variables[[i]]$variable.name,colnames(dummies),sep = ", ") # Maybe: do$variables[[i]]$category.names instead of colnames()
       exoselected<-cbind(exoselected[,-exonum],dummies)
       exo.names<-c(exo.names[-exonum],colnames(dummies))
       if(!is.null(exo.labels)) exo.labels<-c(exo.labels[-exonum],paste0(exo.labels[exonum],1:ncol(dummies)))

@@ -88,7 +88,7 @@ item.names.shorten<-function(item.names,max.name.length) {
   numdup<-0
   while(length(dups)>0) {
     numdup<-numdup+1
-    item.names[dups]<-paste0(apply(array(item.names[dups]),1,substr,start=1,stop=max.name.length-numdup),rep("x",numdup))
+    item.names[dups]<-paste0(apply(array(item.names[dups]),1,substr,start=1,stop=max.name.length-numdup),paste(rep("x",numdup),collapse = ""))
     dups<-which(duplicated(item.names))
   }
   item.names
