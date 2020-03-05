@@ -4,12 +4,22 @@
 \alias{variable.update}
 \title{Update variable}
 \usage{
-variable.update(do=NULL,variable=NULL,variable.name=NULL,variable.label=NULL,category.names=c(),variable.type=c("ordinal","nominal"),minimum=NULL,maximum=NULL,cutpoints=c())
+variable.update(
+  do = NULL,
+  variable.to.update = NULL,
+  variable.name = NULL,
+  variable.label = NULL,
+  category.names = NULL,
+  variable.type = NULL,
+  minimum = NULL,
+  maximum = NULL,
+  cutpoints = NULL
+)
 }
 \arguments{
 \item{do}{A digram.object}
 
-\item{variable.to.update}{The number or name of the variable that should be updated}
+\item{variable.to.update}{The number or name of the variable(s) which should be updated}
 
 \item{variable.name}{New name for the variable (string)}
 
@@ -28,13 +38,19 @@ Category 2: cutpoint(1) < values <= cutpoint(2)
 Category N: cutpoint(n) < values <= maximum}
 }
 \value{
-Returns a DIGRAM object with an updated variable
+Returns a DIGRAM object with (an) updated variable(s)
 }
 \description{
-Update variable in DIGRAM Object.
+Update one or more variable(s) in DIGRAM Object.
+}
+\details{
+A set of variables can be updated by providing a vector of variable names/numbers to update and ordered lists whith their new properties
 }
 \examples{
+data(DHP)
 DHP<-variable.update(do=DHP,variable.to.update="dhp36",cutpoints=c(2,3))
+DHP<-variable.update(do=DHP,variable.to.update=c(1,3),variable.label=list("32","36"))
+
 }
 \references{
 Kreiner, S. (2003). \emph{Introduction to DIGRAM}. Dept. of Biostatistics, University of Copenhagen.

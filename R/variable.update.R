@@ -1,9 +1,8 @@
 #' @title Update variable
 #' @name variable.update
-#' @description Update variable in DIGRAM Object.
-#' @usage variable.update(do=NULL,variable=NULL,variable.name=NULL,variable.label=NULL,category.names=c(),variable.type=c("ordinal","nominal"),minimum=NULL,maximum=NULL,cutpoints=c())
+#' @description Update one or more variable(s) in DIGRAM Object.
 #' @param do A digram.object
-#' @param variable.to.update The number or name of the variable that should be updated
+#' @param variable.to.update The number or name of the variable(s) which should be updated
 #' @param variable.name New name for the variable (string)
 #' @param variable.label New label for the variable (one or more uppercase letters)
 #' @param variable.type Type of variable ("ordinal" or "nominal")
@@ -15,29 +14,37 @@
 #' ...
 #' Category N: cutpoint(n) < values <= maximum
 #' @export
-#' @return Returns a DIGRAM object with an updated variable
+#' @details A set of variables can be updated by providing a vector of variable names/numbers to update and ordered lists whith their new properties
+#' @return Returns a DIGRAM object with (an) updated variable(s)
 #' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
 #' @examples
+#' data(DHP)
 #' DHP<-variable.update(do=DHP,variable.to.update="dhp36",cutpoints=c(2,3))
+#' DHP<-variable.update(do=DHP,variable.to.update=c(1,3),variable.label=list("32","36"))
+#'
 #' @references
 #' Kreiner, S. (2003). *Introduction to DIGRAM*. Dept. of Biostatistics, University of Copenhagen.
-variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,variable.label=NULL,category.names=NULL,variable.type=c("nominal","ordinal"),minimum=NULL,maximum=NULL,cutpoints=NULL) {
+variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,variable.label=NULL,category.names=NULL,variable.type=NULL,minimum=NULL,maximum=NULL,cutpoints=NULL) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   if(is.null(variable.to.update)) stop("You need to provide a number or name of the variable to update")
-  variable.type<-match.arg(variable.type)
   #data<-as.data.frame(data)
-  variable.num<-if(class(variable.to.update)=="numeric") variable.to.update else which(sapply(do$variables,function(x) x[["variable.name"]]==variable.to.update))
-  variable<-do$variables[[variable.num]]
-  do$variables[[variable.num]]<-list(variable.name=ifelse(is.null(variable.name),variable$variable.name,variable.name),
-       variable.label=ifelse(is.null(variable.label),variable$variable.label,variable.label),
-       column.number=variable$column.number,
-       ncat=variable$ncat,
-       category.names=if(is.null(category.names)) variable$category.names else category.names,
-       variable.type=ifelse(is.null(variable.type),variable$variable.type,variable.type),
-       minimum=ifelse(is.null(minimum),variable$minimum,minimum),
-       maximum=ifelse(is.null(maximum),variable$maximum,maximum),
-       cutpoints=if(is.null(cutpoints)) variable$cutpoints else cutpoints)
-  colnames(do$data)[variable.num]<-do$variables[[variable.num]]$variable.name
+  for(i in 1:length(variable.to.update)) {
+    variable.num<-if(inherits(variable.to.update[i],"integer")) variable.to.update[i] else which(sapply(do$variables,function(x) x[["variable.name"]]==variable.to.update[i]))
+    variable<-do$variables[[variable.num]]
+    if(!is.null(variable.type[[i]])) match.arg(variable.type[[i]],c("nominal","ordinal"))
+    if(!is.null(cutpoints) && !inherits(cutpoints,"list")) cutpoints<-list(cutpoints)
+    do$variables[[variable.num]]<-list(variable.name=ifelse(is.null(variable.name[i]),variable$variable.name,variable.name[i]),
+         variable.label=ifelse(is.null(variable.label[[i]]),variable$variable.label,variable.label[[i]]),
+         column.number=variable$column.number,
+         ncat=variable$ncat,
+         category.names=if(is.null(category.names[[i]])) variable$category.names else category.names[[i]],
+         variable.type=ifelse(is.null(variable.type[[i]]),variable$variable.type,variable.type[[i]]),
+         minimum=ifelse(is.null(minimum[[i]]),variable$minimum,minimum[[i]]),
+         maximum=ifelse(is.null(maximum[[i]]),variable$maximum,maximum[[i]]),
+         cutpoints=if(is.null(cutpoints[[i]])) variable$cutpoints else cutpoints[[i]])
+    colnames(do$data)[variable.num]<-do$variables[[variable.num]]$variable.name
+  }
   do$recoded<-digram.recode(do$data,do$variables,do$filter.conditions)
   do
+
 }
