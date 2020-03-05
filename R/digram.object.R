@@ -203,7 +203,7 @@ as_tbl_graph.digram.object<-function(do,items=NULL,exo=NULL,LD=NULL,DIF=NULL){
 code.testlet<-function(do,testlet=NULL,names=NULL,labels=NULL,append=F) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   if(is.null(testlet)) stop("You need to provide a list of variables which are local dependent")
-  testlet.strs<-strsplit(x = testlet, split =" *, *")[[1]]
+  testlet.strs<-strsplit(x = testlet, split ="\\s*,\\s*")[[1]]
   no<-0
   testlets<-lapply(testlet.strs,function(x) {
       no<<-no+1
