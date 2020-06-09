@@ -46,8 +46,9 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
   } else {
     if(is.null(items)) items<-colnames(resp)
   }
+  items<-get.column.no(do,items)
   item.names<-get.variable.names(do,items)
-  if(inherits(items,"character")) items<-match(items,item.names)
+  #if(inherits(items,"character")) items<-match(items,item.names)
   item.labels<-get.labels(do,items)
   header<-header.format("Test of local independence")
   # Combine items with LD
@@ -73,10 +74,12 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
     sink("/dev/null")
     orig.result<-iarm::partgam_LD(selected,p.adj = p.adj)
     sink()
+    # Remove NaN's
+    orig.result<-orig.result[[1]][!is.nan(orig.result[[1]]$gamma),]
     result<-orig.result
     missing.item1<-colnames(selected)[!colnames(selected) %in% unique(result$Item1)]
     missing.item2<-colnames(selected)[!colnames(selected) %in% unique(result$Item2)]
-    result[nrow(result)+1,]<-c(missing.item1,missing.item2,rep(" ",6))
+    result[nrow(result)+1,]<-c(missing.item1,missing.item2,rep(" ",7))
     colnames(result)[5]<-"p.adj"
     molten<-reshape2::melt(data = result[,-6],id.vars=c("Item1","Item2"),na.rm=T)
     # tonum<-!molten$variable %in% c("sig")
@@ -116,10 +119,9 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
       ggraph::scale_edge_color_brewer(palette = "Set1" ,limits=c(FALSE,TRUE))+
       scale_color_brewer(palette = "Set2")# ,limits=c(FALSE,TRUE))
 
-   if(knitr::is_latex_output() || knitr::is_html_output()) {
+#   if(knitr::is_latex_output() || knitr::is_html_output()) {
      print(p)
-    } else print(p)
-
+#    } else print(p)
     invisible(orig.result)
   }
 }

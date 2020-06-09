@@ -142,7 +142,7 @@ write.digram<-function(do=NULL,path="",filename=do$project){
     }
     paste0(l(x$variable.label)," ",x$column.number," ",x$ncat," ",ifelse(x$variable.type=="nominal",2,3),"\r\n",x$minimum," ",paste(as.vector(x$cutpoints),collapse = " ")," ",x$maximum)
   }),collapse = "\r\n")),file = varfile,append = T)
-  cat(e(paste0(do$recursive.blocks,"\r\n",paste(do$recursive.structure,collapse = " "),"\r\n")),file = varfile,append = T)
+  cat(e(paste0("\r\n",do$recursive.blocks,"\r\n",paste(do$recursive.structure,collapse = " "),"\r\n")),file = varfile,append = T)
   cat(e(paste0(do$comments,"\r\n")),file=varfile,append = T)
   cat(e(paste("VARIABLES\r\n")),file = varfile,append = T)
   vars<-paste0(sapply(do$variables,function(x) {paste(l(x$variable.label),x$variable.name)}),collapse = "\r\n")

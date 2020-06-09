@@ -36,25 +36,16 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
     if(is.null(items)) items<-colnames(resp)
     if(is.null(exo)) exo<-c()
   }
+  items<-get.column.no(do,items)
+
   selected<-if(accept.na) resp[,items] else na.omit(resp[,items])
   if(nrow(selected)==0) stop("No cases without NA's. Try setting accept.na to TRUE")
-  exona<-!is.na(resp[,c(items,exo)])
-  selecteditemsexo<-resp[exona,items]
-  exoselected<-resp[exona,exo]
 
   item.labels<-get.labels(do,items)
   item.names<-get.variable.names(do,items)
   item.names<-item.names.shorten(item.names,max.name.length)
 
-  exo.names<-get.variable.names(do,exo)
-  exo.names<-item.names.shorten(exo.names,max.name.length)
-
-  exos<-make.exo.dummies(do,exo,exoselected,exo.names)
-  exoselected<-exos$exoselected
-  exo.names<-exos$exo.names
-  exo<-exos$exo
   num.items<-length(items)
-  num.exo<-length(exo)
 
   header<-header.format("Item-item correlations")
   pval.matrix<-corr.items<-matrix(rep(NA,(num.items^2)),nrow = num.items)
@@ -126,7 +117,19 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
     cat("\nAll correlations are significantly positive.")
   }
   #####
-  if(num.exo>0) {
+  if(length(exo)>0) {
+    exona<-!is.na(resp[,c(items,exo)])
+    selecteditemsexo<-resp[exona,items]
+    exoselected<-resp[exona,exo]
+    exo.names<-get.variable.names(do,exo)
+    exo.names<-item.names.shorten(exo.names,max.name.length)
+
+    exos<-make.exo.dummies(do,exo,exoselected,exo.names)
+    exoselected<-exos$exoselected
+    exo.names<-exos$exo.names
+    exo<-exos$exo
+    num.exo<-length(exo)
+
     header<-header.format("Correlations between items and exogeneous variables")
     pval.exo<-corr.exo<-matrix(rep(NA,(num.items*num.exo)),nrow = num.items)
     for(i in 1:num.items) {

@@ -44,7 +44,7 @@ digram.object<-function(project=NULL,data=data.frame(),variables=NULL,filter.con
       # Categories
       if(ncat<1) stop(paste("Not enough categories in",variable.name))
       category.names<-data.frame(Category=0:(ncat-1),Name=categories)
-      if(!(class(data[,vars[i]]) %in% c("integer","numeric)"))) {
+      if(!(class(data[,vars[i]]) %in% c("integer","numeric"))) {
         r2<-paste(apply(category.names,1,function(x) {
           paste0("'",x["Name"],"'=",x["Category"])
         }),collapse = ";")
@@ -110,20 +110,23 @@ digram.recode<-function(data,variables,filter.conditions=NULL) {
 #' # Local dependecy and DIF
 #' dograph<-as_tbl_graph(DHP,LD=data.frame(item1=c(5,3),item2=c(6,5),gamma=c(.53,-.38)),DIF=data.frame(item=c(4),exo=c(8),gamma=c(.27)))
 #' ggraph(dograph,layout="fr")+geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),abs(gamma),""),alpha=ifelse(!is.na(gamma),gamma,1),color=ifelse(!is.na(gamma),2,1)),angle_calc="along",label_dodge=unit(.25,"cm"),end_cap = square(.5, 'cm'),arrow = arrow(angle=10,length=unit(.2,"cm")))+geom_node_label(mapping = aes(label=label))
-as_tbl_graph.digram.object<-function(do,items=NULL,exo=NULL,LD=NULL,DIF=NULL){
+as_tbl_graph.digram.object<-function(do,items=NULL,exo.names=NULL,exo.labels=exo.names,LD=NULL,DIF=NULL){
   if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
   resp<-do$recoded
   if(is.null(items)) items<-1:do$recursive.structure[1]
-  if(is.null(exo)) exo<-if(ncol(resp)>do$recursive.structure[1]) (do$recursive.structure[1]+1):ncol(resp) else NULL
-
+  if(is.null(exo.names)) {
+    exo<-if(ncol(resp)>do$recursive.structure[1]) (do$recursive.structure[1]+1):ncol(resp) else NULL
+    exo.names<-get.variable.names(do,exo)
+    if(inherits(exo,"character")) exo<-match(exo,exo.names)
+    exo.labels<-get.labels(do,exo)
+  }
   item.names<-get.variable.names(do,items)
   if(inherits(items,"character")) items<-match(items,item.names)
   item.labels<-get.labels(do,items)
-  exo.names<-get.variable.names(do,exo)
-  if(inherits(exo,"character")) exo<-match(exo,exo.names)
-  exo.labels<-get.labels(do,exo)
+
+
   nitems<-length(items)
-  nexo<-length(exo)
+  nexo<-length(exo.names)
   ntestlets<-0
 
   if(!is.null(LD) || !is.null(DIF)) {
@@ -158,26 +161,29 @@ as_tbl_graph.digram.object<-function(do,items=NULL,exo=NULL,LD=NULL,DIF=NULL){
     if(nrow(DIF)>0){
       if(ncol(DIF)!=3) stop("DIF needs to have three columns: item, exo, and gamma")
       colnames(DIF)<-c("to","from","gamma")
-      maxnl<-max(nchar(apply(array(DIF$from),1,sub,pattern=",.*",replacement="")),nchar(DIF$to))
-      DIF$from<-apply(array(DIF$from),1,function(x) which(sub(",.*","",x)==item.names.shorten(exo.names,maxnl))) + 2 + nitems # We add 2 and nitems because we have theta and total score and items before exos
+      #maxnl<-max(nchar(apply(array(DIF$from),1,sub,pattern=",.*",replacement="")),nchar(DIF$to))
+      maxnl<-max(nchar(DIF$to))
+      # DIF$from<-apply(array(DIF$from),1,function(x) which(sub(",.*","",x)==item.names.shorten(exo.names,maxnl))) + 2 + nitems # We add 2 and nitems because we have theta and total score and items before exos
       DIF$to<-apply(array(DIF$to),1,function(x) which(x==item.names.shorten(item.names,maxnl))) + 2
-      # DIF$from<-apply(array(DIF$from),1,match,exo.names) + 2 + nitems # We add 2 and nitems because we have theta and total score and items before exos
-      # DIF$to<-apply(array(DIF$to),1,match,item.names) + 2  # We add 2 because we have theta and total score
+      DIF$from<-apply(array(DIF$from),1,match,exo.names) + 2 + nitems # We add 2 and nitems because we have theta and total score and items before exos
+      #DIF$to<-apply(array(DIF$to),1,match,item.names) + 2  # We add 2 because we have theta and total score
 
     }
   }
-  nitems<-length(items)
-  nexo<-length(exo)
+  # nitems<-length(items)
+  # nexo<-length(exo)
   nodes<-rbind(data.frame(name=c("Theta","Total Score"),label=c("θ","S"),type=rep("Ability",2),stringsAsFactors = F),#,column.number=c(0,0)
-               data.frame(name=item.names,label=item.labels,type=c(rep("Item",nitems-ntestlets),rep("Testlet",ntestlets))), #t(sapply(1:do$recursive.structure[1], function(x) unlist(do$variables[[x]][c("variable.name","variable.label","column.number")]))),
-               data.frame(name=exo.names,label=exo.labels,type=rep("Exo",nexo))#t(sapply((do$recursive.structure[1]+1):do$recursive.structure[2], function(x) unlist(do$variables[[x]][c("variable.name","variable.label","column.number")])))
+               data.frame(name=item.names,label=item.labels,type=c(rep("Item",nitems-ntestlets),rep("Testlet",ntestlets)))
   )
-
-#  nodes$type<-c(rep("Ability",2),rep("Item",do$recursive.structure[1]),rep("Exo",do$recursive.structure[2]-do$recursive.structure[1]))
-#  colnames(nodes)<-c("name","label","colnumber","type")
+  if(nexo>0)  nodes<-rbind(nodes, #t(sapply(1:do$recursive.structure[1], function(x) unlist(do$variables[[x]][c("variable.name","variable.label","column.number")]))),
+                           data.frame(name=exo.names,label=exo.labels,type=rep("Exo",nexo))#t(sapply((do$recursive.structure[1]+1):do$recursive.structure[2], function(x) unlist(do$variables[[x]][c("variable.name","variable.label","column.number")])))
+  )
   edges<-data.frame(
-    from=c(1,rep(2,nitems),(nitems+3):(nitems+nexo+2)),
-    to=c(2,3:(nitems+2),rep(1,nexo)))
+    from=c(1,rep(2,nitems)),
+    to=c(2,3:(nitems+2)))
+  if(nexo>0) edges<-rbind(edges,data.frame(
+    from=(nitems+3):(nitems+nexo+2),
+    to=rep(1,nexo)))
   edges$gamma<-NA
   if(exists("testlet.edges")) edges<-rbind(edges,testlet.edges)
   if(exists("LD")) edges<-rbind(edges,LD)
@@ -185,6 +191,7 @@ as_tbl_graph.digram.object<-function(do,items=NULL,exo=NULL,LD=NULL,DIF=NULL){
 
   tbl_graph(nodes=nodes,edges=edges,directed = T)
 }
+
 #' Code items as a testlet/local dependant
 #'
 #' @param do A digram.object
@@ -207,16 +214,18 @@ code.testlet<-function(do,testlet=NULL,names=NULL,labels=NULL,append=F) {
   no<-0
   testlets<-lapply(testlet.strs,function(x) {
       no<<-no+1
-      testlet<-strsplit(x," +")[[1]]
+      testlet<-strsplit(x," |\\+")[[1]]
       if(length(testlet)<2) testlet<-strsplit(testlet,"")[[1]]
       testlet<-sapply(testlet,function(x) ifelse(grepl("^[0-9]$",x),as.numeric(x),x))
       testlet<-sapply(testlet,get.column.no,do=do)
-      name<-ifelse(is.null(names[no]),
-                   paste(get.variable.names(do,testlet),collapse = " + "),
-                   names[no])
       label<-ifelse(is.null(labels[no]),
                    paste(get.labels(do,testlet),collapse = " + "),
                    labels[no])
+      if(is.null(names[no])){
+        itemnames<-get.variable.names(do,testlet)
+        name<-str_overlap(itemnames)
+        if(name=="") name<-paste(itemnames,collapse = " + ")
+      } else name<-names[no]
       list(testlet=testlet,name=name,label=label)
   })
   if(append && !is.null(do$testlets)) {
@@ -224,6 +233,15 @@ code.testlet<-function(do,testlet=NULL,names=NULL,labels=NULL,append=F) {
   } else do$testlets<-testlets
 
   do
+}
+str_overlap<-function(arr,str="") {
+  if(length(arr)==0) return(str)
+  if(str=="") return(str_overlap(arr[-1],arr[1]))
+  str2=arr[1]
+  for(i in 1:nchar(str)) {
+    if(substr(str,i,i)!=substr(str2,i,i)) {i<-i-1;break}
+  }
+  return(sub("[-_.:;,+?]$","",str_overlap(arr[-1],substr(str,1,i))))
 }
 # Internal function to collapse testlets
 collapse.testlets<-function(){

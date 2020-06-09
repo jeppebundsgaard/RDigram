@@ -49,9 +49,10 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   } else {
     if(is.null(items)) items<-colnames(resp)
   }
+  items<-get.column.no(do,items)
 
   item.names<-get.variable.names(do,items)
-  if(inherits(items,"character")) items<-match(items,item.names)
+  #if(inherits(items,"character")) items<-match(items,item.names)
   item.labels<-get.labels(do,items)
 
   # Combine items with LD
@@ -98,6 +99,9 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   sink("/dev/null")
   result<-iarm::partgam_DIF(dat.items = selected,dat.exo = exoselected,p.adj = p.adj)
   sink()
+  # Remove NaN's
+  result<-result[!is.nan(result$gamma),]
+
   colnames(result)[5]<-"p.adj"
   molten<-reshape2::melt(data = result[,-6],id.vars=c("Item","Var"),na.rm=F)
   # tonum<-!molten$variable %in% c("sig")
@@ -124,7 +128,7 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
     print.corr.matrix(corr.matrix=DIF.matrix[,,"gamma"],pvals = DIF.matrix[,,"p.adj"],cnames = colnames(DIF.matrix[,,"gamma"]),rnames=rownames(DIF.matrix[,,"gamma"]),digits = digits)
 
   # Draw graph
-  dograph<-as_tbl_graph(do,items=items,exo=exo,DIF=result[result[,5]<0.05,1:3])
+  dograph<-as_tbl_graph(do,items=items,exo.names=exo.names,exo.labels=exo.labels,DIF=result[result[,5]<0.05,1:3])
   p<-
     ggraph::ggraph(dograph,layout="fr")+
     ggraph::geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),round(abs(gamma),digits),""),alpha=ifelse(!is.na(gamma),abs(gamma),.4),color=is.na(gamma)),
@@ -143,11 +147,11 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
 }
 make.exo.dummies<-function(do,exo,exoselected,exo.names,exo.labels=NULL) {
   # Make dummies out of nominal variables
-  for(i in exo) {
+  for(i in rev(exo)) {
     if(do$variables[[i]]$variable.type=="nominal" && do$variables[[i]]$ncat>2) {
       exonum<-i-do$recursive.structure[1]
       dummies<-psych::dummy.code(exoselected[,exonum])
-      colnames(dummies)<-paste(do$variables[[i]]$variable.name,colnames(dummies),sep = ", ") # Maybe: do$variables[[i]]$category.names instead of colnames()
+      colnames(dummies)<-paste(do$variables[[i]]$variable.name,do$variables[[i]]$category.names$Name,sep = ", ") # Maybe:  instead of colnames()
       exoselected<-cbind(exoselected[,-exonum],dummies)
       exo.names<-c(exo.names[-exonum],colnames(dummies))
       if(!is.null(exo.labels)) exo.labels<-c(exo.labels[-exonum],paste0(exo.labels[exonum],1:ncol(dummies)))

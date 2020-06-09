@@ -4,7 +4,8 @@
 \name{DHP}
 \alias{DHP}
 \title{Diabetes Health profile (DHP)}
-\format{A data frame with 185 rows and 8 variables.
+\format{
+A data frame with 185 rows and 8 variables.
 \describe{
 The Disinhibited eating (DE) subscale summarizing responses to the
 following five questions with four ordinal response categories that were coded in such a way that 0
@@ -21,7 +22,8 @@ Responses: a) “Never”, b) “Sometimes”, c) “Usually”, d) “Always”
 you like?
 Responses: a) “Never”, b) “Sometimes”, c) “Usually”, d) “Always”}
 In addition to the items, the DHP project also includes information on sex and age.
-}}
+}
+}
 \source{
 The \code{DHP} data were obtained from
 Chwalow J., Meadows K., Mesbah M., Coliche V., Mollett E., (2007) Empirical validation of a quality of life

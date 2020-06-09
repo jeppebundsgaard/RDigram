@@ -7,12 +7,12 @@
 #' @return Returns a TAM result object
 #' @details
 #' Uses either the package TAM or eRm to estimate the model.
-#' If items have been coded as local dependent, a bifactorial model is used, when using the TAM package. A slight change was necessary in the package. Therefore you need to get the custom version:
+#' If items have been coded as testlets, a bifactorial model is used, when using the TAM package. A slight change was necessary in the package. Therefore you need to get the custom version:
 #' library(devtools)
 #' install_github("jeppebundsgaard/TAM")
-#' In eRm, local dependence is managed by collapsing the locally dependent items into a superitem.
+#' In eRm, testlets are managed by creating a interaction parameter between the testlet items.
 #' @export
-#' @seealso tam.mml(), tam.fa()
+#' @seealso [tam.mml()], [tam.fa()], [LPCM()]
 #' @references
 #' Wang, W.-C., & Wilson, M. (2005). The Rasch Testlet Model. *Applied Psychological Measurement*, 29(2), 126–149. https://doi.org/10.1177/0146621604271053
 #' Rijmen, F. (2009). *Three multidimensional models for testlet-based tests: Formal relations and an empirical comparison*. ETS Research Report Series, 2009(2), i–13. https://doi.org/10.1002/j.2333-8504.2009.tb02194.x
@@ -28,24 +28,26 @@
 #' mod1$deviance
 #' mod2$deviance
 #' mod1$deviance-mod2$deviance
-digram.estimate<-function(do,items=NULL,constraint = "cases",use.package=c("TAM","eRm"),tam.control=list(),verbose=T,...) {
+digram.estimate<-function(do,items=NULL,constraint = "cases",use.package=c("TAM","eRm","bundle"),collapse.testlets=F,tam.control=list(),sum0=T,verbose=T,...) {
   use.package<-match.arg(use.package)
-  tam.control$progress <- verbose
+  if(use.package=="TAM") tam.control$progress <- verbose
   if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
   resp<-do$recoded
   if(is.null(items)) items<-1:do$recursive.structure[1]
-  if(inherits(items,"character")) items<-match(items,item.names)
+  items<-get.column.no(do,items)
+
   item.names<-get.variable.names(do,items)
+  #if(inherits(items,"character")) items<-match(items,item.names)
   item.labels<-get.labels(do,items)
-  if(!is.null(do$DIF)) {
-    for (i in 1:nrow(do$DIF)) {
-      DIFs<-do$DIF[i,]
-      exoitem<-as.numeric(DIFs[2])
+  if(!is.null(do$split)) {
+    for (i in 1:nrow(do$split)) {
+      splits<-do$split[i,]
+      exoitem<-as.numeric(splits[2])
       exocat<-do$variables[[exoitem]]$category.names
       ncat<-do$variables[[exoitem]]$ncat
       newitems<-ncol(resp)+1:ncat
       items<-c(items,newitems)
-      olditem<-as.numeric(DIFs[1])
+      olditem<-as.numeric(splits[1])
       # Split
       nas<-rep(NA,ncat)
       resp[,newitems]<-sapply(1:nrow(resp),function(i) {
@@ -67,22 +69,60 @@ digram.estimate<-function(do,items=NULL,constraint = "cases",use.package=c("TAM"
     }
   }
   selected<-resp[,items]
-  LDs<-rep(NA, length(items))
-  if(!is.null(do$LD)) {
+  testlets<-rep(NA, length(items))
+  if(!is.null(do$testlets)) {
+    if(collapse.testlets) {
+      for(testlet in do$testlets){
+        newitem<-ncol(resp)+1
+        items<-c(items,newitem)
+        olditems<-which(items %in% testlet$testlet)
+        # Recode
+        resp[,newitem]<-apply(resp[,testlet$testlet],1,sum,na.rm=T)
+        # Combine names and labels
+        newname<-paste(item.names[olditems],collapse = "+")
+        item.names<-c(item.names,newname)
+        colnames(resp)[newitem]<-newname
+        item.labels<-c(item.labels,paste(item.labels[olditems],collapse = "+"))
+        item.names<-item.names[-olditems]
+        item.labels<-item.labels[-olditems]
+        # Remove item-nums
+        items<-c(items[-olditems])
+        selected<-resp[,items]
+        naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)
+        selected<-selected[!naonly,]
+      }
+    }
     mod<-switch (use.package,
       "TAM"={
-          for(i in 1:length(do$LD)) {
-            LDs[do$LD[[i]]]<-i
+          if(collapse.testlets) {
+            TAM::tam.mml(resp=selected,constraint = constraint, control=tam.control,...)
+          } else {
+            for(i in 1:length(do$testlets)) {
+              testlets[do$testlets[[i]]$testlet]<-i
+            }
+            TAM::tam.fa(resp=selected,irtmodel = "bifactor1",dims=testlets,control=tam.control)#, constraint = constraint)
           }
-          TAM::tam.fa(resp=selected,irtmodel = "bifactor1",dims=LDs,control=tam.control, constraint = constraint)
         },
       "eRm"={
-        for(LDs in do$LD){
+          if(collapse.testlets) {
+            eRm::PCM(X = selected,sum0=sum0)
+          } else {
+            W<-build_digram_W(do,items,item.labels,sum0 = sum0)
+            # Remove item-nums
+            #items<-c(items[-olditems])
+            #selected<-resp[,items]
+            naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)
+            selected<-selected[!naonly,]
+            eRm::LPCM(X = selected,W = W,sum0=sum0)
+          }
+      },
+      "bundle"={
+        for(testlet in do$testlets){
           newitem<-ncol(resp)+1
           items<-c(items,newitem)
-          olditems<-which(items %in% LDs)
+          olditems<-which(items %in% testlet$testlet)
           # Recode
-          resp[,newitem]<-apply(resp[,LDs],1,sum,na.rm=T)
+          resp[,newitem]<-apply(resp[,testlet$testlet],1,sum,na.rm=T)
           # Combine names and labels
           newname<-paste(item.names[olditems],collapse = "+")
           item.names<-c(item.names,newname)
@@ -96,8 +136,9 @@ digram.estimate<-function(do,items=NULL,constraint = "cases",use.package=c("TAM"
           naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)
           selected<-selected[!naonly,]
         }
-        eRm::PCM(X = selected)
+        eRm::PCM(X = selected,sum0=sum0)
       }
+
     )
   } else {
     mod<-switch (use.package,
@@ -107,10 +148,43 @@ digram.estimate<-function(do,items=NULL,constraint = "cases",use.package=c("TAM"
                  "eRm"={
                    naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)
                    selected<-selected[!naonly,]
-                   eRm::PCM(X = selected)
+                   eRm::PCM(X = selected,sum0=sum0)
                  }
     )
   }
   if(use.package=="eRm") mod$naonly<-naonly # Use this to reintroduce cases without thetas...
   mod
+}
+build_digram_W<-function(do,items,item.labels,sum0=T) {
+  itemcols<-sapply(items,function(x) do$variables[[x]]$ncat)-1
+  nitemcols<-sum(itemcols)
+  nitems<-length(items)
+  W<-matrix(rep(0,(nitemcols-1)*nitemcols),nrow = nitemcols)
+  colnames(W)<-paste("eta",1:(nitemcols-1))
+  rownames(W)<-paste("beta",sapply(1:nitems,function(x) paste0(item.labels[x],".c",1:itemcols[x])))
+  W[1,]<-ifelse(sum0,-1,0)
+  W[2:nitemcols,]<-c(rep(c(1,rep(0,nitemcols-1)),nitemcols-2),1)
+  for(testlet in do$testlets){
+    newitem<-max(items)+1 # or ncol(resp)+1
+    items<-c(items,newitem)
+    olditems<-which(items %in% testlet$testlet)
+    newitemcols<-1#max(itemcols[olditems])
+    # Combine names and labels
+    newname<-paste(item.labels[olditems],collapse = "+")
+    new.W<-matrix(rep(0,nitemcols*newitemcols),ncol = newitemcols)
+    #new.W.rows<-matrix(rep(0,((nitemcols-1)+newitemcols)*newitemcols),nrow = newitemcols)
+    colnames(new.W)<-paste("eta",(ncol(W)+1):(ncol(W)+newitemcols))
+    #rownames(new.W.rows)<-paste("beta",paste0(newname,".c",1:newitemcols))
+    #new.W[1,]<-ifelse(sum0,-1,0)
+    for(i in 1:length(testlet$testlet)) {
+      f<-sum(itemcols[1:(olditems[i]-1)])+1
+      #A column for each category: new.W[f:(f+itemcols[olditems[i]]-1),]<-c(rep(c(1,rep(0,itemcols[olditems[i]])),itemcols[olditems[i]]-1),1)
+      # A column for testlet. Values: 1:ncat
+      new.W[f:(f+itemcols[olditems[i]]-1),]<-rep(1,itemcols[olditems[i]])
+
+    }
+    W<-cbind(W,new.W)
+    #W<-rbind(W,new.W.rows)
+  }
+  W
 }

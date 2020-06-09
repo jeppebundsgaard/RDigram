@@ -19,9 +19,11 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
     resp<-do$recoded
     labels<-sapply(do$variables,function(x)x$variable.label)
   }else labels<-letters[1:ncol(resp)]
-  if(class(items)=="character") {
-    items<-apply(as.matrix(strsplit(items,"")[[1]]),1,function(x) which(labels %in% x))
-  }
+  items<-get.column.no(do,items)
+  #
+  # if(class(items)=="character") {
+  #   items<-apply(as.matrix(strsplit(items,"")[[1]]),1,function(x) which(labels %in% x))
+  # }
   selected<-resp[,items]
   selectednona<-if(!accept.na) na.omit(selected) else selected
   if(nrow(selectednona)==0) stop("No cases without NA's. Try setting accept.na to TRUE")
@@ -63,8 +65,10 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
     if(cumulated>50 && half==0) half=i
     score.distribution[i+1,]<-c(i,sum(has.score),percent,cumulated)
   }
-  print(knitr::kable(score.distribution,booktabs=T,longtable=T))
-  #stargazer::stargazer(score.distribution,type = "text",summary = F,digit.separator = "",digits = 2,rownames = F)
+  if(knitr::is_latex_output() || knitr::is_html_output())
+    print(knitr::kable(score.distribution,booktabs=T,longtable=T))
+  else
+    stargazer::stargazer(score.distribution,type = "text",summary = F,digit.separator = "",digits = 2,rownames = F)
   newline<-ifelse(knitr::is_html_output() || knitr::is_latex_output(),"\n\n","\n")
   cat(newline,"Mean: ",round(mean(totals),2),newline,"Variance: ",round(var(totals),2),newline,"Standard Deviation: ",round(sd(totals),2),newline,"Skewness: ",round(DescTools::Skew(totals),2),newline,"Missing: ",nrow(selectednona)-length(totals),newline,"Cronbach's Alpha: ",round(DescTools::CronbachAlpha(selectednona,na.rm = T),3))
 

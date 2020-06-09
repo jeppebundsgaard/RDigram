@@ -4,7 +4,8 @@
 \name{ADLtired}
 \alias{ADLtired}
 \title{Physical Activities of Daily Living}
-\format{A data frame with 734 rows and 97 variables of which 19 are used.
+\format{
+A data frame with 734 rows and 97 variables of which 19 are used.
 The data was collected from 734 70-year old in the County of Copenhagen, Denmark.
 The PADL scale consisted of a total of 16 items covering three different domains.
 \describe{
@@ -27,7 +28,8 @@ Upper limb function
 \item{N:}{Are you able to comb your hair?}
 \item{O:}{Are you able to wash your hair?}
 \item{P:}{Are You able to dress the upper part of the body?}
-}}
+}
+}
 \source{
 The \code{ADLtired} data were obtained from
 Avlund, K., Schultz-Larsen, K., Kreiner, S. (1993) Construct validation and the Rasch model: Functional ability of healthy elderly people. \emph{Scand. J. Soc. Med.}, 21: 233-245.

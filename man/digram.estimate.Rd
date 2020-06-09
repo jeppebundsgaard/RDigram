@@ -10,6 +10,7 @@ digram.estimate(
   constraint = "cases",
   use.package = c("TAM", "eRm"),
   tam.control = list(),
+  sum0 = T,
   verbose = T,
   ...
 )
@@ -29,10 +30,10 @@ Estimate RDigram object using TAM
 }
 \details{
 Uses either the package TAM or eRm to estimate the model.
-If items have been coded as local dependent, a bifactorial model is used, when using the TAM package. A slight change was necessary in the package. Therefore you need to get the custom version:
+If items have been coded as testlets, a bifactorial model is used, when using the TAM package. A slight change was necessary in the package. Therefore you need to get the custom version:
 library(devtools)
 install_github("jeppebundsgaard/TAM")
-In eRm, local dependence is managed by collapsing the locally dependent items into a superitem.
+In eRm, testlets are managed by creating a interaction parameter between the testlet items.
 }
 \examples{
 data(DHP)
@@ -51,5 +52,5 @@ Wang, W.-C., & Wilson, M. (2005). The Rasch Testlet Model. \emph{Applied Psychol
 Rijmen, F. (2009). \emph{Three multidimensional models for testlet-based tests: Formal relations and an empirical comparison}. ETS Research Report Series, 2009(2), i–13. https://doi.org/10.1002/j.2333-8504.2009.tb02194.x
 }
 \seealso{
-tam.mml(), tam.fa()
+\code{\link[=tam.mml]{tam.mml()}}, \code{\link[=tam.fa]{tam.fa()}}, \code{\link[=LPCM]{LPCM()}}
 }
