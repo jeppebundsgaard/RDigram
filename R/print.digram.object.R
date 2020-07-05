@@ -31,16 +31,16 @@ print.digram.object <- function(do=NULL) {
   }
   cat("\n\n",nrow(do$data)," cases in the dataset",sep="")
   if(!is.null(do$testlets)) {
-    cat("\n\nTestlets:\n *",
+    cat("\n\nTestlets:\n\n *",
         paste(
           lapply(do$testlets,function(x)
-            paste0(x$label,": ",x$name,"\n",
+            paste0(x$label,": ",x$name,"\n    - ",
                    paste(sapply(x$testlet,function(y)
                      do$variables[[y]]["variable.name"]),
                      collapse = " + ")
                    )
             ),
-            collapse = "\n * ")
+            collapse = "\n\n * ")
     )
   }
   if(!is.null(do$splits)) {

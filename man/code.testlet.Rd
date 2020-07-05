@@ -9,7 +9,7 @@ code.testlet(do, testlet = NULL, names = NULL, labels = NULL, append = F)
 \arguments{
 \item{do}{A digram.object}
 
-\item{testlet}{String. The items that are part of a testlet/are local dependant. Give as a list of comma separated variable numbers, variable labels or variable names}
+\item{testlet}{String. The items that are part of a testlet/are local dependant. Give as a list of comma separated variable numbers, variable labels or variable names. If there is spaces in the variable names, they can be delimited by ".}
 
 \item{names}{A vector of strings naming the testlets. If names are not given, they are composed of the testlet item names.}
 

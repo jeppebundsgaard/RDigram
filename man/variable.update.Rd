@@ -44,7 +44,7 @@ Returns a DIGRAM object with (an) updated variable(s)
 Update one or more variable(s) in DIGRAM Object.
 }
 \details{
-A set of variables can be updated by providing a vector of variable names/numbers to update and ordered lists whith their new properties
+A set of variables can be updated by providing a vector of variable names/numbers to update and ordered lists whith their new properties. For variable.type, cutpoints, minimum and maximum you can provide one property to give all variables.
 }
 \examples{
 data(DHP)

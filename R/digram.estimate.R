@@ -2,7 +2,14 @@
 #'
 #' @param do A digram.object
 #' @param items The items to include in the analysis
+#' @param ncases Number of cases to sample for the estimation (0 uses all cases)
 #' @param constraint Constraint on "cases" or "items"
+#' @param use.package Which R package to use for the estimation. TAM and eRm are implemented.
+#' @param collapse.testlets Testlets are estimated using a bifactorial model in TAM and a data matrix in eRm. Setting collapse.testlets to TRUE calculates super-items instead and estimate a normal polytomous model.
+#' @param init.model In TAM, the model that was output from an earlier estimation can be used to set sensible init-values for the estimation.
+#' @param tam.control Use this to set control parameters in TAM estimation.
+#' @param sum0 Set to TRUE if you want eRm to sum the parameters to 0. If FALSE the first parameter is set to 0.
+#' @param verbose Set to TRUE to get information about the estimation progress.
 #'
 #' @return Returns a TAM result object
 #' @details
@@ -28,11 +35,12 @@
 #' mod1$deviance
 #' mod2$deviance
 #' mod1$deviance-mod2$deviance
-digram.estimate<-function(do,items=NULL,constraint = "cases",use.package=c("TAM","eRm","bundle"),collapse.testlets=F,tam.control=list(),sum0=T,verbose=T,...) {
+digram.estimate<-function(do,items=NULL,ncases=0,constraint = "cases",use.package=c("TAM","eRm"),collapse.testlets=F,init.model=NULL,tam.control=list(),sum0=T,verbose=T,...) {
   use.package<-match.arg(use.package)
   if(use.package=="TAM") tam.control$progress <- verbose
   if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
   resp<-do$recoded
+  if(ncases>0) resp<-resp[sample(1:nrow(resp),ncases),]
   if(is.null(items)) items<-1:do$recursive.structure[1]
   items<-get.column.no(do,items)
 
@@ -68,6 +76,10 @@ digram.estimate<-function(do,items=NULL,constraint = "cases",use.package=c("TAM"
       items<-c(items[-olditemno])
     }
   }
+  if(!is.null(init.model)) {
+    xsi.inits=matrix(c(1:nrow(init.model$xsi),init.model$xsi$xsi),ncol = 2)
+    variance.inits=init.model$variance
+  }  else {xsi.inits<-variance.inits<-NULL}
   selected<-resp[,items]
   testlets<-rep(NA, length(items))
   if(!is.null(do$testlets)) {
@@ -88,19 +100,21 @@ digram.estimate<-function(do,items=NULL,constraint = "cases",use.package=c("TAM"
         # Remove item-nums
         items<-c(items[-olditems])
         selected<-resp[,items]
-        naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)
-        selected<-selected[!naonly,]
+        if(use.package!="TAM") {
+          naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)
+          selected<-selected[!naonly,]
+        }
       }
     }
     mod<-switch (use.package,
       "TAM"={
           if(collapse.testlets) {
-            TAM::tam.mml(resp=selected,constraint = constraint, control=tam.control,...)
+            TAM::tam.mml(resp=selected,xsi.inits = xsi.inits,variance.inits = variance.inits,constraint = constraint, control=tam.control,...)
           } else {
             for(i in 1:length(do$testlets)) {
               testlets[do$testlets[[i]]$testlet]<-i
             }
-            TAM::tam.fa(resp=selected,irtmodel = "bifactor1",dims=testlets,control=tam.control)#, constraint = constraint)
+            TAM::tam.fa(resp=selected,irtmodel = "bifactor1",dims=testlets,xsi.inits = xsi.inits,variance.inits = variance.inits,control=tam.control)#, constraint = constraint)
           }
         },
       "eRm"={
@@ -115,35 +129,12 @@ digram.estimate<-function(do,items=NULL,constraint = "cases",use.package=c("TAM"
             selected<-selected[!naonly,]
             eRm::LPCM(X = selected,W = W,sum0=sum0)
           }
-      },
-      "bundle"={
-        for(testlet in do$testlets){
-          newitem<-ncol(resp)+1
-          items<-c(items,newitem)
-          olditems<-which(items %in% testlet$testlet)
-          # Recode
-          resp[,newitem]<-apply(resp[,testlet$testlet],1,sum,na.rm=T)
-          # Combine names and labels
-          newname<-paste(item.names[olditems],collapse = "+")
-          item.names<-c(item.names,newname)
-          colnames(resp)[newitem]<-newname
-          item.labels<-c(item.labels,paste(item.labels[olditems],collapse = "+"))
-          item.names<-item.names[-olditems]
-          item.labels<-item.labels[-olditems]
-          # Remove item-nums
-          items<-c(items[-olditems])
-          selected<-resp[,items]
-          naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)
-          selected<-selected[!naonly,]
-        }
-        eRm::PCM(X = selected,sum0=sum0)
       }
-
     )
   } else {
     mod<-switch (use.package,
                  "TAM"={
-                   TAM::tam.mml(resp=selected,constraint = constraint, control=tam.control,...)
+                   TAM::tam.mml(resp=selected,xsi.inits = xsi.inits,variance.inits = variance.inits,constraint = constraint, control=tam.control,...)
                  },
                  "eRm"={
                    naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)

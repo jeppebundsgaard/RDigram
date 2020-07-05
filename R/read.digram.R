@@ -104,9 +104,22 @@ read.digram<-function(project=NULL,path=""){
 #' @references
 #' Kreiner, S. (2003). *Introduction to DIGRAM*. Dept. of Biostatistics, University of Copenhagen.
 write.digram<-function(do=NULL,path="",filename=do$project){
+  # Helper functions
+  e<-function(t) {gsub("\\x0d\\x0a","\r\n",stringi::stri_encode(t,to="cp865"))} # Encode to ASCII Nordic https://www.ascii-codes.com/cp865.html#extended_character_set
+
+  l<-function(a) {
+    if(recodelabs) {
+      substr(c865,a,a)
+    } else do$variables[[a]]$variable.label
+  }
+
+  if(!class(do)=="digram.object") stop("You need to provide a digram.object")
   # Settings
   maxcats<-10
-  if(!class(do)=="digram.object") stop("You need to provide a digram.object")
+  c865<-"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzæÆøØåÅâäàçÇüéêëèïîìÄÉôöòûùÿÖÜ£áíóúñαβΓδεΘπΩΦτμΣσ½"
+  nchar865<-nchar(c865)
+  if(length(do$variables)>nchar865) stop(paste("You need to delete some variables in your digram object - due to restrictions on the number of labels, only",nchar865,"labels can be produced."))
+  recodelabs<-any(sapply(do$variables,function(x) nchar(x$variable.label)>1))
   path<-sub("^/$","./",paste0(sub(pattern = "/$","",x = path),"/"))
   basefile=paste0(path,do$project)
   deffile<-paste0(basefile,".DEF")
@@ -117,13 +130,14 @@ write.digram<-function(do=NULL,path="",filename=do$project){
   ndatcol<-ncol(do$data)
   cat(e(paste0(ndatcol,"\r\n")),file = deffile)
   #Included in VAR-file...? for(i in 1:ndatcol) cat(i," ",do$variables[[i]]$minimum," ",do$variables[[i]]$maximum,"\r\n",file = deffile)
-  cat(e(paste(apply(apply(do$data,1:2,function(x) ifelse(is.na(x),-9999,x)),1,paste,collapse=" "),collapse = "\r\n")),file=datfile)
+  cat(e(paste(apply(apply(do$data,1:2,function(x) ifelse(is.na(x),-999,x)),1,paste,collapse=" "),collapse = "\r\n")),file=datfile)
 
   nvar<-length(do$variables)
   items<-1:do$recursive.structure[1]
   maxcat<-max(sapply(items,function(i) do$variables[[i]]$ncat))
   cat(e(paste0(nvar,"\r\n")),file = varfile)
-  cat(e(paste(sapply(do$variables,function(x) {
+  cat(e(paste(sapply(1:length(do$variables),function(i) {
+    x<-do$variables[[i]]
     if(x$ncat>maxcats) {  # Recode when too many categories
       vardata<-unique(as.numeric(do$data[,x$column.number]))
       ordereddata<-vardata[order(vardata)]
@@ -140,25 +154,18 @@ write.digram<-function(do=NULL,path="",filename=do$project){
       x$cutpoints<-c(x$cutpoints,(x$ncat-1):(maxcat-2))
       x$maximum<-maxcat-1
     }
-    paste0(l(x$variable.label)," ",x$column.number," ",x$ncat," ",ifelse(x$variable.type=="nominal",2,3),"\r\n",x$minimum," ",paste(as.vector(x$cutpoints),collapse = " ")," ",x$maximum)
+    paste0(l(i)," ",x$column.number," ",x$ncat," ",ifelse(x$variable.type=="nominal",2,3),"\r\n",x$minimum," ",paste(as.vector(x$cutpoints),collapse = " ")," ",x$maximum)
   }),collapse = "\r\n")),file = varfile,append = T)
   cat(e(paste0("\r\n",do$recursive.blocks,"\r\n",paste(do$recursive.structure,collapse = " "),"\r\n")),file = varfile,append = T)
   cat(e(paste0(do$comments,"\r\n")),file=varfile,append = T)
   cat(e(paste("VARIABLES\r\n")),file = varfile,append = T)
-  vars<-paste0(sapply(do$variables,function(x) {paste(l(x$variable.label),x$variable.name)}),collapse = "\r\n")
+  vars<-paste0(sapply(1:length(do$variables),function(i) {paste(l(i),do$variables[[i]]$variable.name)}),collapse = "\r\n")
   cat(e(vars),file = varfile,append = T)
 
-  cat(e(paste(sapply(do$variables,function(x) {
-      paste(l(x$variable.label),apply(x$category.names,1,function(y) {
+  cat(e(paste(sapply(1:length(do$variables),function(i) {
+      paste(l(i),apply(do$variables[[i]]$category.names,1,function(y) {
         paste(y["Category"],y["Name"])
       }),collapse = "\r\n")
     }),collapse = "\r\n")),"\r\n",file = catfile)
 }
-e<-function(t) {gsub("\\x0d\\x0a","\r\n",stringi::stri_encode(t,to="cp865"))} # Encode to ASCII Nordic https://www.ascii-codes.com/cp865.html#extended_character_set
-l<-function(a) {
-  if(nchar(a)>1) {
-    a<-97+(utf8ToInt(a)[1]-65)*26+(utf8ToInt(a)[2]-65)
-    if(a>122 && a<128) a<-a+6
-    intToUtf8(a)
-  } else a
-}
+

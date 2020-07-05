@@ -4,10 +4,12 @@
 \alias{get.item.params}
 \title{Get item parameters and standard errors as a data.frame from a TAM or eRm object}
 \usage{
-get.item.params(obj)
+get.item.params(obj, type = c("andersen", "conquest"), include.se = F)
 }
 \arguments{
 \item{obj}{A TAM or eRm-object}
+
+\item{type}{For TAM-objects, return Andersen or Conquest ("IRT") parameters.}
 }
 \value{
 Returns a matrix of item parameters and standard errors, one row for each item
@@ -15,8 +17,14 @@ Returns a matrix of item parameters and standard errors, one row for each item
 \description{
 Get item parameters and standard errors as a data.frame from a TAM or eRm object
 }
+\details{
+Andersen parameters are given as easiness parameters as is the convention. Difficulty can be calculated as the negated version of the parameters.
+}
 \examples{
 data(DHP)
 tamobj<-digram.estimate(DHP)
 get.item.params(tamobj)
+}
+\seealso{
+\code{\link[=item.params.convert]{item.params.convert()}}
 }

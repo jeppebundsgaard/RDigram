@@ -2,20 +2,20 @@
 % Please edit documentation in R/get.column.no.R
 \name{get.column.no}
 \alias{get.column.no}
-\title{Get column number of a variable in the recoded data}
+\title{Get column number(s) of a variable in the recoded data}
 \usage{
 get.column.no(do, variable.name.num)
 }
 \arguments{
 \item{do}{A DIGRAM object}
 
-\item{variable.name.num}{The number, label or name of the variable to search for}
+\item{variable.name.num}{The number, label or name of the variable(s) to search for}
 }
 \value{
-Returns the column.number
+Returns the column.number(s)
 }
 \description{
-Get column number of a variable in the recoded data
+Get column number(s) of a variable in the recoded data
 }
 \examples{
 data(DHP)

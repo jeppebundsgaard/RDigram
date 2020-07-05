@@ -13,13 +13,15 @@ local.independence(do=NULL,resp=NULL,items=1:do$recursive.structure[1],digits=2,
 
 \item{items}{A vector of columns from the recoded data to include as items in the analysis \emph{or} a character vector of variable labels}
 
-\item{p.adj}{the kind of multiple p-value testing adjustment to be used (one of "BH","holm", "hochberg", "hommel", "bonferroni", "BY", "none").}
+\item{p.adj}{the kind of multiple p-value testing adjustment to be used (one of "holm", "BH","hochberg", "hommel", "bonferroni", "BY", "none"), see \code{\link[=p.adjust]{p.adjust()}}.}
 
 \item{digits}{Number of digits in table}
 
 \item{max.name.length}{Maximum length of item names (to be printed in tables)}
 
 \item{only.significant}{Only list fit values significantly different from 1}
+
+\item{use.names}{Use item names instead of item labes as node labels}
 
 \item{verbose}{Print results}
 }

@@ -172,7 +172,8 @@ as_tbl_graph.digram.object<-function(do,items=NULL,exo.names=NULL,exo.labels=exo
   }
   # nitems<-length(items)
   # nexo<-length(exo)
-  nodes<-rbind(data.frame(name=c("Theta","Total Score"),label=c("θ","S"),type=rep("Ability",2),stringsAsFactors = F),#,column.number=c(0,0)
+  # c("Theta","Total Score")
+  nodes<-rbind(data.frame(name=c("θ","S"),label=c("θ","S"),type=rep("Ability",2),stringsAsFactors = F),#,column.number=c(0,0)
                data.frame(name=item.names,label=item.labels,type=c(rep("Item",nitems-ntestlets),rep("Testlet",ntestlets)))
   )
   if(nexo>0)  nodes<-rbind(nodes, #t(sapply(1:do$recursive.structure[1], function(x) unlist(do$variables[[x]][c("variable.name","variable.label","column.number")]))),
@@ -195,7 +196,7 @@ as_tbl_graph.digram.object<-function(do,items=NULL,exo.names=NULL,exo.labels=exo
 #' Code items as a testlet/local dependant
 #'
 #' @param do A digram.object
-#' @param testlet String. The items that are part of a testlet/are local dependant. Give as a list of comma separated variable numbers, variable labels or variable names
+#' @param testlet String. The items that are part of a testlet/are local dependant. Give as a list of comma separated variable numbers, variable labels or variable names. If there is spaces in the variable names, they can be delimited by ".
 #' @param names A vector of strings naming the testlets. If names are not given, they are composed of the testlet item names.
 #' @param append Logical. Append new testlet variables to the existing ones.
 #'
@@ -210,11 +211,18 @@ as_tbl_graph.digram.object<-function(do,items=NULL,exo.names=NULL,exo.labels=exo
 code.testlet<-function(do,testlet=NULL,names=NULL,labels=NULL,append=F) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   if(is.null(testlet)) stop("You need to provide a list of variables which are local dependent")
-  testlet.strs<-strsplit(x = testlet, split ="\\s*,\\s*")[[1]]
+  testlet.strs<-ifelse(grepl("\"",testlet),strsplit(x = testlet, split ='(?<=")\\s*,\\s*(?=")',perl = T),testlet.strs<-strsplit(x = testlet, split ="\\s*,\\s*"))[[1]]
   no<-0
   testlets<-lapply(testlet.strs,function(x) {
       no<<-no+1
-      testlet<-strsplit(x," |\\+")[[1]]
+      if(grepl("\"",x)) {
+        res<-gregexpr('"[^"]+"\\s*',x)[[1]]
+        res<-c(res,nchar(x))
+        testlet<-c()
+        for(i in 2:length(res)) {
+          testlet<-c(testlet,trimws(substr(x,res[i-1],res[i]-1))) #gsub("\"","",)
+        }
+      } else testlet<-strsplit(x," |\\+")[[1]]
       if(length(testlet)<2) testlet<-strsplit(testlet,"")[[1]]
       testlet<-sapply(testlet,function(x) ifelse(grepl("^[0-9]$",x),as.numeric(x),x))
       testlet<-sapply(testlet,get.column.no,do=do)
@@ -241,7 +249,7 @@ str_overlap<-function(arr,str="") {
   for(i in 1:nchar(str)) {
     if(substr(str,i,i)!=substr(str2,i,i)) {i<-i-1;break}
   }
-  return(sub("[-_.:;,+?]$","",str_overlap(arr[-1],substr(str,1,i))))
+  return(sub("[-_.:;,+?]\\s*$","",str_overlap(arr[-1],substr(str,1,i))))
 }
 # Internal function to collapse testlets
 collapse.testlets<-function(){

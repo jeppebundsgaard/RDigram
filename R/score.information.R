@@ -13,7 +13,7 @@
 #' @examples score.information(do,items="abcdef")
 #' @references
 #' Kreiner, S. (2003). *Introduction to DIGRAM*. Dept. of Biostatistics, University of Copenhagen.
-score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],accept.na=F){
+score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],accept.na=F,font.size=9){
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
     resp<-do$recoded
@@ -34,20 +34,58 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
   # Item scores
   header.format("Average item scores and score distribution")
 
-  items.scores<-data.frame(Items=character(),n=numeric(),Mean=numeric(),Mean.complete=numeric(),Item.range=character(),stringsAsFactors = F)
+  items.scores<-data.frame(Items=character(),n=numeric(),Mean=numeric(),n.complete=numeric(),Mean.complete=numeric(),Item.range=character(),stringsAsFactors = F)
 
-  for(i in 1:ncol(selectednona)) {
-    name<-colnames(selectednona)[i]
-    x<-selectednona[,i]
-    items.scores[i,]<-c(paste(labels[i],":",name),sum(!is.na(x)),mean(x,na.rm = T),mean(x[!is.na(x)]),paste(min(x,na.rm = T),"-",max(x,na.rm = T)))
+  for(i in 1:ncol(selected)) {
+    name<-colnames(selected)[i]
+    x<-selected[,name]
+    y<-selectednona[,name]
+    items.scores[i,]<-c(paste(labels[i],":",name),sum(!is.na(x)),mean(x,na.rm = T),sum(!is.na(y)),mean(y),paste(min(x,na.rm = T),"-",max(x,na.rm = T)))
   }
-  items.scores[,c(2:4)]<-apply(items.scores[,c(2:4)],2,as.numeric)
+  items.scores[,c(2:5)]<-apply(items.scores[,c(2:5)],2,as.numeric)
   if(knitr::is_latex_output() || knitr::is_html_output()){
-    print(knitr::kable(items.scores,col.names = c("Items","n","Mean","Mean (complete)","Item range"),booktabs=T,longtable=T)%>%
+    print(knitr::kable(items.scores,col.names = c("Items","n","Mean","n (complete)","Mean (complete)","Item range"),booktabs=T,longtable=T)%>%
             kable_styling(latex_options = c("scale_down")))
     #%>%
 #    kableExtra::add_header_above(header = c(" "=3,"Complete cases"=2))
   } else stargazer::stargazer(items.scores,type = "text",summary = F,digit.separator = "",digits = 2,rownames = F)
+
+
+  #######################
+  # Score distribution in categories
+  header.format("Score distribution in categories")
+
+  maxall<-max(selectednona,na.rm=T)
+  scoredist<-data.frame(t(sapply(1:ncol(selectednona),function(i) {
+    sapply(0:maxall,function(j) sum(selectednona[,i]==j))
+  })))
+  colnames(scoredist)<-paste("Category",0:maxall)
+  rownames(scoredist)<-colnames(selectednona)
+  if(knitr::is_latex_output() || knitr::is_html_output())
+    print(knitr::kable(scoredist,booktabs=T,longtable=T)%>%kable_styling(latex_options = c("scale_down")))
+  else
+    stargazer::stargazer(scoredist,type = "text",summary = F,rownames = T)
+
+  #######################
+  # Mean sumscore in categories
+  header.format("Mean sumscore in categories (excluding item)")
+
+  maxall<-max(selectednona,na.rm=T)
+  meansum<-data.frame(t(sapply(1:ncol(selectednona),function(i) {
+    sapply(0:maxall,function(j) mean(rowSums(selectednona[selectednona[,i]==j,-i],na.rm = T)))
+  })))
+  colnames(meansum)<-paste("Category",0:maxall)
+  rownames(meansum)<-colnames(selectednona)
+  descwarn<-apply(meansum,1,function(x) {
+      desc<-FALSE
+      for(i in 2:(maxall+1)) if(!is.na(x[i])) desc<-desc|(x[i]<=x[i-1])
+      desc
+    })
+  if(any(descwarn)) meansum$Warning<-ifelse(descwarn,"!","")
+  if(knitr::is_latex_output() || knitr::is_html_output())
+    print(knitr::kable(meansum,booktabs=T,longtable=T)%>%kable_styling(latex_options = c("scale_down")))
+  else
+    stargazer::stargazer(meansum,type = "text",summary = F,digit.separator = "",digits = 2,rownames = T)
 
 
   ########################
@@ -55,7 +93,7 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
   totals<-apply(selectednona,1,sum,na.rm=T)
   cat("\n\nObtainable score range:",min(totals),"-",max(totals))
   scores<-min(totals):max(totals)
-  cat("\n\nScore distribution: ",length(totals)," cases")
+  header.format(paste("Score distribution:",length(totals),"cases"))
   score.distribution<-data.frame(Score=numeric(),Count=numeric(),Percent=numeric(),Cumulated=numeric())
   cumulated<-half<-0
   for(i in scores) {
@@ -66,9 +104,11 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
     score.distribution[i+1,]<-c(i,sum(has.score),percent,cumulated)
   }
   if(knitr::is_latex_output() || knitr::is_html_output())
-    print(knitr::kable(score.distribution,booktabs=T,longtable=T))
+    print(knitr::kable(score.distribution,booktabs=T,longtable=T)%>%kable_styling(latex_options = c("scale_down")))
   else
     stargazer::stargazer(score.distribution,type = "text",summary = F,digit.separator = "",digits = 2,rownames = F)
+
+
   newline<-ifelse(knitr::is_html_output() || knitr::is_latex_output(),"\n\n","\n")
   cat(newline,"Mean: ",round(mean(totals),2),newline,"Variance: ",round(var(totals),2),newline,"Standard Deviation: ",round(sd(totals),2),newline,"Skewness: ",round(DescTools::Skew(totals),2),newline,"Missing: ",nrow(selectednona)-length(totals),newline,"Cronbach's Alpha: ",round(DescTools::CronbachAlpha(selectednona,na.rm = T),3))
 

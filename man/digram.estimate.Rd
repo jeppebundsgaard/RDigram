@@ -7,8 +7,11 @@
 digram.estimate(
   do,
   items = NULL,
+  ncases = 0,
   constraint = "cases",
   use.package = c("TAM", "eRm"),
+  collapse.testlets = F,
+  init.model = NULL,
   tam.control = list(),
   sum0 = T,
   verbose = T,
@@ -20,7 +23,21 @@ digram.estimate(
 
 \item{items}{The items to include in the analysis}
 
+\item{ncases}{Number of cases to sample for the estimation (0 uses all cases)}
+
 \item{constraint}{Constraint on "cases" or "items"}
+
+\item{use.package}{Which R package to use for the estimation. TAM and eRm are implemented.}
+
+\item{collapse.testlets}{Testlets are estimated using a bifactorial model in TAM and a data matrix in eRm. Setting collapse.testlets to TRUE calculates super-items instead and estimate a normal polytomous model.}
+
+\item{init.model}{In TAM, the model that was output from an earlier estimation can be used to set sensible init-values for the estimation.}
+
+\item{tam.control}{Use this to set control parameters in TAM estimation.}
+
+\item{sum0}{Set to TRUE if you want eRm to sum the parameters to 0. If FALSE the first parameter is set to 0.}
+
+\item{verbose}{Set to TRUE to get information about the estimation progress.}
 }
 \value{
 Returns a TAM result object

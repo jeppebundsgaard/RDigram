@@ -97,7 +97,7 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   # Remove exos with no cases
   exoselected<-as.data.frame(exoselected[,apply(exoselected,2,sum)>0])
   sink("/dev/null")
-  result<-iarm::partgam_DIF(dat.items = selected,dat.exo = exoselected,p.adj = p.adj)
+  result<-partgam_DIF(dat.items = selected,dat.exo = exoselected,p.adj = p.adj) #iarm::
   sink()
   # Remove NaN's
   result<-result[!is.nan(result$gamma),]
@@ -160,4 +160,35 @@ make.exo.dummies<-function(do,exo,exoselected,exo.names,exo.labels=NULL) {
   }
   exo<-do$recursive.structure[1]+(1:ncol(exoselected))
   list(exoselected=exoselected,exo=exo,exo.names=exo.names,exo.labels=exo.labels)
+}
+partgam_DIF<-function (dat.items, dat.exo, p.adj = c( "holm","BH", "hochberg","hommel", "bonferroni", "BY", "none"), verbose=T)
+{
+  if (!is.data.frame(dat.exo)) {
+    gname <- deparse(substitute(dat.exo))
+    dat.exo <- data.frame(dat.exo)
+    names(dat.exo) <- gname
+  }
+  if (is.null(names(dat.items)))
+    names(dat.items) <- paste("I", 1:dim(dat.items)[2],sep = "")
+  padj <- match.arg(p.adj)
+  score <- apply(dat.items, 1, sum, na.rm = T)
+  k <- dim(dat.items)[2]
+  l <- dim(dat.exo)[2]
+  result <- data.frame(Item = character(), Var = character(),
+                       gamma = double(), se = double(), pvalue = double(),
+                       padj = double(), sig = character(), lower = double(),
+                       upper = double(), stringsAsFactors = FALSE)
+  for (i in 1:k) {
+    for (j in 1:l) {
+      mm <- partgam(dat.items[, i], dat.exo[, j], score)
+      result[nrow(result)+1, ] <- c(names(dat.items)[i], names(dat.exo)[j],mm[dim(mm)[1], 1:2], NA, NA, NA, mm[dim(mm)[1],3:4])
+    }
+  }
+  result$pvalue <- apply(result[,3:4],1,function(x) ifelse(x[1] > 0, 2 * (1 - pnorm(x[1]/x[2])), 2 * (pnorm(x[1]/x[2]))))
+  result$padj <- p.adjust(result$pvalue, method = padj)
+  result$sig <- symnum(result$padj, cutpoints = c(0, 0.001, 0.01,0.05, 0.1, 1), symbols = c(" ***", " **", " *", " .", " "))
+
+  names(result)[6] <- paste("padj", padj, sep = ".")
+  if (verbose) print(cbind(result[, 1:2], round(result[, 3:ifelse(padj == "none",5,6)], digits = 4),sig = result[, 7], round(result[, 8:9], digits = 4)))
+  invisible(result)
 }

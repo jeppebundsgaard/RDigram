@@ -5,10 +5,11 @@
 #' @param do an object of class \code{digram.object}
 #' @param resp A data.frame or matrix of recoded data (only used if \code{do} is \code{NULL})
 #' @param items A vector of columns from the recoded data to include as items in the analysis *or* a character vector of variable labels
-#' @param p.adj the kind of multiple p-value testing adjustment to be used (one of "BH","holm", "hochberg", "hommel", "bonferroni", "BY", "none").
+#' @param p.adj the kind of multiple p-value testing adjustment to be used (one of "holm", "BH","hochberg", "hommel", "bonferroni", "BY", "none"), see [p.adjust()].
 #' @param digits Number of digits in table
 #' @param max.name.length Maximum length of item names (to be printed in tables)
 #' @param only.significant Only list fit values significantly different from 1
+#' @param use.names Use item names instead of item labes as node labels
 #' @param verbose Print results
 #' @export
 #' @details
@@ -36,7 +37,7 @@
 #' local.independence(DHP)
 #' @references
 #' Kreiner, S. & Christensen, K.B. (2011). Item Screening in Graphical Loglinear Rasch Models. *Psychometrika*, vol. 76, no. 2, pp. 228-256. DOI: 10.1007/s11336-9203-Y
-local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", "hochberg", "hommel", "bonferroni", "BY", "none"),digits=2,max.name.length=30,only.significant=F,verbose=T){
+local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("holm","BH","hochberg", "hommel", "bonferroni", "BY", "none"),digits=2,max.name.length=30,only.significant=F,use.names=F,verbose=T){
   p.adj <- match.arg(p.adj)
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
@@ -49,7 +50,7 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
   items<-get.column.no(do,items)
   item.names<-get.variable.names(do,items)
   #if(inherits(items,"character")) items<-match(items,item.names)
-  item.labels<-get.labels(do,items)
+  item.labels<-if(use.names) item.names else get.labels(do,items)
   header<-header.format("Test of local independence")
   # Combine items with LD
   environment(collapse.testlets) <- environment()
@@ -71,20 +72,14 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
     warning("More that two items are needed for analysis of local independency.")
   } else {
     colnames(selected)<-item.names
-    sink("/dev/null")
-    orig.result<-iarm::partgam_LD(selected,p.adj = p.adj)
-    sink()
-    # Remove NaN's
-    orig.result<-orig.result[[1]][!is.nan(orig.result[[1]]$gamma),]
+    orig.result<-partgam_LD(selected,p.adj = p.adj, verbose = F)
     result<-orig.result
-    missing.item1<-colnames(selected)[!colnames(selected) %in% unique(result$Item1)]
-    missing.item2<-colnames(selected)[!colnames(selected) %in% unique(result$Item2)]
-    result[nrow(result)+1,]<-c(missing.item1,missing.item2,rep(" ",7))
-    colnames(result)[5]<-"p.adj"
-    molten<-reshape2::melt(data = result[,-6],id.vars=c("Item1","Item2"),na.rm=T)
-    # tonum<-!molten$variable %in% c("sig")
+    colnames(result)[6]<-"p.adj"
+    molten<-reshape2::melt(data = result[,-7],id.vars=c("Item1","Item2"),na.rm=T)
+
     molten$value<-as.numeric(molten$value)
     dep.matrix<-reshape2::acast(data = molten,formula = Item1~Item2~variable,drop = F)
+
     num.col<-ncol(dep.matrix)
 
     is.dependant<-which(orig.result$p.adj<0.05)
@@ -98,31 +93,57 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("BH","holm", 
     nsign<-if(only.significant) which(apply(dep.matrix[,,"p.adj"],1:2,function(x) ifelse(x<0.05,T,F))) else c()
     siggammas[nsign]<-NA
 
-    order.cols<-order(apply(dep.matrix[,,"gamma"],2,function(x) sum(is.na(x))-sum(is.nan(x))),decreasing = T)
-    order.rows<-order(apply(dep.matrix[,,"gamma"],1,function(x) sum(is.na(x))-sum(is.nan(x))),decreasing = F)
-    order.names<-match(rownames(dep.matrix[,,"gamma"])[order.rows],colnames(selected))
-    order.labels<-match(colnames(dep.matrix[,,"gamma"])[order.cols],colnames(selected))
-
+    order.names<-match(item.names,rownames(dep.matrix[,,"gamma"]))
 
     if(verbose)
-      print.corr.matrix(corr.matrix=dep.matrix[order.rows,order.cols,"gamma"],pvals = dep.matrix[order.rows,order.cols,"p.adj"],cnames = item.labels[order.labels],rnames=paste(item.labels[order.names],item.names[order.names],sep = ": "),digits = digits) #rownames(dep.matrix) erstattet af item.names
+      print.corr.matrix(corr.matrix=dep.matrix[order.names,order.names,"gamma"],pvals = dep.matrix[order.names,order.names,"p.adj"],cnames = item.labels,rnames=if(use.names) item.labels else paste(item.labels,item.names,sep = ": "),digits = digits)
 
     # Draw graph
-    dograph<-as_tbl_graph(do,items=items,LD=orig.result[orig.result[,5]<0.05,1:3])
+    # Remove NaN's
+    result<-result[!is.nan(result$gamma),]
+    dograph<-as_tbl_graph(do,items=items,LD=result[result[,6]<0.05,1:3])
     p<-
       ggraph::ggraph(dograph,layout="fr")+
-      ggraph::geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),round(abs(gamma),digits),""),alpha=ifelse(!is.na(gamma),abs(gamma),.4),color=is.na(gamma)),
+      ggraph::geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),round(gamma,digits),""),alpha=ifelse(!is.na(gamma),abs(gamma),.4),color=is.na(gamma)),
                      angle_calc="along",label_dodge=unit(.25,"cm"),end_cap = ggraph::square(.5, 'cm'),start_cap = ggraph::square(.5, 'cm'),arrow = arrow(angle=10,length=unit(.2,"cm")))+
-      ggraph::geom_node_label(mapping = aes(label=label,color=type)) +
+      ggraph::geom_node_label(mapping = aes(label=if(use.names) name else label,color=type)) +
       theme_void()+
       theme(legend.position = "none")+
       ggraph::scale_edge_color_brewer(palette = "Set1" ,limits=c(FALSE,TRUE))+
       scale_color_brewer(palette = "Set2")# ,limits=c(FALSE,TRUE))
 
-#   if(knitr::is_latex_output() || knitr::is_html_output()) {
      print(p)
-#    } else print(p)
     invisible(orig.result)
   }
 }
 #local.independence(do=proces.do,items = grep(paste0("^",m), colnames(proces.do$recoded)))
+
+
+# Hacking iarm
+partgam_LD<-function (dat.items, p.adj = c("BH", "holm", "hochberg", "hommel", "bonferroni", "BY", "none"), verbose=T)
+{
+  padj <- match.arg(p.adj)
+  dat.items<-dat.items[complete.cases(dat.items),]
+  score <- rowSums(dat.items)
+  k <- ncol(dat.items)
+  result<-setNames(data.frame(matrix(ncol = 9,nrow=0)),c("Item1", "Item2","gamma", "se", "pvalue","padj", "sig", "lower","upper"))
+  for(i in 1:k) {
+    for(j in 1:k) {
+      if(i!=j) {
+        rest <- score - dat.items[,j]
+        mm <- iarm::partgam(dat.items[,i], dat.items[,j], rest)
+        result[nrow(result)+1,]<-c(names(dat.items)[j],names(dat.items)[i],mm[dim(mm)[1], 1:2],NA,NA,NA,mm[dim(mm)[1], 3:4])
+      }
+    }
+  }
+  result$pvalue <- apply(result[,3:4],1,function(x) ifelse(x[1] > 0, 2 * (1 - pnorm(x[1]/x[2])), 2 * (pnorm(x[1]/x[2]))))
+  result$padj<-p.adjust(result$pvalue, method = padj)#, n = (k * (k - 1))) #/2
+  result$sig<-symnum(result$padj, cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1), symbols = c(" ***", " **", " *", " .", " "))
+  names(result)[6] <- paste("padj", padj, sep = ".")
+
+  if(verbose) {
+      print(cbind(result[, 1:2], round(result[,3:ifelse(padj == "none",5,6)], digits = 4), sig = result[, 7], round(result[,8:9], digits = 4)))
+      cat("\n")
+    }
+  invisible(result)
+}
