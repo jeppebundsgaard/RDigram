@@ -2,6 +2,7 @@
 #'
 #' @param do A digram.object
 #' @param items The items to include in the analysis
+#' @param groups Names or column numbers of exogenous variables to use for grouping in TAM. If more names are given, all combinations of values are calculated and used as grouping variables.
 #' @param ncases Number of cases to sample for the estimation (0 uses all cases)
 #' @param constraint Constraint on "cases" or "items"
 #' @param use.package Which R package to use for the estimation. TAM and eRm are implemented.
@@ -35,7 +36,7 @@
 #' mod1$deviance
 #' mod2$deviance
 #' mod1$deviance-mod2$deviance
-digram.estimate<-function(do,items=NULL,ncases=0,constraint = "cases",use.package=c("TAM","eRm"),collapse.testlets=F,init.model=NULL,tam.control=list(),sum0=T,verbose=T,...) {
+digram.estimate<-function(do,items=NULL,groups=NULL,ncases=0,constraint = "cases",use.package=c("TAM","eRm"),collapse.testlets=F,init.model=NULL,tam.control=list(),sum0=T,verbose=T,...) {
   use.package<-match.arg(use.package)
   if(use.package=="TAM") tam.control$progress <- verbose
   if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
@@ -81,6 +82,15 @@ digram.estimate<-function(do,items=NULL,ncases=0,constraint = "cases",use.packag
     variance.inits=init.model$variance
   }  else {xsi.inits<-variance.inits<-NULL}
   selected<-resp[,items]
+  if(!is.null(groups)) {
+    groupitems<-get.column.no(do,groups)
+    #cats<-sapply(groupitems,function(i) {do$variables[[i]]$category.names[do$variables[[i]]$category.names$Category %in% c(do$variables[[i]]$cutpoints,do$variables[[i]]$maximum),"Name"][do$recoded[,i]+1]})
+    cats<-sapply(groupitems,function(i) {do$variables[[i]]$category.names$Name[do$recoded[,i]+1]})
+    group<-do.call("paste",c(as.data.frame(cats),sep="_"))
+    if(any(table(group)<2)) stop(paste("There is only one member of group(s):",names(table(group))[table(group)<2],collapse = ", "))
+
+  } else group<-NULL
+
   testlets<-rep(NA, length(items))
   if(!is.null(do$testlets)) {
     if(collapse.testlets) {
@@ -89,7 +99,7 @@ digram.estimate<-function(do,items=NULL,ncases=0,constraint = "cases",use.packag
         items<-c(items,newitem)
         olditems<-which(items %in% testlet$testlet)
         # Recode
-        resp[,newitem]<-apply(resp[,testlet$testlet],1,sum,na.rm=T)
+        resp[,newitem]<-apply(resp[,testlet$testlet],1,sum)#,na.rm=T)
         # Combine names and labels
         newname<-paste(item.names[olditems],collapse = "+")
         item.names<-c(item.names,newname)
@@ -109,7 +119,7 @@ digram.estimate<-function(do,items=NULL,ncases=0,constraint = "cases",use.packag
     mod<-switch (use.package,
       "TAM"={
           if(collapse.testlets) {
-            TAM::tam.mml(resp=selected,xsi.inits = xsi.inits,variance.inits = variance.inits,constraint = constraint, control=tam.control,...)
+            TAM::tam.mml(resp=selected,group = group,xsi.inits = xsi.inits,variance.inits = variance.inits,constraint = constraint, control=tam.control,...)
           } else {
             for(i in 1:length(do$testlets)) {
               testlets[do$testlets[[i]]$testlet]<-i
@@ -134,7 +144,7 @@ digram.estimate<-function(do,items=NULL,ncases=0,constraint = "cases",use.packag
   } else {
     mod<-switch (use.package,
                  "TAM"={
-                   TAM::tam.mml(resp=selected,xsi.inits = xsi.inits,variance.inits = variance.inits,constraint = constraint, control=tam.control,...)
+                   TAM::tam.mml(resp=selected,group = group,xsi.inits = xsi.inits,variance.inits = variance.inits,constraint = constraint, control=tam.control,...)
                  },
                  "eRm"={
                    naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)

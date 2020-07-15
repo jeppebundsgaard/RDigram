@@ -7,6 +7,7 @@
 digram.estimate(
   do,
   items = NULL,
+  groups = NULL,
   ncases = 0,
   constraint = "cases",
   use.package = c("TAM", "eRm"),
@@ -22,6 +23,8 @@ digram.estimate(
 \item{do}{A digram.object}
 
 \item{items}{The items to include in the analysis}
+
+\item{groups}{Names or column numbers of exogenous variables to use for grouping in TAM. If more names are given, all combinations of values are calculated and used as grouping variables.}
 
 \item{ncases}{Number of cases to sample for the estimation (0 uses all cases)}
 

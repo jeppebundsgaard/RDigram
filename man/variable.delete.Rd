@@ -15,7 +15,7 @@ variable.delete(do = NULL, variable.to.delete = NULL)
 Returns a DIGRAM object with (a) deleted variable(s)
 }
 \description{
-Delete one or more variable(s) in DIGRAM Object.
+Delete one or more variable(s) in a DIGRAM Object.
 }
 \details{
 A set of variables can be deleted by providing a vector of variable names/numbers.

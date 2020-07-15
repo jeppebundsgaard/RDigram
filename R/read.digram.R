@@ -77,13 +77,13 @@ read.digram<-function(project=NULL,path=""){
     variables[[i]]<-list(variable.name=variable.name,variable.label=variable.label,column.number=column.number,ncat=ncat,category.names=category.names,variable.type=variable.type,minimum=minimum,maximum=maximum,cutpoints=cutpoints)
 
   }
-  # Recode
-  recoded<-digram.recode(data,variables,filter.conditions)
   # The number of recursive blocks should appear on a separate record.
   recursive.blocks<-as.numeric(vars[i*2+2,1])
   recursive.structure<-as.numeric(as.matrix(vars[i*2+3,!is.na(vars[i*2+3,])]))
-  do<-list(project=project,data=data,recoded=recoded,variables=variables,filter.conditions=filter.conditions,recursive.blocks=recursive.blocks,recursive.structure=recursive.structure,comments=comments)
+  do<-list(project=project,data=data,recoded=NULL,variables=variables,filter.conditions=filter.conditions,recursive.blocks=recursive.blocks,recursive.structure=recursive.structure,comments=comments)
   class(do)<-"digram.object"
+  # Recode
+  do$recoded<-digram.recode(do)
   do
 }
 #' @title Write DIGRAM Object
@@ -106,12 +106,7 @@ read.digram<-function(project=NULL,path=""){
 write.digram<-function(do=NULL,path="",filename=do$project){
   # Helper functions
   e<-function(t) {gsub("\\x0d\\x0a","\r\n",stringi::stri_encode(t,to="cp865"))} # Encode to ASCII Nordic https://www.ascii-codes.com/cp865.html#extended_character_set
-
-  l<-function(a) {
-    if(recodelabs) {
-      substr(c865,a,a)
-    } else do$variables[[a]]$variable.label
-  }
+  l<-function(a) { if(recodelabs) { substr(c865,a,a)} else do$variables[[a]]$variable.label}
 
   if(!class(do)=="digram.object") stop("You need to provide a digram.object")
   # Settings
@@ -126,6 +121,16 @@ write.digram<-function(do=NULL,path="",filename=do$project){
   varfile<-paste0(basefile,".VAR")
   datfile<-paste0(basefile,".DAT")
   catfile<-paste0(basefile,".CAT")
+
+  # Combined variables need a column in the original data-frame.
+  for(i in 1:length(do$variables)) {
+    if(length(do$variables[[i]]$column.number)>1) {
+      next.col<-ncol(do$data)+1
+      do$data[,next.col]<-apply(do$data[,do$variables[[i]]$column.number],1,sum)
+      do$variables[[i]]$column.number<-next.col
+      colnames(do$data)[next.col]<-do$variables[[i]]$variable.name
+    }
+  }
 
   ndatcol<-ncol(do$data)
   cat(e(paste0(ndatcol,"\r\n")),file = deffile)

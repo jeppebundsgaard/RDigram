@@ -54,15 +54,18 @@ digram.object<-function(project=NULL,data=data.frame(),variables=NULL,filter.con
       variables[[i]]<-list(variable.name=variable.name,variable.label=variable.label,column.number=column.number,ncat=ncat,category.names=category.names,variable.type=variable.type,minimum=minimum,maximum=maximum,cutpoints=cutpoints)
     }
   }
-  recoded<-digram.recode(data,variables,filter.conditions)
   # The number of recursive blocks should appear on a separate record.
   if(is.null(recursive.structure)) recursive.structure<-length(variables)
   recursive.blocks<-length(recursive.structure)
-  do<-list(project=project,data=data,recoded=recoded,variables=variables,filter.conditions=filter.conditions,recursive.blocks=recursive.blocks,recursive.structure=recursive.structure,comments=comments)
+  do<-list(project=project,data=data,recoded=NULL,variables=variables,filter.conditions=filter.conditions,recursive.blocks=recursive.blocks,recursive.structure=recursive.structure,comments=comments)
   class(do)<-"digram.object"
+  do$recoded<-digram.recode(do)
   do
 }
-digram.recode<-function(data,variables,filter.conditions=NULL) {
+digram.recode<-function(do) {
+  data<-do$data
+  variables<-do$variables
+  filter.conditions<-do$filter.conditions
   # Recode data
   as.data.frame(sapply(variables,function(x) {
     cutpoints2<-matrix(c(x$minimum,x$cutpoints+.000001,x$cutpoints,x$maximum),ncol = 2,byrow = F)
@@ -71,6 +74,9 @@ digram.recode<-function(data,variables,filter.conditions=NULL) {
     recodestr<-paste(apply(matrix(c(froms,tos),ncol=2,byrow = F),1,paste,collapse="="),collapse=";")
     column.number<-x$column.number
     datacol<-data[,column.number]
+    # If this is a combined variable, add the columns together
+    if(is.data.frame(datacol)) datacol<-apply(datacol,1,sum)
+
     if(!is.null(filter.conditions)) {
       minmax<-filter.conditions[filter.conditions$variable.number==column.number,2:3]
       if(nrow(minmax)>0) {

@@ -48,7 +48,7 @@ variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,var
          cutpoints=if(is.null(cutpoints[[i]])) variable$cutpoints else cutpoints[[i]])
     colnames(do$data)[variable.num]<-do$variables[[variable.num]]$variable.name
   }
-  do$recoded<-digram.recode(do$data,do$variables,do$filter.conditions)
+  do$recoded<-digram.recode(do)
   do
 
 }
@@ -83,6 +83,70 @@ variable.delete<-function(do=NULL,variable.to.delete=NULL) {
   for(i in variable.to.delete[order(variable.to.delete)]) {
     do$recursive.structure[do$recursive.structure>=i]<-do$recursive.structure[do$recursive.structure>=i]-1
   }
-  do$recoded<-digram.recode(do$data,do$variables,do$filter.conditions)
+  do$recoded<-digram.recode(do)
+  do
+}
+
+#' @title Combine variables
+#' @name variables.combine
+#' @description Combines one or more variable(s) in a DIGRAM Object.
+#' @param do A digram.object
+#' @param variables.to.combine The numbers or names of the two or more variables to combine
+#' @param variable.name Name of the variable (string)
+#' @param variable.label Label of the variable (one or more uppercase letters)
+#' @param minimum Smallest value of the variable (lower values are coded NA)
+#' @param maximum Largest value of the variable (lower values are coded NA)
+#' @param cutpoints Cutpoints used to recode the variable
+#' Category 1: minimum <= values <= cutpoint(1)
+#' Category 2: cutpoint(1) < values <= cutpoint(2)
+#' ...
+#' Category N: cutpoint(n) < values <= maximum
+
+#' @export
+#' @details Only ordinal variables can be combined. The resulting variable can be manipulated and deleted as ordinary variables using variable.update and variable.delete.
+#' @return Returns a DIGRAM object with the new combined variable.
+#' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
+#' @examples
+#' data(DHP)
+#' DHP<-variables.combine(do=DHP,variables.to.combine=c("dhp36","dhp34"))
+#'
+variables.combine<-function(do=NULL,variables.to.combine=NULL,variable.name=NULL,variable.label=NULL,category.names=NULL,minimum=NULL,maximum=NULL,cutpoints=NULL) {
+  if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
+  if(is.null(variables.to.combine) | length(variables.to.combine)<2) stop("You need to provide numbers or names of 2 or more variables to combine")
+  variables.to.combine<-get.column.no(do,variables.to.combine)
+  for(i in variables.to.combine) if(do$variables[[i]]$variable.type!="ordinal") stop("Variables need to be of type ordninal.")
+
+  if(is.null(minimum)) minimum<-sum(sapply(variables.to.combine,function(x) do$variables[[x]]$minimum))
+  if(is.null(maximum)) maximum<-sum(sapply(variables.to.combine,function(x) do$variables[[x]]$maximum))
+  ncat<-maximum-minimum+1
+  if(is.null(category.names)) category.names<-data.frame(Category=1:(ncat),Name=0:(ncat-1))
+  if(is.null(cutpoints)) cutpoints<-minimum:(maximum-1)
+
+  column.numbers<-sapply(variables.to.combine,function(x) do$variables[[x]]$column.number)
+
+  new.variable.num=do$recursive.structure[1]
+  new.variable<-list(
+       variable.name=ifelse(is.null(variable.name),paste(get.variable.names(do,variables.to.combine),collapse = "+"),variable.name),
+       variable.label=ifelse(is.null(variable.label),paste(get.labels(do,variables.to.combine),collapse = "+"),variable.label),
+       column.number=column.numbers,
+       ncat=ncat,
+       category.names=category.names,
+       variable.type="ordinal",
+       minimum=minimum,
+       maximum=maximum,
+       cutpoints=cutpoints)
+
+  # Update recursive structure before insert
+  do$recursive.structure[do$recursive.structure>=new.variable.num]<-do$recursive.structure[do$recursive.structure>=new.variable.num]+1
+  # Insert variable
+  do$variables<-append(do$variables,values=list(new.variable),after=new.variable.num)
+  # Delete old variables
+  do$variables<-do$variables[-variables.to.combine]
+  # Update recursive structure after delete
+  for(i in variables.to.combine[order(variables.to.combine)]) {
+    do$recursive.structure[do$recursive.structure>=i]<-do$recursive.structure[do$recursive.structure>=i]-1
+  }
+
+  do$recoded<-digram.recode(do)
   do
 }
