@@ -15,12 +15,10 @@
 #' @return Returns a TAM result object
 #' @details
 #' Uses either the package TAM or eRm to estimate the model.
-#' If items have been coded as testlets, a bifactorial model is used, when using the TAM package. A slight change was necessary in the package. Therefore you need to get the custom version:
-#' library(devtools)
-#' install_github("jeppebundsgaard/TAM")
-#' In eRm, testlets are managed by creating a interaction parameter between the testlet items.
+#' If items have been coded as testlets, a bifactorial model is used in TAM ([tam.fa()]). Otherwise [tam.mml()] is used for estimation.
+#' In eRm, testlets are managed by creating an interaction parameter between the testlet items. In this case [LPCM()] is used for estimation. This is also the case, if groups are provided. Otherwise [PCM()] is used for estimation.
 #' @export
-#' @seealso [tam.mml()], [tam.fa()], [LPCM()]
+#' @seealso [tam.mml()], [tam.fa()], [PCM()], [LPCM()]
 #' @references
 #' Wang, W.-C., & Wilson, M. (2005). The Rasch Testlet Model. *Applied Psychological Measurement*, 29(2), 126–149. https://doi.org/10.1177/0146621604271053
 #' Rijmen, F. (2009). *Three multidimensional models for testlet-based tests: Formal relations and an empirical comparison*. ETS Research Report Series, 2009(2), i–13. https://doi.org/10.1002/j.2333-8504.2009.tb02194.x
@@ -87,7 +85,8 @@ digram.estimate<-function(do,items=NULL,groups=NULL,ncases=0,constraint = "cases
     #cats<-sapply(groupitems,function(i) {do$variables[[i]]$category.names[do$variables[[i]]$category.names$Category %in% c(do$variables[[i]]$cutpoints,do$variables[[i]]$maximum),"Name"][do$recoded[,i]+1]})
     cats<-sapply(groupitems,function(i) {do$variables[[i]]$category.names$Name[do$recoded[,i]+1]})
     group<-do.call("paste",c(as.data.frame(cats),sep="_"))
-    if(any(table(group)<2)) stop(paste("There is only one member of group(s):",names(table(group))[table(group)<2],collapse = ", "))
+    group[apply(cats,1,function(x) any(is.na(x)))]<-"NA"
+    if(any(table(group)<2)) stop(paste("There is only one member of group(s):",paste(names(table(group))[table(group)<2],collapse = ", ")))
 
   } else group<-NULL
 
@@ -129,7 +128,11 @@ digram.estimate<-function(do,items=NULL,groups=NULL,ncases=0,constraint = "cases
         },
       "eRm"={
           if(collapse.testlets) {
-            eRm::PCM(X = selected,sum0=sum0)
+            if(!is.null(group)){
+              group<-as.numeric(as.factor(group))
+              eRm::LPCM(X=selected,groupvec = group,sum0 = sum0)
+            } else
+              eRm::PCM(X = selected,sum0=sum0)
           } else {
             W<-build_digram_W(do,items,item.labels,sum0 = sum0)
             # Remove item-nums
@@ -137,7 +140,8 @@ digram.estimate<-function(do,items=NULL,groups=NULL,ncases=0,constraint = "cases
             #selected<-resp[,items]
             naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)
             selected<-selected[!naonly,]
-            eRm::LPCM(X = selected,W = W,sum0=sum0)
+            if(is.null(group)) group<-1
+            eRm::LPCM(X = selected,W = W,groupvec = group,sum0=sum0)
           }
       }
     )

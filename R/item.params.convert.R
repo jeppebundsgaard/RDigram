@@ -2,7 +2,9 @@
 #'
 pcm.to.pcm.cent<-function(item.params) {
   beta<-apply(item.params,1,mean,na.rm=T)
-  cbind(beta,item.params-beta)
+  beta<-cbind(beta,item.params-beta)
+  colnames(beta)<-c("beta",paste0("beta.",1:ncol(item.params)))
+  beta
 }
 #> item.params.convert Andersen parameters item parameters calculated from Centralized Partial Credit Model parameters
 #'
@@ -110,14 +112,18 @@ psd.to.conquest<-function(item.params) {
 #> item.params.convert Partial Credit Model item parameters calculated from Conquest parameters
 #'
 conquest.to.pcm<-function(item.params=NULL) {
-
+  if(ncol(item.params)>1) {
+    item.params[,2][is.na(item.params[,2])]<-0
+    item.params<-item.params[,2:ncol(item.params)]+item.params[,1]
+  }
+  colnames(item.params)<-paste0("tau.",1:ncol(item.params))
+  item.params
 }
 #> item.params.convert Centralized Partial Credit Model item parameters calculated from Conquest parameters
 #'
 
 conquest.to.pcm.cent<-function(item.params=NULL) {
-
-
+  pcm.to.pcm.cent(conquest.to.pcm(item.params))
 }
 #> item.params.convert Andersen item parameters calculated from Conquest parameters
 #'
@@ -191,8 +197,8 @@ delta.to.conquest.item<-function(single.item.params) {
 #' @param from.model A model of class TAM or eRm.
 #' @param item.params A matrix of item parameters (items in rows, thresholds in columns) (not needed if from.model is given)
 #' @param from,to Type of item parameters. One of pcm, pcm.cent, andersen, psd, conquest (from not needed if from.model is given).
-#'
-#' @return Returns item parameters in the parametrization specified in *to*
+#' @param return.vector Get result as a vector of category values instead of the default data.frame
+#' @return Returns item parameters in the parametrization specified in *to*.
 #' @export
 #' @details
 #' The Rasch model can be parameterized in multiple ways. This function translates parameters from one to the other. The following models are supported:
@@ -233,17 +239,16 @@ delta.to.conquest.item<-function(single.item.params) {
 #' @examples
 #' item.params<-matrix(c(0,1,2,3,1,2,3,4),nrow=4)
 #' item.params.convert(item.params=item.params,from="conquest",to="psd")
-item.params.convert<-function(from.model=NULL,item.params=c(),from=c("pcm","pcm.cent","andersen","psd","conquest"),to=c("pcm","pcm.cent","andersen","psd","conquest")) {
+item.params.convert<-function(from.model=NULL,item.params=c(),from=c("pcm","pcm.cent","andersen","psd","conquest"),to=c("pcm","pcm.cent","andersen","psd","conquest"), return.vector=F) {
   if(is.null(from.model)) {
     if(!is.null(attributes(item.params)$par.type)) {
       from<-attributes(item.params)$par.type
     } else from<-match.arg(from)
   } else {
-    from<-"andersen"#switch(class(from.model),"tam.mml"="conquest","eRm"="andersen")
-    item.params<-get.item.params(from.model)
-    #item.params<-item.params[,1:(ncol(item.params)/2)] # only use the item params, not the standard errors
+    from<-switch(intersect(class(from.model),c("tam.mml","eRm")),"tam.mml"="conquest","eRm"="andersen")
+    item.params<-get.item.params(from.model,type=from)
   }
-  if(class(item.params)=="numeric") {item.params<-matrix(item.params,nrow=1)}
+  if(inherits(item.params,"numeric")) {item.params<-matrix(item.params,nrow=1)}
   if(!inherits(item.params,"matrix")) {item.params<-as.matrix(item.params)}
   to<-match.arg(to)
   cat(from," -> ",to,"\n")
@@ -252,6 +257,8 @@ item.params.convert<-function(from.model=NULL,item.params=c(),from=c("pcm","pcm.
          "conquest"=switch(to,
                        "psd"=andersen.to.psd(conquest.to.andersen(item.params = item.params)),
                        "andersen"=conquest.to.andersen(item.params = item.params), #Okay!
+                       "pcm"=conquest.to.pcm(item.params = item.params),
+                       "pcm.cent"=conquest.to.pcm.cent(item.params = item.params),
                        stop("This conversion is not implemented yet, sorry!")
          ),
          "psd"=switch(to,
@@ -283,6 +290,8 @@ item.params.convert<-function(from.model=NULL,item.params=c(),from=c("pcm","pcm.
          stop("This conversion is not implemented yet, sorry!")
   )
   attributes(item.params)$par.type=to
+  if(return.vector && is.matrix(item.params))
+    item.params<-unlist(apply(item.params, 1, function(x) x[!is.na(x)]))
   item.params
 }
 

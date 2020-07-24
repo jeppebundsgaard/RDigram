@@ -8,7 +8,8 @@ item.params.convert(
   from.model = NULL,
   item.params = c(),
   from = c("pcm", "pcm.cent", "andersen", "psd", "conquest"),
-  to = c("pcm", "pcm.cent", "andersen", "psd", "conquest")
+  to = c("pcm", "pcm.cent", "andersen", "psd", "conquest"),
+  return.vector = F
 )
 }
 \arguments{
@@ -17,9 +18,11 @@ item.params.convert(
 \item{item.params}{A matrix of item parameters (items in rows, thresholds in columns) (not needed if from.model is given)}
 
 \item{from, to}{Type of item parameters. One of pcm, pcm.cent, andersen, psd, conquest (from not needed if from.model is given).}
+
+\item{return.vector}{Get result as a vector of category values instead of the default data.frame}
 }
 \value{
-Returns item parameters in the parametrization specified in \emph{to}
+Returns item parameters in the parametrization specified in \emph{to}.
 }
 \description{
 Convert item parameters from one parametrization to another

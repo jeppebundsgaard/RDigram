@@ -80,7 +80,7 @@ variable.delete<-function(do=NULL,variable.to.delete=NULL) {
   if(!is.null(do$testlets)) do$testlets<-lapply(do$testlets,function(x) {x$testlet<-x$testlet[!(names(x$testlet) %in% var.names)]; x})
   if(!is.null(do$splits)) do$splits<-do$splits[apply(do$splits,1,function(x) {length(intersect(x,variable.to.delete))==0}),]
   # Update recursive structure
-  for(i in variable.to.delete[order(variable.to.delete)]) {
+  for(i in variable.to.delete[order(variable.to.delete,decreasing = T)]) {
     do$recursive.structure[do$recursive.structure>=i]<-do$recursive.structure[do$recursive.structure>=i]-1
   }
   do$recoded<-digram.recode(do)

@@ -12,6 +12,7 @@
 #' tamobj<-digram.estimate(DHP)
 #' get.item.params(tamobj)
 get.item.params<-function(obj,type=c("andersen","conquest"),include.se=F) {
+  type=match.arg(type)
   switch(which(c("tam.mml","eRm") %in% class(obj)),
     "1"={#"tam.mml"
       # A<-obj$A
@@ -42,16 +43,18 @@ get.item.params<-function(obj,type=c("andersen","conquest"),include.se=F) {
       m<-melt(obj$betapar)
       m<-cbind(m,matrix(unlist( strsplit(sub("beta ","",names(obj$betapar)),split = "\\.c")),ncol=2,byrow = T))
       colnames(m)<-c("beta","item","category")
-      m$category<-paste0("cat.",m$category)
+      m$category<-strtoi(m$category)
       beta<-dcast(data = melt(m,id.vars = c("item","category"))[,c(1,2,4)],item~category )
-      item.params<-cbind(beta[,-1])
+      item.params<-beta[,-1]
+      colnames(item.params)<-paste0("cat.",colnames(item.params))
       if(include.se) {
         m<-melt(obj$se.beta)
         m<-cbind(m,matrix(unlist( strsplit(sub("beta ","",names(obj$betapar)),split = "\\.c")),ncol=2,byrow = T))
         colnames(m)<-c("beta","item","category")
-        m$category<-paste0("se.cat.",m$category)
-        error<-dcast(data = melt(m,id.vars = c("item","category"))[,c(1,2,4)],item~category )
-        item.params<-cbind(item.params,error[,-1])
+        m$category<-strtoi(m$category)
+        error<-dcast(data = melt(m,id.vars = c("item","category"))[,c(1,2,4)],item~category )[,-1]
+        colnames(error)<-paste0("se.cat.",colnames(error))
+        item.params<-cbind(item.params,error)
       }
       orig.order<-match(unique(sub("^beta (.*).c[1-9]+$","\\1",names(obj$betapar))),beta[,1])
       row.names(item.params)<-beta[,1]

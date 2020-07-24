@@ -50,10 +50,8 @@ Estimate RDigram object using TAM
 }
 \details{
 Uses either the package TAM or eRm to estimate the model.
-If items have been coded as testlets, a bifactorial model is used, when using the TAM package. A slight change was necessary in the package. Therefore you need to get the custom version:
-library(devtools)
-install_github("jeppebundsgaard/TAM")
-In eRm, testlets are managed by creating a interaction parameter between the testlet items.
+If items have been coded as testlets, a bifactorial model is used in TAM (\code{\link[=tam.fa]{tam.fa()}}). Otherwise \code{\link[=tam.mml]{tam.mml()}} is used for estimation.
+In eRm, testlets are managed by creating an interaction parameter between the testlet items. In this case \code{\link[=LPCM]{LPCM()}} is used for estimation. This is also the case, if groups are provided. Otherwise \code{\link[=PCM]{PCM()}} is used for estimation.
 }
 \examples{
 data(DHP)
@@ -72,5 +70,5 @@ Wang, W.-C., & Wilson, M. (2005). The Rasch Testlet Model. \emph{Applied Psychol
 Rijmen, F. (2009). \emph{Three multidimensional models for testlet-based tests: Formal relations and an empirical comparison}. ETS Research Report Series, 2009(2), i–13. https://doi.org/10.1002/j.2333-8504.2009.tb02194.x
 }
 \seealso{
-\code{\link[=tam.mml]{tam.mml()}}, \code{\link[=tam.fa]{tam.fa()}}, \code{\link[=LPCM]{LPCM()}}
+\code{\link[=tam.mml]{tam.mml()}}, \code{\link[=tam.fa]{tam.fa()}}, \code{\link[=PCM]{PCM()}}, \code{\link[=LPCM]{LPCM()}}
 }
