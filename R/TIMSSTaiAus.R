@@ -1,4 +1,4 @@
-#' @title TIMSS data for Taiwan and Austrailia
+#' @title TIMSS data for Taiwan and Australia
 #' @description TIMSS 2011 mathematics tests, released items, blocks 1 and 14, for Taiwan and Australian students. From TAM tutorial https://www.edmeasurementsurveys.com/TAM/Tutorials/5PartialCredit.htm. Coded according to the tutorial.
 #' @docType data
 #' @keywords datasets

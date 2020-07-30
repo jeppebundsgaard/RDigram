@@ -38,9 +38,9 @@ print.corr.matrix<-function(corr.matrix=NULL,pvals=NULL,cnames=NULL,rnames=NULL,
 #' Get variable labels
 #'
 #' @param do A digram.object
-#' @param items The variable.numbers of the items or exogeneous variables to provide the labels for
+#' @param items The variable.numbers of the items or exogenous variables to provide the labels for
 #'
-#' @return Returns the variable.labels of the items/exogeneous variables .
+#' @return Returns the variable.labels of the items/exogenous variables .
 #' @export
 #'
 #' @examples
@@ -60,9 +60,9 @@ get.labels<-function(do,items=NULL) {
 #' Get variable names
 #'
 #' @param do A digram.object
-#' @param items The variable.numbers of the items or exogeneous variables to provide the names for
+#' @param items The variable.numbers of the items or exogenous variables to provide the names for
 #'
-#' @return Returns the variable.names of the items/exogeneous variables .
+#' @return Returns the variable.names of the items/exogenous variables .
 #' @export
 #'
 #' @examples

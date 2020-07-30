@@ -17,18 +17,67 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
     resp<-do$recoded
-    labels<-sapply(do$variables,function(x)x$variable.label)
-  }else labels<-letters[1:ncol(resp)]
+    item.labels<-sapply(do$variables,function(x)x$variable.label)
+  }else item.labels<-letters[1:ncol(resp)]
   items<-get.column.no(do,items)
-  #
-  # if(class(items)=="character") {
-  #   items<-apply(as.matrix(strsplit(items,"")[[1]]),1,function(x) which(labels %in% x))
-  # }
+  all.olditems<-c()
+  if(!is.null(do$testlets)) {
+    for(testlet in do$testlets){
+      olditems<-which(items %in% testlet$testlet)
+      if(length(olditems)>0) {
+        newitem<-ncol(resp)+1
+        items<-c(items,newitem)
+        all.olditems<-c(all.olditems,olditems)
+        # Recode
+        resp[,newitem]<-apply(resp[,testlet$testlet],1,sum)#,na.rm=T)
+        # Combine names and item.labels
+        colnames(resp)[newitem]<-testlet$name
+        item.labels<-c(item.labels,testlet$label)
+      }
+    }
+  }
+
+  if(!is.null(do$split)) {
+    if(!accept.na) {
+      warning("Set accept.na to TRUE if you want to get information on split items.")
+    } else {
+      for (i in 1:nrow(do$split)) {
+        splits<-do$split[i,]
+        olditem<-as.numeric(splits[1])
+        if(length(olditem %in% items)>0) {
+          exoitem<-as.numeric(splits[2])
+          exocat<-do$variables[[exoitem]]$category.names
+          ncat<-do$variables[[exoitem]]$ncat
+          newitems<-ncol(resp)+1:ncat
+          items<-c(items,newitems)
+          all.olditems<-c(all.olditems,olditem)
+          # Split
+          nas<-rep(NA,ncat)
+          resp[,newitems]<-sapply(1:nrow(resp),function(i) {
+            newscores<-nas
+            if(resp[i,exoitem] %in% exocat[,2]) newscores[resp[i,exoitem]]<-resp[i,olditem]
+            newscores
+          })
+
+          # Combine names and item.labels
+          olditemno<-which(items %in% olditem)
+          newnames<-paste0(colnames(resp)[olditem],"_",exocat[,2])
+          colnames(resp)[newitems]<-newnames
+          item.labels<-c(item.labels,paste0(item.labels[olditemno],"_",do$variables[[exoitem]]$variable.label,1:ncat))
+        }
+      }
+    }
+  }
+
+  # Remove old.items used in testlet and split
+  if(length(all.olditems)>0) {
+    items<-items[-all.olditems]
+  }
   selected<-resp[,items]
   selectednona<-if(!accept.na) na.omit(selected) else selected
   if(nrow(selectednona)==0) stop("No cases without NA's. Try setting accept.na to TRUE")
   header.format("Variables selected for item analysis")
-  cat("\nItems: ",labels[items])
+  cat("\nItems: ",item.labels[items])
 
   ########################
   # Item scores
@@ -40,7 +89,7 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
     name<-colnames(selected)[i]
     x<-selected[,name]
     y<-selectednona[,name]
-    items.scores[i,]<-c(paste(labels[i],":",name),sum(!is.na(x)),mean(x,na.rm = T),sum(!is.na(y)),mean(y),paste(min(x,na.rm = T),"-",max(x,na.rm = T)))
+    items.scores[i,]<-c(paste(item.labels[items][i],":",name),sum(!is.na(x)),mean(x,na.rm = T),sum(!is.na(y)),mean(y),paste(min(x,na.rm = T),"-",max(x,na.rm = T)))
   }
   items.scores[,c(2:5)]<-apply(items.scores[,c(2:5)],2,as.numeric)
   if(knitr::is_latex_output() || knitr::is_html_output()){
@@ -56,7 +105,7 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
 
   maxall<-max(selectednona,na.rm=T)
   scoredist<-data.frame(t(sapply(1:ncol(selectednona),function(i) {
-    sapply(0:maxall,function(j) sum(selectednona[,i]==j))
+    sapply(0:maxall,function(j) sum(selectednona[,i]==j,na.rm = accept.na))
   })))
   colnames(scoredist)<-paste(ifelse((knitr::is_latex_output() || knitr::is_html_output()),"","Category "),0:maxall,sep = "")
   rownames(scoredist)<-colnames(selectednona)

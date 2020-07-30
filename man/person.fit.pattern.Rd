@@ -17,7 +17,7 @@ person.fit.pattern(
 \arguments{
 \item{do}{a DIGRAM object}
 
-\item{resp}{a matix of responses (if no DIGRAM object is supplied)}
+\item{resp}{a matrix of responses (if no DIGRAM object is supplied)}
 
 \item{items}{a vector of items to use}
 

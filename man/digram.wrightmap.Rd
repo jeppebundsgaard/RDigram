@@ -27,7 +27,7 @@ digram.wrightmap(
 \item{verbose}{Boolean. Set to TRUE to get information about progress.}
 }
 \value{
-Returns a list of item difficulties as thresholds and person abillities as thetas
+Returns a list of item difficulties as thresholds and person abilities as thetas
 }
 \description{
 Draw a Wrightmap

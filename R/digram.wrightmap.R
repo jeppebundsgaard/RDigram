@@ -8,7 +8,7 @@
 #' @param verbose Boolean. Set to TRUE to get information about progress.
 #'
 #' @return
-#' Returns a list of item difficulties as thresholds and person abillities as thetas
+#' Returns a list of item difficulties as thresholds and person abilities as thetas
 #' @export
 #'
 #' @examples

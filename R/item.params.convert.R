@@ -49,7 +49,7 @@ pcm.cent.to.conquest<-function(item.params) {
 andersen.to.pcm<-function(item.params) {
   # Andersen params are easiness params, we make them difficulty params
   ncat<-ncol(item.params)
-  pcm.params<--cbind(item.params[,1],sapply(2:ncat,function(x) item.params[,x]-item.params[,x-1]))
+  pcm.params<-if(ncat==1) -as.data.frame(item.params) else -cbind(item.params[,1],sapply(2:ncat,function(x) item.params[,x]-item.params[,x-1]))
   colnames(pcm.params)<-paste0("tau.",1:ncol(item.params))
   pcm.params
 }
@@ -213,10 +213,10 @@ delta.to.conquest.item<-function(single.item.params) {
 #'     \eqn{exp(x\theta-\sum\limits_{i=1}^x\tau_i) \over G(\theta,\tau_1 ... \tau_k)}, where \eqn{\theta} is the person parameter (ability), and \eqn{\tau_x} are the item step parameters
 #'   }
 #'   \item{Partial Credit Model (PCM)/Masters' parametrization with centralized item step parameters (pcm.cent)} {\cr
-#'     \eqn{exp(x(\theta-\beta)-\sum\limits_{i=1}^x\beta_i) \over G(\theta,\beta_1 ... \beta_k)}, where \eqn{\theta} is the person parameter (ability), \eqn{\beta={1 \over k}\sum\limits_{i=1}^k \tau_i} is the avarage of the \eqn{\tau} parameters from the PCM parametrization, and \eqn{\beta_x=\tau_x-{1 \over k}\sum\limits_{i=1}^k \tau_i} are the centralized item step parameters
+#'     \eqn{exp(x(\theta-\beta)-\sum\limits_{i=1}^x\beta_i) \over G(\theta,\beta_1 ... \beta_k)}, where \eqn{\theta} is the person parameter (ability), \eqn{\beta={1 \over k}\sum\limits_{i=1}^k \tau_i} is the average of the \eqn{\tau} parameters from the PCM parametrization, and \eqn{\beta_x=\tau_x-{1 \over k}\sum\limits_{i=1}^k \tau_i} are the centralized item step parameters
 #'   }
 #'   \item{Conquest parametrization (conquest)} {\cr
-#'     \eqn{exp(x(\theta-\psi-\sum\limits_{i=1} x\psi_x) \over G(\theta,\psi_1 ... \psi_k)}, where \eqn{\sum_limits{i=1}^x\psi_i \equiv 0}. And where \eqn{\theta} is the person parameter (ability), \eqn{\psi={1 \over k}\sum\limits_{i=1}^k \tau_i} is the avarage of the \eqn{\tau} parameters from the PCM parametrization, and \eqn{\psi_x=\tau_x-{1 \over k}\sum\limits_{i=1}^k \tau_i} are the centralized item step parameters
+#'     \eqn{exp(x(\theta-\psi-\sum\limits_{i=1} x\psi_x) \over G(\theta,\psi_1 ... \psi_k)}, where \eqn{\sum_limits{i=1}^x\psi_i \equiv 0}. And where \eqn{\theta} is the person parameter (ability), \eqn{\psi={1 \over k}\sum\limits_{i=1}^k \tau_i} is the average of the \eqn{\tau} parameters from the PCM parametrization, and \eqn{\psi_x=\tau_x-{1 \over k}\sum\limits_{i=1}^k \tau_i} are the centralized item step parameters
 #'   }
 #' }
 #' [TAM] uses Conquest parametrization. [eRm] uses Andersen parametrization. RUMM 2030 uses Partial Credit parametrization with centralized item step parameters. DIGRAM uses Power Series Distribution parametrization.
@@ -251,7 +251,6 @@ item.params.convert<-function(from.model=NULL,item.params=c(),from=c("pcm","pcm.
   if(inherits(item.params,"numeric")) {item.params<-matrix(item.params,nrow=1)}
   if(!inherits(item.params,"matrix")) {item.params<-as.matrix(item.params)}
   to<-match.arg(to)
-  cat(from," -> ",to,"\n")
   if(from==to) {return(item.params)}
   item.params<-switch(from,
          "conquest"=switch(to,
@@ -289,7 +288,9 @@ item.params.convert<-function(from.model=NULL,item.params=c(),from=c("pcm","pcm.
          ),
          stop("This conversion is not implemented yet, sorry!")
   )
-  attributes(item.params)$par.type=to
+  attributes(item.params)$par.type<-to
+  attributes(item.params)$from.type<-from
+
   if(return.vector && is.matrix(item.params))
     item.params<-unlist(apply(item.params, 1, function(x) x[!is.na(x)]))
   item.params

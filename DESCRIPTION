@@ -1,13 +1,14 @@
 Package: RDigram
 Type: Package
 Title: Analysis of Items from Tests and Surveys
-Version: 0.1.0
-Date: 2019-12-06
+Version: 0.2.0
+Date: 2020-07-30
 Author: Jeppe Bundsgaard & Svend Kreiner
 Maintainer: Jeppe Bundsgaard <jebu@edu.au.dk>
 Description: Functions for analysis categorical data from achievement tests and surveys
 License: GPL-3
 Encoding: UTF-8
+Language: en-US
 LazyData: true
 RoxygenNote: 7.1.0
 Roxygen: list(markdown = TRUE,roclets = c("rd", "collate","namespace","vignette"))

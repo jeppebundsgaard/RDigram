@@ -14,7 +14,7 @@
 #' ...
 #' Category N: cutpoint(n) < values <= maximum
 #' @export
-#' @details A set of variables can be updated by providing a vector of variable names/numbers to update and ordered lists whith their new properties. For variable.type, cutpoints, minimum and maximum you can provide one property to give all variables.
+#' @details A set of variables can be updated by providing a vector of variable names/numbers to update and ordered lists with their new properties. For variable.type, cutpoints, minimum and maximum you can provide one property to give all variables.
 #' @return Returns a DIGRAM object with (an) updated variable(s)
 #' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
 #' @examples
@@ -94,6 +94,12 @@ variable.delete<-function(do=NULL,variable.to.delete=NULL) {
 #' @param variables.to.combine The numbers or names of the two or more variables to combine
 #' @param variable.name Name of the variable (string)
 #' @param variable.label Label of the variable (one or more uppercase letters)
+#' @param combine.type How to combine the variables. Values are:
+#' "sum": add values of ingoing variables together
+#' "or": if one of the variables has a value other than 0, use it (in case of polytomous values, use the highest)
+#' "xor": if ONLY one of the variables has a value other than 0, use it
+#' "and": if ALL variables has the same value, use it
+#' "onlyif" if the first variable has a value, use it. If the second has a value, add it to the first. If the third has a value ... etc.
 #' @param minimum Smallest value of the variable (lower values are coded NA)
 #' @param maximum Largest value of the variable (lower values are coded NA)
 #' @param cutpoints Cutpoints used to recode the variable
@@ -110,9 +116,10 @@ variable.delete<-function(do=NULL,variable.to.delete=NULL) {
 #' data(DHP)
 #' DHP<-variables.combine(do=DHP,variables.to.combine=c("dhp36","dhp34"))
 #'
-variables.combine<-function(do=NULL,variables.to.combine=NULL,variable.name=NULL,variable.label=NULL,category.names=NULL,minimum=NULL,maximum=NULL,cutpoints=NULL) {
+variables.combine<-function(do=NULL,variables.to.combine=NULL,variable.name=NULL,variable.label=NULL,category.names=NULL,combine.type=c("sum","or","xor","and","onlyif"),minimum=NULL,maximum=NULL,cutpoints=NULL) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   if(is.null(variables.to.combine) | length(variables.to.combine)<2) stop("You need to provide numbers or names of 2 or more variables to combine")
+  combine.type<-match.arg(combine.type)
   variables.to.combine<-get.column.no(do,variables.to.combine)
   for(i in variables.to.combine) if(do$variables[[i]]$variable.type!="ordinal") stop("Variables need to be of type ordninal.")
 
@@ -129,6 +136,7 @@ variables.combine<-function(do=NULL,variables.to.combine=NULL,variable.name=NULL
        variable.name=ifelse(is.null(variable.name),paste(get.variable.names(do,variables.to.combine),collapse = "+"),variable.name),
        variable.label=ifelse(is.null(variable.label),paste(get.labels(do,variables.to.combine),collapse = "+"),variable.label),
        column.number=column.numbers,
+       combine.type=combine.type,
        ncat=ncat,
        category.names=category.names,
        variable.type="ordinal",
@@ -143,7 +151,7 @@ variables.combine<-function(do=NULL,variables.to.combine=NULL,variable.name=NULL
   # Delete old variables
   do$variables<-do$variables[-variables.to.combine]
   # Update recursive structure after delete
-  for(i in variables.to.combine[order(variables.to.combine)]) {
+  for(i in variables.to.combine[order(variables.to.combine,decreasing = T)]) {
     do$recursive.structure[do$recursive.structure>=i]<-do$recursive.structure[do$recursive.structure>=i]-1
   }
 

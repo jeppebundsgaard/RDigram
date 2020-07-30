@@ -9,10 +9,10 @@ get.labels(do, items = NULL)
 \arguments{
 \item{do}{A digram.object}
 
-\item{items}{The variable.numbers of the items or exogeneous variables to provide the labels for}
+\item{items}{The variable.numbers of the items or exogenous variables to provide the labels for}
 }
 \value{
-Returns the variable.labels of the items/exogeneous variables .
+Returns the variable.labels of the items/exogenous variables .
 }
 \description{
 Get variable labels

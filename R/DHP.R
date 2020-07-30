@@ -29,7 +29,7 @@
 #' }
 #' @source The \code{DHP} data were obtained from
 #'     Chwalow J., Meadows K., Mesbah M., Coliche V., Mollett E., (2007) Empirical validation of a quality of life
-#'     instrument: empirical internal validation and analysi of a quality of life instrument in French diabetic
+#'     instrument: empirical internal validation and analysis of a quality of life instrument in French diabetic
 #'     patients during an educational intervention. In C. Huber, N. Limnios, M. Mesbah, N. Nikulin (eds).
 #'     *Mathematical Methods in Survival Analysis, Reliability and Quality of Life.* London: Hernes.
 NULL

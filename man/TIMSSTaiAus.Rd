@@ -3,7 +3,7 @@
 \docType{data}
 \name{TIMSSTaiAus}
 \alias{TIMSSTaiAus}
-\title{TIMSS data for Taiwan and Austrailia}
+\title{TIMSS data for Taiwan and Australia}
 \format{
 A data frame with 1773 rows and 14 variables. 11 response variables, 3 context variables.
 The data was collected in IEA's TIMSS 2011 mathematics tests, released items, blocks 1 and 14, for Taiwan and Australian students.

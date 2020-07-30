@@ -49,30 +49,32 @@ digram.estimate<-function(do,items=NULL,groups=NULL,ncases=0,constraint = "cases
   if(!is.null(do$split)) {
     for (i in 1:nrow(do$split)) {
       splits<-do$split[i,]
-      exoitem<-as.numeric(splits[2])
-      exocat<-do$variables[[exoitem]]$category.names
-      ncat<-do$variables[[exoitem]]$ncat
-      newitems<-ncol(resp)+1:ncat
-      items<-c(items,newitems)
       olditem<-as.numeric(splits[1])
-      # Split
-      nas<-rep(NA,ncat)
-      resp[,newitems]<-sapply(1:nrow(resp),function(i) {
-        newscores<-nas
-        if(resp[i,exoitem] %in% exocat[,2]) newscores[resp[i,exoitem]]<-resp[i,olditem]
-        newscores
-      })
+      if(length(olditem %in% items)>0) {
+        exoitem<-as.numeric(splits[2])
+        exocat<-do$variables[[exoitem]]$category.names
+        ncat<-do$variables[[exoitem]]$ncat
+        newitems<-ncol(resp)+1:ncat
+        items<-c(items,newitems)
+        # Split
+        nas<-rep(NA,ncat)
+        resp[,newitems]<-sapply(1:nrow(resp),function(i) {
+          newscores<-nas
+          if(resp[i,exoitem] %in% exocat[,2]) newscores[resp[i,exoitem]]<-resp[i,olditem]
+          newscores
+        })
 
-      # Combine names and labels
-      olditemno<-which(items %in% olditem)
-      newnames<-paste0(item.names[olditemno],"_",exocat[,2])
-      item.names<-c(item.names,newnames)
-      colnames(resp)[newitems]<-newnames
-      item.labels<-c(item.labels,paste0(item.labels[olditemno],"_",do$variables[[exoitem]]$variable.label,1:ncat))
-      item.names<-item.names[-olditemno]
-      item.labels<-item.labels[-olditemno]
-      # Remove item-nums
-      items<-c(items[-olditemno])
+        # Combine names and labels
+        olditemno<-which(items %in% olditem)
+        newnames<-paste0(item.names[olditemno],"_",exocat[,2])
+        item.names<-c(item.names,newnames)
+        colnames(resp)[newitems]<-newnames
+        item.labels<-c(item.labels,paste0(item.labels[olditemno],"_",do$variables[[exoitem]]$variable.label,1:ncat))
+        item.names<-item.names[-olditemno]
+        item.labels<-item.labels[-olditemno]
+        # Remove item-nums
+        items<-c(items[-olditemno])
+      }
     }
   }
   if(!is.null(init.model)) {
@@ -94,24 +96,26 @@ digram.estimate<-function(do,items=NULL,groups=NULL,ncases=0,constraint = "cases
   if(!is.null(do$testlets)) {
     if(collapse.testlets) {
       for(testlet in do$testlets){
-        newitem<-ncol(resp)+1
-        items<-c(items,newitem)
         olditems<-which(items %in% testlet$testlet)
-        # Recode
-        resp[,newitem]<-apply(resp[,testlet$testlet],1,sum)#,na.rm=T)
-        # Combine names and labels
-        newname<-paste(item.names[olditems],collapse = "+")
-        item.names<-c(item.names,newname)
-        colnames(resp)[newitem]<-newname
-        item.labels<-c(item.labels,paste(item.labels[olditems],collapse = "+"))
-        item.names<-item.names[-olditems]
-        item.labels<-item.labels[-olditems]
-        # Remove item-nums
-        items<-c(items[-olditems])
-        selected<-resp[,items]
-        if(use.package!="TAM") {
-          naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)
-          selected<-selected[!naonly,]
+        if(length(olditems)>0) {
+          newitem<-ncol(resp)+1
+          items<-c(items,newitem)
+          # Recode
+          resp[,newitem]<-apply(resp[,testlet$testlet],1,sum)#,na.rm=T)
+          # Combine names and labels
+          newname<-testlet$name
+          item.names<-c(item.names,newname)
+          colnames(resp)[newitem]<-newname
+          item.labels<-c(item.labels,testlet$label)
+          item.names<-item.names[-olditems]
+          item.labels<-item.labels[-olditems]
+          # Remove item-nums
+          items<-c(items[-olditems])
+          selected<-resp[,items]
+          if(use.package!="TAM") {
+            naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)
+            selected<-selected[!naonly,]
+          }
         }
       }
     }

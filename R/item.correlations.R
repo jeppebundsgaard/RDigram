@@ -37,12 +37,71 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
     if(is.null(exo)) exo<-c()
   }
   items<-get.column.no(do,items)
+  item.labels<-get.labels(do,items)
+  item.names<-get.variable.names(do,items)
+
+  all.olditems<-c()
+  if(!is.null(do$testlets)) {
+    for(testlet in do$testlets){
+      olditems<-which(items %in% testlet$testlet)
+      if(length(olditems)>0) {
+        newitem<-ncol(resp)+1
+        items<-c(items,newitem)
+        all.olditems<-c(all.olditems,olditems)
+        # Recode
+        resp[,newitem]<-apply(resp[,testlet$testlet],1,sum)#,na.rm=T)
+        # Combine names and item.labels
+        item.names<-c(item.names,testlet$name)
+        colnames(resp)[newitem]<-testlet$name
+        item.labels<-c(item.labels,testlet$label)
+      }
+    }
+  }
+
+  if(!is.null(do$split)) {
+    if(!accept.na) {
+      warning("Set accept.na to TRUE if you want to get information on split items.")
+    } else {
+      for (i in 1:nrow(do$split)) {
+        splits<-do$split[i,]
+        olditem<-as.numeric(splits[1])
+        if(length(olditem %in% items)>0) {
+          exoitem<-as.numeric(splits[2])
+          exocat<-do$variables[[exoitem]]$category.names
+          ncat<-do$variables[[exoitem]]$ncat
+          newitems<-ncol(resp)+1:ncat
+          items<-c(items,newitems)
+          all.olditems<-c(all.olditems,olditem)
+          # Split
+          nas<-rep(NA,ncat)
+          resp[,newitems]<-sapply(1:nrow(resp),function(i) {
+            newscores<-nas
+            if(resp[i,exoitem] %in% exocat[,2]) newscores[resp[i,exoitem]]<-resp[i,olditem]
+            newscores
+          })
+
+          # Combine names and item.labels
+          olditemno<-which(items %in% olditem)
+          newnames<-paste0(colnames(resp)[olditem],"_",exocat[,2])
+          colnames(resp)[newitems]<-newnames
+          item.names<-c(item.names,newnames)
+          item.labels<-c(item.labels,paste0(item.labels[olditemno],"_",do$variables[[exoitem]]$variable.label,1:ncat))
+        }
+      }
+    }
+  }
+
+  # Remove old.items used in testlet and split
+  if(length(all.olditems)>0) {
+    item.labels<-item.labels[-all.olditems]
+    item.names<-item.names[-all.olditems]
+    items<-items[-all.olditems]
+  }
+
 
   selected<-if(accept.na) resp[,items] else na.omit(resp[,items])
   if(nrow(selected)==0) stop("No cases without NA's. Try setting accept.na to TRUE")
 
-  item.labels<-get.labels(do,items)
-  item.names<-get.variable.names(do,items)
   item.names<-item.names.shorten(item.names,max.name.length)
 
   num.items<-length(items)
@@ -53,6 +112,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
     for(j in (i):num.items) {
       tab<-table(selected[,c(i,j)])
       acor<-MESS::gkgamma(tab,conf.level = 0.95)
+      acor$estimate[is.nan(acor$estimate)]<-NA
       corr.items[i,j]<-acor$estimate
       pval.matrix[i,j]<-acor$p.value
     }

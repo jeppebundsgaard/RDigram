@@ -24,6 +24,8 @@ item.DIF(do=NULL,resp=NULL,items=1:do$recursive.structure[1],exo=(do$recursive.s
 \item{only.significant}{Only list fit values significantly different from 1}
 
 \item{verbose}{Print results}
+
+\item{saved.result}{To avoid repeated calculation, you can provide a saved version of the analysis (returned from item.DIF())}
 }
 \value{
 Returns a list of DIF-information
@@ -47,7 +49,7 @@ Add this in you yaml header:
   pdf_document: \cr
     latex_engine: xelatex}
 
-Add this in your setup chunck:
+Add this in your setup chunk:
 
 \code{knitr::opts_chunk$set(echo = TRUE, dev = "cairo_pdf", dpi = 300)}
 }

@@ -9,10 +9,10 @@ get.variable.names(do, items = NULL)
 \arguments{
 \item{do}{A digram.object}
 
-\item{items}{The variable.numbers of the items or exogeneous variables to provide the names for}
+\item{items}{The variable.numbers of the items or exogenous variables to provide the names for}
 }
 \value{
-Returns the variable.names of the items/exogeneous variables .
+Returns the variable.names of the items/exogenous variables .
 }
 \description{
 Get variable names

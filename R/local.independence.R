@@ -9,8 +9,9 @@
 #' @param digits Number of digits in table
 #' @param max.name.length Maximum length of item names (to be printed in tables)
 #' @param only.significant Only list fit values significantly different from 1
-#' @param use.names Use item names instead of item labes as node labels
+#' @param use.names Use item names instead of item labels as node labels
 #' @param verbose Print results
+#' @param saved.result To avoid repeated calculation, you can provide a saved version of the analysis (returned from local.independence())
 #' @export
 #' @details
 #' Second step in item screening: Analysis of DIF and local dependence
@@ -27,7 +28,7 @@
 #'   pdf_document: \cr
 #'     latex_engine: xelatex}
 #'
-#' Add this in your setup chunck:
+#' Add this in your setup chunk:
 #'
 #' \code{knitr::opts_chunk$set(echo = TRUE, dev = "cairo_pdf", dpi = 300)}
 #' @return Returns a list of local dependencies
@@ -37,7 +38,7 @@
 #' local.independence(DHP)
 #' @references
 #' Kreiner, S. & Christensen, K.B. (2011). Item Screening in Graphical Loglinear Rasch Models. *Psychometrika*, vol. 76, no. 2, pp. 228-256. DOI: 10.1007/s11336-9203-Y
-local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("holm","BH","hochberg", "hommel", "bonferroni", "BY", "none"),digits=2,max.name.length=30,only.significant=F,use.names=F,verbose=T){
+local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("holm","BH","hochberg", "hommel", "bonferroni", "BY", "none"),digits=2,max.name.length=30,only.significant=F,use.names=F,verbose=T,saved.result=NULL){
   p.adj <- match.arg(p.adj)
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
@@ -72,8 +73,8 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("holm","BH","
     warning("More that two items are needed for analysis of local independency.")
   } else {
     colnames(selected)<-item.names
-    orig.result<-partgam_LD(selected,p.adj = p.adj, verbose = F)
-    result<-orig.result
+    result<-if(is.null(saved.result)) partgam_LD(selected,p.adj = p.adj, verbose = F) else saved.result
+    orig.result<-result
     colnames(result)[6]<-"p.adj"
     molten<-reshape2::melt(data = result[,-7],id.vars=c("Item1","Item2"),na.rm=T)
 

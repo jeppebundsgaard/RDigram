@@ -62,6 +62,7 @@ digram.object<-function(project=NULL,data=data.frame(),variables=NULL,filter.con
   do$recoded<-digram.recode(do)
   do
 }
+onlyif<-function(y) {i<-0;for(z in y) {if(!is.na(z) & z>0) i<-i+z else break};i}
 digram.recode<-function(do) {
   data<-do$data
   variables<-do$variables
@@ -75,7 +76,16 @@ digram.recode<-function(do) {
     column.number<-x$column.number
     datacol<-data[,column.number]
     # If this is a combined variable, add the columns together
-    if(is.data.frame(datacol)) datacol<-apply(datacol,1,sum)
+    if(is.data.frame(datacol)) datacol<-apply(datacol,1,function(y) {
+      if(is.null(x$combine.type)) x$combine.type<-"sum"
+      switch (x$combine.type,
+        "sum" = sum(y),
+        "or" = max(y),
+        "xor" = ifelse(sum(y>0)==1,y[y>0],0),
+        "and" = ifelse(length(unique(y))==1,y[1],0),
+        "onlyif" = onlyif(y)
+      )
+    })
 
     if(!is.null(filter.conditions)) {
       minmax<-filter.conditions[filter.conditions$variable.number==column.number,2:3]

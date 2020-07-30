@@ -10,6 +10,7 @@ variables.combine(
   variable.name = NULL,
   variable.label = NULL,
   category.names = NULL,
+  combine.type = c("sum", "or", "xor", "and", "onlyif"),
   minimum = NULL,
   maximum = NULL,
   cutpoints = NULL
@@ -23,6 +24,13 @@ variables.combine(
 \item{variable.name}{Name of the variable (string)}
 
 \item{variable.label}{Label of the variable (one or more uppercase letters)}
+
+\item{combine.type}{How to combine the variables. Values are:
+"sum": add values of ingoing variables together
+"or": if one of the variables has a value other than 0, use it (in case of polytomous values, use the highest)
+"xor": if ONLY one of the variables has a value other than 0, use it
+"and": if ALL variables has the same value, use it
+"onlyif" if the first variable has a value, use it. If the second has a value, add it to the first. If the third has a value ... etc.}
 
 \item{minimum}{Smallest value of the variable (lower values are coded NA)}
 

@@ -11,6 +11,7 @@
 #' @param max.name.length Maximum length of item names (to be printed in tables)
 #' @param only.significant Only list fit values significantly different from 1
 #' @param verbose Print results
+#' @param saved.result To avoid repeated calculation, you can provide a saved version of the analysis (returned from item.DIF())
 #' @export
 #' @details
 #' Second step in item screening: Analysis of DIF and local dependency
@@ -28,7 +29,7 @@
 #'   pdf_document: \cr
 #'     latex_engine: xelatex}
 #'
-#' Add this in your setup chunck:
+#' Add this in your setup chunk:
 #'
 #' \code{knitr::opts_chunk$set(echo = TRUE, dev = "cairo_pdf", dpi = 300)}
 #' @return Returns a list of DIF-information
@@ -38,7 +39,7 @@
 #' item.DIF(DHP)
 #' @references
 #' Kreiner, S. & Christensen, K.B. (2011). Item Screening in Graphical Loglinear Rasch Models. *Psychometrika*, vol. 76, no. 2, pp. 228-256. DOI: 10.1007/s11336-9203-Y
-item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "hochberg", "hommel", "bonferroni", "BY", "none"),max.name.length=30,digits=2,only.significant=F,verbose=T){
+item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "hochberg", "hommel", "bonferroni", "BY", "none"),max.name.length=30,digits=2,only.significant=F,verbose=T,saved.result=NULL){
   p.adj <- match.arg(p.adj)
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
@@ -97,7 +98,8 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   # Remove exos with no cases
   exoselected<-as.data.frame(exoselected[,apply(exoselected,2,sum)>0])
   sink("/dev/null")
-  result<-partgam_DIF(dat.items = selected,dat.exo = exoselected,p.adj = p.adj) #iarm::
+  result<-if(is.null(saved.result)) partgam_DIF(dat.items = selected,dat.exo = exoselected,p.adj = p.adj) else saved.result
+  orig.result<-result
   sink()
   # Remove NaN's
   result<-result[!is.nan(result$gamma),]
@@ -138,12 +140,8 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
     theme(legend.position = "none")+
     ggraph::scale_edge_color_brewer(palette = "Set1" ,limits=c(FALSE,TRUE))+
     scale_color_brewer(palette = "Set2")
-
-
-  if(knitr::is_latex_output() || knitr::is_html_output()) {
-    print(p)
-  } else print(p)
-
+  print(p)
+  orig.result
 }
 make.exo.dummies<-function(do,exo,exoselected,exo.names,exo.labels=NULL) {
   # Make dummies out of nominal variables

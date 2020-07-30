@@ -1,7 +1,7 @@
 #' Person fit based on response pattern
 #'
 #' @param do a DIGRAM object
-#' @param resp a matix of responses (if no DIGRAM object is supplied)
+#' @param resp a matrix of responses (if no DIGRAM object is supplied)
 #' @param items a vector of items to use
 #' @param item.params a matrix of item parameters. Items in rows, thresholds in columns
 #' @param param.type Type of item parameters given. One of pcm (RUMM2030), log.item.score (?), multiplicative (DIGRAM or RDigram, xsi (Conquest or TAM))

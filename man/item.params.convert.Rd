@@ -40,10 +40,10 @@ The Rasch model can be parameterized in multiple ways. This function translates 
 \eqn{exp(x\theta-\sum\limits_{i=1}^x\tau_i) \over G(\theta,\tau_1 ... \tau_k)}, where \eqn{\theta} is the person parameter (ability), and \eqn{\tau_x} are the item step parameters
 }
 \item{Partial Credit Model (PCM)/Masters' parametrization with centralized item step parameters (pcm.cent)} {\cr
-\eqn{exp(x(\theta-\beta)-\sum\limits_{i=1}^x\beta_i) \over G(\theta,\beta_1 ... \beta_k)}, where \eqn{\theta} is the person parameter (ability), \eqn{\beta={1 \over k}\sum\limits_{i=1}^k \tau_i} is the avarage of the \eqn{\tau} parameters from the PCM parametrization, and \eqn{\beta_x=\tau_x-{1 \over k}\sum\limits_{i=1}^k \tau_i} are the centralized item step parameters
+\eqn{exp(x(\theta-\beta)-\sum\limits_{i=1}^x\beta_i) \over G(\theta,\beta_1 ... \beta_k)}, where \eqn{\theta} is the person parameter (ability), \eqn{\beta={1 \over k}\sum\limits_{i=1}^k \tau_i} is the average of the \eqn{\tau} parameters from the PCM parametrization, and \eqn{\beta_x=\tau_x-{1 \over k}\sum\limits_{i=1}^k \tau_i} are the centralized item step parameters
 }
 \item{Conquest parametrization (conquest)} {\cr
-\eqn{exp(x(\theta-\psi-\sum\limits_{i=1} x\psi_x) \over G(\theta,\psi_1 ... \psi_k)}, where \eqn{\sum_limits{i=1}^x\psi_i \equiv 0}. And where \eqn{\theta} is the person parameter (ability), \eqn{\psi={1 \over k}\sum\limits_{i=1}^k \tau_i} is the avarage of the \eqn{\tau} parameters from the PCM parametrization, and \eqn{\psi_x=\tau_x-{1 \over k}\sum\limits_{i=1}^k \tau_i} are the centralized item step parameters
+\eqn{exp(x(\theta-\psi-\sum\limits_{i=1} x\psi_x) \over G(\theta,\psi_1 ... \psi_k)}, where \eqn{\sum_limits{i=1}^x\psi_i \equiv 0}. And where \eqn{\theta} is the person parameter (ability), \eqn{\psi={1 \over k}\sum\limits_{i=1}^k \tau_i} is the average of the \eqn{\tau} parameters from the PCM parametrization, and \eqn{\psi_x=\tau_x-{1 \over k}\sum\limits_{i=1}^k \tau_i} are the centralized item step parameters
 }
 }
 \link{TAM} uses Conquest parametrization. \link{eRm} uses Andersen parametrization. RUMM 2030 uses Partial Credit parametrization with centralized item step parameters. DIGRAM uses Power Series Distribution parametrization.
