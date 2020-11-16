@@ -105,6 +105,7 @@ digram.recode<-function(do) {
 #' @param do A digram.object.
 #' @param LD A data.frame with columns for item1, item2 and gamma coefficient. Items can be variable.names, variable.columns or item numbers.
 #' @param DIF A data.frame with columns for item, exogenous variable and gamma coefficient. Items and exogenous variables can be variable.names, variable.columns or item numbers.
+#' @param summarize.testlets If true, don't collapse testlets, but summarize number of local dependent item pairs (both ways) in each testlet.
 #' @usage as_tbl_graph(do)
 #' @return Returns a tbl_graph
 #' @export
@@ -126,7 +127,7 @@ digram.recode<-function(do) {
 #' # Local dependecy and DIF
 #' dograph<-as_tbl_graph(DHP,LD=data.frame(item1=c(5,3),item2=c(6,5),gamma=c(.53,-.38)),DIF=data.frame(item=c(4),exo=c(8),gamma=c(.27)))
 #' ggraph(dograph,layout="fr")+geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),abs(gamma),""),alpha=ifelse(!is.na(gamma),gamma,1),color=ifelse(!is.na(gamma),2,1)),angle_calc="along",label_dodge=unit(.25,"cm"),end_cap = square(.5, 'cm'),arrow = arrow(angle=10,length=unit(.2,"cm")))+geom_node_label(mapping = aes(label=label))
-as_tbl_graph.digram.object<-function(do,items=NULL,exo.names=NULL,exo.labels=exo.names,LD=NULL,DIF=NULL){
+as_tbl_graph.digram.object<-function(do,items=NULL,exo.names=NULL,exo.labels=exo.names,LD=NULL,DIF=NULL,summarize.testlets=F){
   if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
   resp<-do$recoded
   if(is.null(items)) items<-1:do$recursive.structure[1]
@@ -146,9 +147,11 @@ as_tbl_graph.digram.object<-function(do,items=NULL,exo.names=NULL,exo.labels=exo
   ntestlets<-0
 
   if(!is.null(LD) || !is.null(DIF)) {
-    environment(collapse.testlets) <- environment()
-    collapse.testlets()
-    ntestlets<-sum(items>length(do$variables))
+    if(!summarize.testlets) {
+      environment(collapse.testlets) <- environment()
+      collapse.testlets()
+      ntestlets<-sum(items>length(do$variables))
+    }
   } else if(!is.null(do$testlets)) {
     testlet.edges<-lapply(do$testlets,function(x) {
       testlet<-x$testlet
@@ -180,8 +183,10 @@ as_tbl_graph.digram.object<-function(do,items=NULL,exo.names=NULL,exo.labels=exo
       #maxnl<-max(nchar(apply(array(DIF$from),1,sub,pattern=",.*",replacement="")),nchar(DIF$to))
       maxnl<-max(nchar(DIF$to))
       # DIF$from<-apply(array(DIF$from),1,function(x) which(sub(",.*","",x)==item.names.shorten(exo.names,maxnl))) + 2 + nitems # We add 2 and nitems because we have theta and total score and items before exos
-      DIF$to<-apply(array(DIF$to),1,function(x) which(x==item.names.shorten(item.names,maxnl))) + 2
-      DIF$from<-apply(array(DIF$from),1,match,exo.names) + 2 + nitems # We add 2 and nitems because we have theta and total score and items before exos
+      DIF$to<-sapply(DIF$to,function(x) {a<-which(x==item.names.shorten(item.names,maxnl)); ifelse(is.null(a),NA,a)}) + 2
+      DIF$from<-sapply(DIF$from,match,exo.names) + 2 + nitems # We add 2 and nitems because we have theta and total score and items before exos
+      hasNA<-is.na(DIF$to) | is.na(DIF$from)
+      if(any(hasNA)) DIF<-DIF[!hasNA,]
       #DIF$to<-apply(array(DIF$to),1,match,item.names) + 2  # We add 2 because we have theta and total score
 
     }
@@ -320,4 +325,30 @@ code.split<-function(do,split.var,split.on,append=F) {
   exo.nums<-sapply(exos,get.column.no,do=do)
   do$splits<-rbind(splits,expand.grid(var=var.nums,exo=exo.nums))
   do
+}
+
+#' Combine several digram.objects into a combined.digram.objects.
+#'
+#' @param ... digram.objects to combine
+#' @param project Name of project
+#'
+#' @return Returns a combined.digram.objects
+#' @export
+#' @details This function is useful when preparing a multidimensional analysis. Each digram.object represents a dimension.¸
+#' @examples
+#' do1<-DHP
+#' do2<-DHP
+#' digram.objects.combine(do1,do2)
+digram.objects.combine<-function(...,project="") {
+  digram.objects<-list(...)
+  nr<-0
+  for(do in digram.objects) {
+    if(!inherits(do,what = "digram.object")) stop("The objects need to be of class digram.object.")
+    if(nr==0) nr<-nrow(do$data)
+    if(nrow(do$data)!=nr) stop("The digram.objects need to have the same number of data rows.")
+    nr<-nrow(do$data)
+  }
+  cdo<-list(project=project,digram.objects=digram.objects)
+  class(cdo)<-"combined.digram.objects"
+  cdo
 }

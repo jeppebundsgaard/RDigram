@@ -13,6 +13,10 @@ score.information(do=NULL,resp=NULL,items=1:length(do$variables),accept.na = F)
 
 \item{items}{A vector of columns from the recoded data to include in the analysis \emph{or} a character vector of variable labels}
 
+\item{do.testlets}{Bolean. If TRUE, testlets are combined to superitems.}
+
+\item{do.split}{Bolean. If TRUE, items coded as split are split.}
+
 \item{accept.na}{A boolean. Include cases with missing values in responses}
 }
 \value{

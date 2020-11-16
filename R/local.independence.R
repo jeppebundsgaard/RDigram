@@ -10,8 +10,11 @@
 #' @param max.name.length Maximum length of item names (to be printed in tables)
 #' @param only.significant Only list fit values significantly different from 1
 #' @param use.names Use item names instead of item labels as node labels
+#' @param summarize.testlets If true, don't collapse testlets, but summarize number of local dependent item pairs (both ways) in each testlet. Asterisk (*) indicates one or more negative gamme correlations.
 #' @param verbose Print results
+#' @param extra.verbose Print warnings in PDF and HTML-output
 #' @param saved.result To avoid repeated calculation, you can provide a saved version of the analysis (returned from local.independence())
+#' @param caption Caption for the LD table (in Rmarkdown)
 #' @export
 #' @details
 #' Second step in item screening: Analysis of DIF and local dependence
@@ -38,7 +41,7 @@
 #' local.independence(DHP)
 #' @references
 #' Kreiner, S. & Christensen, K.B. (2011). Item Screening in Graphical Loglinear Rasch Models. *Psychometrika*, vol. 76, no. 2, pp. 228-256. DOI: 10.1007/s11336-9203-Y
-local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("holm","BH","hochberg", "hommel", "bonferroni", "BY", "none"),digits=2,max.name.length=30,only.significant=F,use.names=F,verbose=T,saved.result=NULL){
+local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("holm","BH","hochberg", "hommel", "bonferroni", "BY", "none"),digits=2,max.name.length=30,only.significant=F,use.names=F,summarize.testlets=F,verbose=T,extra.verbose=F,saved.result=NULL,caption=paste(ifelse(summarize.testlets,"Summary of",""),"Local dependence of",ifelse(is.null(do),"items",do$project))){
   p.adj <- match.arg(p.adj)
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
@@ -53,17 +56,18 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("holm","BH","
   #if(inherits(items,"character")) items<-match(items,item.names)
   item.labels<-if(use.names) item.names else get.labels(do,items)
   header<-header.format("Test of local independence")
-  # Combine items with LD
-  environment(collapse.testlets) <- environment()
-  collapse.testlets()
-
+  if(!summarize.testlets) {
+    # Combine items with LD
+    environment(collapse.testlets) <- environment()
+    collapse.testlets()
+  }
   item.names<-item.names.shorten(item.names,max.name.length)
   selected<-na.omit(resp[,items])
   sums<-apply(selected,2,sum,na.rm=T)
   if(!all(sums>0)) {
     removecols<-sums==0
     items<-items[!removecols]
-    warning(paste("Some items had no variation. The following items have been removed:",paste(item.names[removecols],collapse = ", ")))
+    RDigram.warning(paste("Some items had no variation. The following items have been removed:",paste(item.names[removecols],collapse = ", ")),extra.verbose=extra.verbose)
     item.names<-item.names[!removecols]
     item.labels<-item.labels[!removecols]
     selected<-selected[,!removecols]
@@ -75,7 +79,7 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("holm","BH","
     colnames(selected)<-item.names
     result<-if(is.null(saved.result)) partgam_LD(selected,p.adj = p.adj, verbose = F) else saved.result
     orig.result<-result
-    colnames(result)[6]<-"p.adj"
+    colnames(result)[grep("padj",colnames(result))]<-"p.adj"
     molten<-reshape2::melt(data = result[,-7],id.vars=c("Item1","Item2"),na.rm=T)
 
     molten$value<-as.numeric(molten$value)
@@ -83,26 +87,60 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("holm","BH","
 
     num.col<-ncol(dep.matrix)
 
-    is.dependant<-which(orig.result$p.adj<0.05)
+    is.dependant<-which(result$p.adj<0.05)
     if(length(is.dependant)>0) {
-      item1<-unique(orig.result$Item1[is.dependant])
-      rels<-paste(item1,"and",sapply(item1,function(x) paste(orig.result$Item2[!is.na(orig.result$p.adj) & orig.result$p.adj<0.05 & orig.result$Item1 == x],collapse = ", ")))
+      item1<-unique(result$Item1[is.dependant])
+      rels<-paste(item1,"and",sapply(item1,function(x) paste(result$Item2[!is.na(result$p.adj) & result$p.adj<0.05 & result$Item1 == x],collapse = ", ")))
       warning(paste0("\nLocal dependence between\n",paste(rels,collapse = "\n")))
       if(knitr::is_html_output() || knitr::is_latex_output()) cat("\n\n### Local dependence\n\n",paste(rels,collapse = "\n\n"))
     }
-    siggammas<-gammas<-as.numeric(dep.matrix[,,"gamma"])
-    nsign<-if(only.significant) which(apply(dep.matrix[,,"p.adj"],1:2,function(x) ifelse(x<0.05,T,F))) else c()
-    siggammas[nsign]<-NA
+    # siggammas<-gammas<-as.numeric(dep.matrix[,,"gamma"])
+    # nsign<-if(only.significant) which(apply(dep.matrix[,,"p.adj"],1:2,function(x) ifelse(x<0.05,T,F))) else c()
+    # siggammas[nsign]<-NA
 
     order.names<-match(item.names,rownames(dep.matrix[,,"gamma"]))
 
-    if(verbose)
-      print.corr.matrix(corr.matrix=dep.matrix[order.names,order.names,"gamma"],pvals = dep.matrix[order.names,order.names,"p.adj"],cnames = item.labels,rnames=if(use.names) item.labels else paste(item.labels,item.names,sep = ": "),digits = digits)
+    if(summarize.testlets && !is.null(do$testlets)) {
+      num.sign<-(dep.matrix[order.names,order.names,"p.adj"]<.05)*1
+      neg.sign<-(dep.matrix[order.names,order.names,"p.adj"]<.05 & dep.matrix[order.names,order.names,"gamma"]<0)
+      remove.cols<-c()
+      item.names.sign<-item.names
+      item.labels.sign<-item.labels
+      for(tlist in do$testlets){
+        testlet<-tlist$testlet
+        testlet<-(testlet[testlet %in% items])
+        if(length(testlet)>0) {
+          num.sign<-cbind(num.sign,rowSums(num.sign[,testlet],na.rm = T))
+          num.sign<-rbind(num.sign,colSums(num.sign[testlet,],na.rm = T))
+          neg.sign<-cbind(neg.sign,apply(neg.sign[,testlet],1,any,na.rm = T))
+          neg.sign<-rbind(neg.sign,apply(neg.sign[testlet,],2,any,na.rm = T))
+
+          colnames(num.sign)[ncol(num.sign)]<-rownames(num.sign)[nrow(num.sign)]<-tlist$name
+          item.names.sign<-c(item.names.sign,tlist$name)
+          item.labels.sign<-c(item.labels.sign,tlist$label)
+          remove.cols<-c(remove.cols,testlet)
+        }
+      }
+      neg.sign<-neg.sign[-remove.cols,-remove.cols]
+      num.sign<-num.sign[-remove.cols,-remove.cols]
+      for(i in 1:ncol(num.sign))
+        for(j in 1:nrow(num.sign))
+          if(!is.na(num.sign[j,i])) num.sign[j,i]<-paste(num.sign[j,i],ifelse(neg.sign[j,i],"*",""))
+      item.labels.sign<-item.labels.sign[-remove.cols]
+      item.names.sign<-item.names.sign[-remove.cols]
+      p<-knitr::kable(x = num.sign,row.names = T,booktabs=T,longtable=ncol(num.sign)<=8,col.names = if(use.names) item.labels.sign else paste(item.labels.sign,item.names.sign,sep = ": "),align = "r",format=ifelse(knitr::is_html_output(),"html",ifelse(knitr::is_latex_output(),"latex","markdown")),caption = caption)
+      if(ncol(num.sign)>3 && knitr::is_latex_output()) {
+        p <-p %>%
+          kable_styling(latex_options = c("scale_down")) %>% landscape()
+      }
+      print(p)
+    } else if(verbose)
+      print.corr.matrix(corr.matrix=dep.matrix[order.names,order.names,"gamma"],pvals = dep.matrix[order.names,order.names,"p.adj"],cnames = item.labels,rnames=if(use.names) item.labels else paste(item.labels,item.names,sep = ": "),digits = digits,caption=caption)
 
     # Draw graph
     # Remove NaN's
     result<-result[!is.nan(result$gamma),]
-    dograph<-as_tbl_graph(do,items=items,LD=result[result[,6]<0.05,1:3])
+    dograph<-as_tbl_graph(do,items=items,LD=result[result$p.adj<0.05,1:3],summarize.testlets = summarize.testlets)
     p<-
       ggraph::ggraph(dograph,layout="fr")+
       ggraph::geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),round(gamma,digits),""),alpha=ifelse(!is.na(gamma),abs(gamma),.4),color=is.na(gamma)),

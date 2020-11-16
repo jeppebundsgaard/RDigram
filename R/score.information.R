@@ -5,6 +5,8 @@
 #' @param do An object of class \code{digram.object}
 #' @param resp A data.frame or matrix of recoded data (only used if \code{do} is \code{NULL})
 #' @param items A vector of columns from the recoded data to include in the analysis *or* a character vector of variable labels
+#' @param do.testlets Bolean. If TRUE, testlets are combined to superitems.
+#' @param do.split Bolean. If TRUE, items coded as split are split.
 #' @param accept.na A boolean. Include cases with missing values in responses
 #' @export
 #' @return Returns NULL.
@@ -13,7 +15,7 @@
 #' @examples score.information(do,items="abcdef")
 #' @references
 #' Kreiner, S. (2003). *Introduction to DIGRAM*. Dept. of Biostatistics, University of Copenhagen.
-score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],accept.na=F,font.size=9){
+score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],do.testlets=T,do.split=T,accept.na=F,font.size=9){
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
     resp<-do$recoded
@@ -21,7 +23,7 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
   }else item.labels<-letters[1:ncol(resp)]
   items<-get.column.no(do,items)
   all.olditems<-c()
-  if(!is.null(do$testlets)) {
+  if(do.testlets && !is.null(do$testlets)) {
     for(testlet in do$testlets){
       olditems<-which(items %in% testlet$testlet)
       if(length(olditems)>0) {
@@ -37,7 +39,7 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
     }
   }
 
-  if(!is.null(do$split)) {
+  if(do.split && !is.null(do$split)) {
     if(!accept.na) {
       warning("Set accept.na to TRUE if you want to get information on split items.")
     } else {
@@ -76,19 +78,20 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
   selected<-resp[,items]
   selectednona<-if(!accept.na) na.omit(selected) else selected
   if(nrow(selectednona)==0) stop("No cases without NA's. Try setting accept.na to TRUE")
+  items.nona<-which(colnames(selectednona) %in% colnames(selected))
   header.format("Variables selected for item analysis")
   cat("\nItems: ",item.labels[items])
+  item.names<-get.variable.names(do,items)
 
   ########################
   # Item scores
   header.format("Average item scores and score distribution")
 
   items.scores<-data.frame(Items=character(),n=numeric(),Mean=numeric(),n.complete=numeric(),Mean.complete=numeric(),Item.range=character(),stringsAsFactors = F)
-
   for(i in 1:ncol(selected)) {
-    name<-colnames(selected)[i]
-    x<-selected[,name]
-    y<-selectednona[,name]
+    name<-item.names[i]
+    x<-selected[,i]
+    y<-selectednona[,i]
     items.scores[i,]<-c(paste(item.labels[items][i],":",name),sum(!is.na(x)),mean(x,na.rm = T),sum(!is.na(y)),mean(y),paste(min(x,na.rm = T),"-",max(x,na.rm = T)))
   }
   items.scores[,c(2:5)]<-apply(items.scores[,c(2:5)],2,as.numeric)
@@ -108,7 +111,7 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
     sapply(0:maxall,function(j) sum(selectednona[,i]==j,na.rm = accept.na))
   })))
   colnames(scoredist)<-paste(ifelse((knitr::is_latex_output() || knitr::is_html_output()),"","Category "),0:maxall,sep = "")
-  rownames(scoredist)<-colnames(selectednona)
+  rownames(scoredist)<-get.variable.names(do,items.nona)
   if(knitr::is_latex_output() || knitr::is_html_output())
     print(knitr::kable(scoredist,booktabs=T,longtable=T)%>%
             kableExtra::kable_styling() %>%
@@ -122,9 +125,9 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
 
   maxall<-max(selectednona,na.rm=T)
   meansum<-data.frame(t(sapply(1:ncol(selectednona),function(i) {
-    sapply(0:maxall,function(j) mean(rowSums(selectednona[selectednona[,i]==j,-i],na.rm = T)))
+    sapply(0:maxall,function(j) mean(if(ncol(selectednona)==2) selectednona[selectednona[,i]==j,-i] else rowSums(selectednona[selectednona[,i]==j,-i],na.rm = T)))
   })))
-  rownames(meansum)<-colnames(selectednona)
+  rownames(meansum)<-get.variable.names(do,items.nona)
   descwarn<-apply(meansum,1,function(x) {
       desc<-FALSE
       for(i in 2:(maxall+1)) if(!is.na(x[i])) desc<-desc|(x[i]<=x[i-1])

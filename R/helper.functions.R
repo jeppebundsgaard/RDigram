@@ -8,7 +8,7 @@ header.format<-function(t="",margin=0) {
   }
   t
 }
-print.corr.matrix<-function(corr.matrix=NULL,pvals=NULL,cnames=NULL,rnames=NULL,verbose=T,digits=2) {
+print.corr.matrix<-function(corr.matrix=NULL,pvals=NULL,cnames=NULL,rnames=NULL,verbose=T,digits=2,caption=NULL) {
   library(kableExtra)
   symp <- symnum(pvals, corr = F,
                  cutpoints = c(0,  .001,.01,.05, .1, 1),
@@ -24,7 +24,7 @@ print.corr.matrix<-function(corr.matrix=NULL,pvals=NULL,cnames=NULL,rnames=NULL,
     rownames(corr.matrix.print)<-cnames
   }
   #print(kablecnames)
-  p<-knitr::kable(x = corr.matrix.print,col.names = as.character(kablecnames),row.names = T,booktabs=T,longtable=ncol(corr.matrix.print)<=8,format=ifelse(knitr::is_html_output(),"html",ifelse(knitr::is_latex_output(),"latex","markdown")))
+  p<-knitr::kable(x = corr.matrix.print,col.names = as.character(kablecnames),row.names = T,booktabs=T,longtable=ncol(corr.matrix.print)<=8,format=ifelse(knitr::is_html_output(),"html",ifelse(knitr::is_latex_output(),"latex","markdown")),caption = caption)
   if(ncol(corr.matrix.print)>3 && knitr::is_latex_output()) {
     p <-p %>%
       kable_styling(latex_options = c("scale_down")) %>% landscape()
@@ -61,15 +61,19 @@ get.labels<-function(do,items=NULL) {
 #'
 #' @param do A digram.object
 #' @param items The variable.numbers of the items or exogenous variables to provide the names for
+#' @param only.items Boolean. Only return items.
+#' @param only.exos Boolean. Only return exos
 #'
 #' @return Returns the variable.names of the items/exogenous variables .
 #' @export
 #'
 #' @examples
 #' get.variable.names(DHP,1:2)
-get.variable.names<-function(do,items=NULL) {
+get.variable.names<-function(do,items=NULL,only.items=F,only.exos=F) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   n<-sapply(do$variables,function(x) x$variable.name)
+  if(only.items) items<-1:do$recursive.structure[1]
+  else if(only.exos) items<-(do$recursive.structure[1]+1):length(do$variables)
   if(!is.null(items)) {
     if(max(items)>length(n)) { # We have testlet items
       n<-c(n,sapply(do$testlets,function(x) x$name))
@@ -92,4 +96,7 @@ item.names.shorten<-function(item.names,max.name.length) {
     dups<-which(duplicated(item.names))
   }
   item.names
+}
+RDigram.warning<-function(warn,extra.verbose=F) {
+  if(extra.verbose && (knitr::is_html_output() || knitr::is_latex_output())) cat("\n\n",gsub("\n","\n\n",warn),"\n\n") else warning(warn)
 }

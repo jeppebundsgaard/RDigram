@@ -37,101 +37,121 @@
 digram.estimate<-function(do,items=NULL,groups=NULL,ncases=0,constraint = "cases",use.package=c("TAM","eRm"),collapse.testlets=F,init.model=NULL,tam.control=list(),sum0=T,verbose=T,...) {
   use.package<-match.arg(use.package)
   if(use.package=="TAM") tam.control$progress <- verbose
-  if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
-  resp<-do$recoded
-  if(ncases>0) resp<-resp[sample(1:nrow(resp),ncases),]
-  if(is.null(items)) items<-1:do$recursive.structure[1]
-  items<-get.column.no(do,items)
+  cdo<-if(inherits(do,what = "combined.digram.objects")) do else digram.objects.combine(do)
+  digram.objects<-cdo$digram.objects
+  dimension<-0
+  totalselected<-NULL
+  dimcols<-rep(0,length(digram.objects))
+  Q<-matrix(nrow = 0,ncol=length(digram.objects))
+  colnames(Q)<-paste("Dimension",1:length(digram.objects))
 
-  item.names<-get.variable.names(do,items)
-  #if(inherits(items,"character")) items<-match(items,item.names)
-  item.labels<-get.labels(do,items)
-  if(!is.null(do$split)) {
-    for (i in 1:nrow(do$split)) {
-      splits<-do$split[i,]
-      olditem<-as.numeric(splits[1])
-      if(length(olditem %in% items)>0) {
-        exoitem<-as.numeric(splits[2])
-        exocat<-do$variables[[exoitem]]$category.names
-        ncat<-do$variables[[exoitem]]$ncat
-        newitems<-ncol(resp)+1:ncat
-        items<-c(items,newitems)
-        # Split
-        nas<-rep(NA,ncat)
-        resp[,newitems]<-sapply(1:nrow(resp),function(i) {
-          newscores<-nas
-          if(resp[i,exoitem] %in% exocat[,2]) newscores[resp[i,exoitem]]<-resp[i,olditem]
-          newscores
-        })
+  for(do in digram.objects) {
+    items<-NULL
+    if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
+    resp<-do$recoded
+    if(ncases>0) resp<-resp[sample(1:nrow(resp),ncases),]
+    if(is.null(items)) items<-1:do$recursive.structure[1]
+    items<-get.column.no(do,items)
 
-        # Combine names and labels
-        olditemno<-which(items %in% olditem)
-        newnames<-paste0(item.names[olditemno],"_",exocat[,2])
-        item.names<-c(item.names,newnames)
-        colnames(resp)[newitems]<-newnames
-        item.labels<-c(item.labels,paste0(item.labels[olditemno],"_",do$variables[[exoitem]]$variable.label,1:ncat))
-        item.names<-item.names[-olditemno]
-        item.labels<-item.labels[-olditemno]
-        # Remove item-nums
-        items<-c(items[-olditemno])
+    item.names<-get.variable.names(do,items)
+    #if(inherits(items,"character")) items<-match(items,item.names)
+    item.labels<-get.labels(do,items)
+    if(!is.null(do$split)) {
+      for (i in 1:nrow(do$split)) {
+        splits<-do$split[i,]
+        olditem<-as.numeric(splits[1])
+        if(length(olditem %in% items)>0) {
+          exoitem<-as.numeric(splits[2])
+          exocat<-do$variables[[exoitem]]$category.names
+          ncat<-do$variables[[exoitem]]$ncat
+          newitems<-ncol(resp)+1:ncat
+          items<-c(items,newitems)
+          # Split
+          nas<-rep(NA,ncat)
+          resp[,newitems]<-sapply(1:nrow(resp),function(i) {
+            newscores<-nas
+            if(resp[i,exoitem] %in% exocat[,2]) newscores[resp[i,exoitem]]<-resp[i,olditem]
+            newscores
+          })
+
+          # Combine names and labels
+          olditemno<-which(items %in% olditem)
+          newnames<-paste0(item.names[olditemno],"_",exocat[,2])
+          item.names<-c(item.names,newnames)
+          colnames(resp)[newitems]<-newnames
+          item.labels<-c(item.labels,paste0(item.labels[olditemno],"_",do$variables[[exoitem]]$variable.label,1:ncat))
+          item.names<-item.names[-olditemno]
+          item.labels<-item.labels[-olditemno]
+          # Remove item-nums
+          items<-c(items[-olditemno])
+        }
       }
     }
-  }
-  if(!is.null(init.model)) {
-    xsi.inits=matrix(c(1:nrow(init.model$xsi),init.model$xsi$xsi),ncol = 2)
-    variance.inits=init.model$variance
-  }  else {xsi.inits<-variance.inits<-NULL}
-  selected<-resp[,items]
-  if(!is.null(groups)) {
-    groupitems<-get.column.no(do,groups)
-    #cats<-sapply(groupitems,function(i) {do$variables[[i]]$category.names[do$variables[[i]]$category.names$Category %in% c(do$variables[[i]]$cutpoints,do$variables[[i]]$maximum),"Name"][do$recoded[,i]+1]})
-    cats<-sapply(groupitems,function(i) {do$variables[[i]]$category.names$Name[do$recoded[,i]+1]})
-    group<-do.call("paste",c(as.data.frame(cats),sep="_"))
-    group[apply(cats,1,function(x) any(is.na(x)))]<-"NA"
-    if(any(table(group)<2)) stop(paste("There is only one member of group(s):",paste(names(table(group))[table(group)<2],collapse = ", ")))
+    if(!is.null(init.model)) {
+      xsi.inits=matrix(c(1:nrow(init.model$xsi),init.model$xsi$xsi),ncol = 2)
+      variance.inits=init.model$variance
+    }  else {xsi.inits<-variance.inits<-NULL}
+    selected<-resp[,items]
+    if(!is.null(groups)) {
+      groupitems<-get.column.no(do,groups)
+      #cats<-sapply(groupitems,function(i) {do$variables[[i]]$category.names[do$variables[[i]]$category.names$Category %in% c(do$variables[[i]]$cutpoints,do$variables[[i]]$maximum),"Name"][do$recoded[,i]+1]})
+      cats<-sapply(groupitems,function(i) {do$variables[[i]]$category.names$Name[do$recoded[,i]+1]})
+      group<-do.call("paste",c(as.data.frame(cats),sep="_"))
+      group[apply(cats,1,function(x) any(is.na(x)))]<-"NA"
+      if(any(table(group)<2)) stop(paste("There is only one member of group(s):",paste(names(table(group))[table(group)<2],collapse = ", ")))
 
-  } else group<-NULL
+    } else group<-NULL
 
-  testlets<-rep(NA, length(items))
-  if(!is.null(do$testlets)) {
-    if(collapse.testlets) {
-      for(testlet in do$testlets){
-        olditems<-which(items %in% testlet$testlet)
-        if(length(olditems)>0) {
-          newitem<-ncol(resp)+1
-          items<-c(items,newitem)
-          # Recode
-          resp[,newitem]<-apply(resp[,testlet$testlet],1,sum)#,na.rm=T)
-          # Combine names and labels
-          newname<-testlet$name
-          item.names<-c(item.names,newname)
-          colnames(resp)[newitem]<-newname
-          item.labels<-c(item.labels,testlet$label)
-          item.names<-item.names[-olditems]
-          item.labels<-item.labels[-olditems]
-          # Remove item-nums
-          items<-c(items[-olditems])
-          selected<-resp[,items]
-          if(use.package!="TAM") {
-            naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)
-            selected<-selected[!naonly,]
+    testlets<-rep(NA, length(items))
+    if(!is.null(do$testlets)) {
+      if(collapse.testlets) {
+        for(testlet in do$testlets){
+          olditems<-which(items %in% testlet$testlet)
+          if(length(olditems)>0) {
+            newitem<-ncol(resp)+1
+            items<-c(items,newitem)
+            # Recode
+            resp[,newitem]<-apply(resp[,testlet$testlet],1,sum)#,na.rm=T)
+            # Combine names and labels
+            newname<-testlet$name
+            item.names<-c(item.names,newname)
+            colnames(resp)[newitem]<-newname
+            item.labels<-c(item.labels,testlet$label)
+            item.names<-item.names[-olditems]
+            item.labels<-item.labels[-olditems]
+            # Remove item-nums
+            items<-c(items[-olditems])
+            selected<-resp[,items]
+
           }
         }
       }
     }
+    if(use.package!="TAM") {
+      naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)
+      selected<-selected[!naonly,]
+    }
+    dimension<-dimension+1
+    totalselected<-if(is.null(totalselected)) selected else cbind(totalselected,selected)
+
+    cols<-dimcols
+    cols[dimension]<-1
+    Q1<-matrix(rep(cols,times=ncol(selected)),ncol = length(digram.objects),byrow = T)
+    Q<-rbind(Q,Q1)
+  }
     mod<-switch (use.package,
       "TAM"={
-          if(collapse.testlets) {
-            TAM::tam.mml(resp=selected,group = group,xsi.inits = xsi.inits,variance.inits = variance.inits,constraint = constraint, control=tam.control,...)
+          if(is.null(do$testlets) | collapse.testlets | length(digram.objects)>1) {
+            TAM::tam.mml(resp=totalselected,Q=Q,group = group,xsi.inits = xsi.inits,variance.inits = variance.inits,constraint = constraint, control=tam.control,...)
           } else {
             for(i in 1:length(do$testlets)) {
               testlets[do$testlets[[i]]$testlet]<-i
             }
-            TAM::tam.fa(resp=selected,irtmodel = "bifactor1",dims=testlets,xsi.inits = xsi.inits,variance.inits = variance.inits,control=tam.control)#, constraint = constraint)
+            TAM::tam.fa(resp=totalselected,irtmodel = "bifactor1",dims=testlets,xsi.inits = xsi.inits,variance.inits = variance.inits,control=tam.control)#, constraint = constraint)
           }
         },
       "eRm"={
-          if(collapse.testlets) {
+        if(is.null(do$testlets) | collapse.testlets | length(digram.objects)>1) {
             if(!is.null(group)){
               group<-as.numeric(as.factor(group))
               eRm::LPCM(X=selected,groupvec = group,sum0 = sum0)
@@ -149,18 +169,18 @@ digram.estimate<-function(do,items=NULL,groups=NULL,ncases=0,constraint = "cases
           }
       }
     )
-  } else {
-    mod<-switch (use.package,
-                 "TAM"={
-                   TAM::tam.mml(resp=selected,group = group,xsi.inits = xsi.inits,variance.inits = variance.inits,constraint = constraint, control=tam.control,...)
-                 },
-                 "eRm"={
-                   naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)
-                   selected<-selected[!naonly,]
-                   eRm::PCM(X = selected,sum0=sum0)
-                 }
-    )
-  }
+  #} else {
+  #   mod<-switch (use.package,
+  #                "TAM"={
+  #                  TAM::tam.mml(resp=selected,group = group,xsi.inits = xsi.inits,variance.inits = variance.inits,constraint = constraint, control=tam.control,...)
+  #                },
+  #                "eRm"={
+  #                  naonly<-apply(selected,1,function(x) sum(!is.na(x))<2)
+  #                  selected<-selected[!naonly,]
+  #                  eRm::PCM(X = selected,sum0=sum0)
+  #                }
+  #   )
+  # }
   if(use.package=="eRm") mod$naonly<-naonly # Use this to reintroduce cases without thetas...
   mod
 }

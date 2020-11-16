@@ -10,6 +10,7 @@ digram.wrightmap(
   dimname = NULL,
   cols = collist,
   colscheme = "(.*)_.*",
+  only.first.dim = F,
   verbose = T
 )
 }
@@ -23,6 +24,8 @@ digram.wrightmap(
 \item{cols}{A vector of colors.}
 
 \item{colscheme}{A regular expression as string. Used to give items of the same type, same colors.}
+
+\item{only.first.dim}{If TRUE, only the first dimension of the model is used to draw the WrightMap.}
 
 \item{verbose}{Boolean. Set to TRUE to get information about progress.}
 }

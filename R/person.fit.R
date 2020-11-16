@@ -7,6 +7,7 @@
 #' @param param.type Type of item parameters given. One of pcm (RUMM2030), log.item.score (?), multiplicative (DIGRAM or RDigram, xsi (Conquest or TAM))
 #' @param num.montecarlo the number of iterations if the calculation of alternative patterns should be done using a montecarlo solution. 0 to do all patterns.
 #' @param verbose set to TRUE if you want to follow the progression
+#' @param extra.verbose Print warnings in PDF and HTML-output
 #' @return Returns a list of results for each respondent, consisting of response pattern probability and the p-value of getting this pattern or a pattern of lower probability.
 #' @export
 #' @author Jeppe Bundsgaard & Svend Kreiner
@@ -20,7 +21,7 @@
 #'                       1.000,2.141,0.330,0.472,
 #'                       1.000,10.304,2.963,4.784),byrow=T,nrow=6)
 #' person.fit.pattern(do=DHP, item.params=item.params,param.type="multiplicative")
-person.fit.pattern<-function(do=NULL,resp=NULL,items=NULL,item.params=matrix(),param.type=c("pcm","log.item.score","multiplicative","xsi"),num.montecarlo=0,verbose=T) {
+person.fit.pattern<-function(do=NULL,resp=NULL,items=NULL,item.params=matrix(),param.type=c("pcm","log.item.score","multiplicative","xsi"),num.montecarlo=0,verbose=T,extra.verbose=F) {
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
     resp<-do$recoded
@@ -35,7 +36,7 @@ person.fit.pattern<-function(do=NULL,resp=NULL,items=NULL,item.params=matrix(),p
     respondent<<-respondent+1
     nona<-!is.na(xs)
     if(sum(nona)==0) {
-      warning(paste("Respondent",respondent,"didn't have any responses"))
+      RDigram.warning(paste("Respondent",respondent,"didn't have any responses"),extra.verbose=extra.verbose)
     } else {
       xs<-xs[nona]
       R<-sum(xs)

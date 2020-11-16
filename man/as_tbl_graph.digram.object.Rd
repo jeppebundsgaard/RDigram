@@ -38,5 +38,5 @@ dograph<-as_tbl_graph(DHP,LD=data.frame(item1=c(5,3),item2=c(6,5),gamma=c(.53,-.
 ggraph(dograph,layout="fr")+geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),abs(gamma),""),alpha=ifelse(!is.na(gamma),gamma,1),color=ifelse(!is.na(gamma),2,1)),angle_calc="along",label_dodge=unit(.25,"cm"),end_cap = square(.5, 'cm'),arrow = arrow(angle=10,length=unit(.2,"cm")))+geom_node_label(mapping = aes(label=label))
 }
 \seealso{
-\code{\link[tidygraph:as_tbl_graph]{tidygraph::as_tbl_graph()}}
+\code{\link[tidygraph:tbl_graph]{tidygraph::as_tbl_graph()}}
 }

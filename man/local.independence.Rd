@@ -25,7 +25,11 @@ local.independence(do=NULL,resp=NULL,items=1:do$recursive.structure[1],digits=2,
 
 \item{verbose}{Print results}
 
+\item{extra.verbose}{Print warnings in PDF and HTML-output}
+
 \item{saved.result}{To avoid repeated calculation, you can provide a saved version of the analysis (returned from local.independence())}
+
+\item{caption}{Caption for the LD table (in Rmarkdown)}
 }
 \value{
 Returns a list of local dependencies

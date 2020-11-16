@@ -11,7 +11,9 @@
 #' @param max.name.length Maximum length of item names (to be printed in tables)
 #' @param only.significant Only list fit values significantly different from 1
 #' @param verbose Print results
+#' @param extra.verbose Print warnings in PDF and HTML-output
 #' @param saved.result To avoid repeated calculation, you can provide a saved version of the analysis (returned from item.DIF())
+#' @param caption Caption for the DIF table (in Rmarkdown)
 #' @export
 #' @details
 #' Second step in item screening: Analysis of DIF and local dependency
@@ -39,18 +41,20 @@
 #' item.DIF(DHP)
 #' @references
 #' Kreiner, S. & Christensen, K.B. (2011). Item Screening in Graphical Loglinear Rasch Models. *Psychometrika*, vol. 76, no. 2, pp. 228-256. DOI: 10.1007/s11336-9203-Y
-item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "hochberg", "hommel", "bonferroni", "BY", "none"),max.name.length=30,digits=2,only.significant=F,verbose=T,saved.result=NULL){
+item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "hochberg", "hommel", "bonferroni", "BY", "none"),max.name.length=30,digits=2,only.significant=F,verbose=T,extra.verbose=F,saved.result=NULL,caption=paste("Differential Item Functioning for",ifelse(is.null(do),"items",do$project))){
   p.adj <- match.arg(p.adj)
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
     resp<-do$recoded
     if(is.null(items)) items<-1:do$recursive.structure[1]
     if(is.null(exo)) exo<-if(ncol(resp)>do$recursive.structure[1]) (do$recursive.structure[1]+1):ncol(resp) else NULL
-    #if(length(do$recursive.structure)>1) (do$recursive.structure[1]+1):do$recursive.structure[2] else if(ncol(recoded)>do$recursive.structure[1]) do$recursive.structure[1]:ncol(recoded) else c()
   } else {
     if(is.null(items)) items<-colnames(resp)
   }
   items<-get.column.no(do,items)
+  if(!is.null(do$split)) {
+    items<-items[!(items %in% do$split$var)]
+  }
 
   item.names<-get.variable.names(do,items)
   #if(inherits(items,"character")) items<-match(items,item.names)
@@ -72,7 +76,7 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   removeitems<-setdiff(colnames(resp[,items]),colnames(selected))
   if(length(removeitems)>0) {
     removecols<-removeitems%in%colnames(resp[,items])
-    warning(paste("Some items had no variation. The following items have been removed:",item.names[removecols]))
+    RDigram.warning(paste("Some items had no variation. The following items have been removed:",item.names[removecols]),extra.verbose=extra.verbose)
     item.names<-item.names[-removecols]
     item.labels<-item.labels[-removecols]
   }
@@ -83,7 +87,7 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   removeexo<-setdiff(colnames(resp[,exo]),colnames(exoselected))
   if(length(removeexo)>0) {
     removecols<-removeexo%in%colnames(resp[,exo])
-    warning(paste("Some exogenous variables had no variation. The following variables have been removed:",exo.names[removecols]))
+    RDigram.warning(paste("Some exogenous variables had no variation. The following variables have been removed:",exo.names[removecols]),extra.verbose=extra.verbose)
     exo.names<-exo.names[-removecols]
     exo.labels<-exo.labels[-removecols]
   }
@@ -102,10 +106,11 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   orig.result<-result
   sink()
   # Remove NaN's
-  result<-result[!is.nan(result$gamma),]
+  #result<-result[!is.nan(result$gamma),]
 
-  colnames(result)[5]<-"p.adj"
-  molten<-reshape2::melt(data = result[,-6],id.vars=c("Item","Var"),na.rm=F)
+  colnames(result)[grep("padj",colnames(result))]<-"p.adj"
+
+  molten<-reshape2::melt(data = result[,c("Item","Var","gamma","se","p.adj")],id.vars=c("Item","Var"),na.rm=F)
   # tonum<-!molten$variable %in% c("sig")
   molten$value<-as.numeric(molten$value)
   DIF.matrix<-reshape2::acast(data = molten,formula = Item~Var~variable,drop = F)
@@ -127,13 +132,13 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   gammas[nsign]<-NA
 
   if(verbose)
-    print.corr.matrix(corr.matrix=DIF.matrix[,,"gamma"],pvals = DIF.matrix[,,"p.adj"],cnames = colnames(DIF.matrix[,,"gamma"]),rnames=rownames(DIF.matrix[,,"gamma"]),digits = digits)
+    print.corr.matrix(corr.matrix=DIF.matrix[,,"gamma"],pvals = DIF.matrix[,,"p.adj"],cnames = colnames(DIF.matrix[,,"gamma"]),rnames=rownames(DIF.matrix[,,"gamma"]),digits = digits,caption=caption)
 
   # Draw graph
-  dograph<-as_tbl_graph(do,items=items,exo.names=exo.names,exo.labels=exo.labels,DIF=result[result[,5]<0.05,1:3])
+  dograph<-as_tbl_graph(do,items=items,exo.names=exo.names,exo.labels=exo.labels,DIF=result[result$p.adj<0.05 & !is.na(result$gamma),1:3])
   p<-
     ggraph::ggraph(dograph,layout="fr")+
-    ggraph::geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),round(abs(gamma),digits),""),alpha=ifelse(!is.na(gamma),abs(gamma),.4),color=is.na(gamma)),
+    ggraph::geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),round(gamma,digits),""),alpha=ifelse(!is.na(gamma),abs(gamma),.4),color=is.na(gamma)),
                    angle_calc="along",label_dodge=unit(.25,"cm"),end_cap = ggraph::square(.5, 'cm'),start_cap = ggraph::square(.5, 'cm'),arrow = arrow(angle=10,length=unit(.2,"cm")))+
     ggraph::geom_node_label(mapping = aes(label=label,color=type)) +
     theme_void()+
@@ -166,6 +171,11 @@ partgam_DIF<-function (dat.items, dat.exo, p.adj = c( "holm","BH", "hochberg","h
     dat.exo <- data.frame(dat.exo)
     names(dat.exo) <- gname
   }
+  # Remove variationless items
+  if(length(which(colSums(dat.items)==0))>0)
+    dat.items<-dat.items[,-which(colSums(dat.items)==0)]
+  if(length(which(colSums(dat.exo)==0))>0)
+    dat.exo<-dat.exo[,-which(colSums(dat.exo)==0)]
   if (is.null(names(dat.items)))
     names(dat.items) <- paste("I", 1:dim(dat.items)[2],sep = "")
   padj <- match.arg(p.adj)
@@ -178,7 +188,7 @@ partgam_DIF<-function (dat.items, dat.exo, p.adj = c( "holm","BH", "hochberg","h
                        upper = double(), stringsAsFactors = FALSE)
   for (i in 1:k) {
     for (j in 1:l) {
-      mm <- partgam(dat.items[, i], dat.exo[, j], score)
+      mm <- iarm::partgam(dat.items[, i], dat.exo[, j], score)
       result[nrow(result)+1, ] <- c(names(dat.items)[i], names(dat.exo)[j],mm[dim(mm)[1], 1:2], NA, NA, NA, mm[dim(mm)[1],3:4])
     }
   }

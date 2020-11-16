@@ -10,7 +10,7 @@ License: GPL-3
 Encoding: UTF-8
 Language: en-US
 LazyData: true
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE,roclets = c("rd", "collate","namespace","vignette"))
 VignetteBuilder: knitr 
 Imports:

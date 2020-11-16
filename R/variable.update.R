@@ -40,7 +40,7 @@ variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,var
     do$variables[[variable.num]]<-list(variable.name=ifelse(is.null(variable.name[i]),variable$variable.name,variable.name[i]),
          variable.label=ifelse(is.null(variable.label[[i]]),variable$variable.label,variable.label[[i]]),
          column.number=variable$column.number,
-         ncat=variable$ncat,
+         ncat=length(if(is.null(cutpoints[[i]])) variable$cutpoints else cutpoints[[i]])+1,
          category.names=if(is.null(category.names[[i]])) variable$category.names else category.names[[i]],
          variable.type=ifelse(is.null(variable.type[[i]]),variable$variable.type,variable.type[[i]]),
          minimum=ifelse(is.null(minimum[[i]]),variable$minimum,minimum[[i]]),
@@ -77,8 +77,16 @@ variable.delete<-function(do=NULL,variable.to.delete=NULL) {
   var.names<-get.variable.names(do,variable.to.delete)
   do$variables<-do$variables[-variable.to.delete]
   # Delete from testlets and splits
-  if(!is.null(do$testlets)) do$testlets<-lapply(do$testlets,function(x) {x$testlet<-x$testlet[!(names(x$testlet) %in% var.names)]; x})
-  if(!is.null(do$splits)) do$splits<-do$splits[apply(do$splits,1,function(x) {length(intersect(x,variable.to.delete))==0}),]
+  if(!is.null(do$testlets)) do$testlets<-lapply(do$testlets,function(x) {
+      x$testlet<-x$testlet[!(x$testlet %in% variable.to.delete)]
+      for(v in variable.to.delete)
+        x$testlet[x$testlet>v]<-x$testlet[x$testlet>v]-1
+      x
+    })
+  if(!is.null(do$splits)) {
+    do$splits<-do$splits[apply(do$splits,1,function(x) {length(intersect(x,variable.to.delete))==0}),]
+    do$splits[do$splits>variable.to.delete]<-do$splits[do$splits>variable.to.delete]-1
+  }
   # Update recursive structure
   for(i in variable.to.delete[order(variable.to.delete,decreasing = T)]) {
     do$recursive.structure[do$recursive.structure>=i]<-do$recursive.structure[do$recursive.structure>=i]-1
@@ -125,9 +133,9 @@ variables.combine<-function(do=NULL,variables.to.combine=NULL,variable.name=NULL
 
   if(is.null(minimum)) minimum<-sum(sapply(variables.to.combine,function(x) do$variables[[x]]$minimum))
   if(is.null(maximum)) maximum<-sum(sapply(variables.to.combine,function(x) do$variables[[x]]$maximum))
-  ncat<-maximum-minimum+1
-  if(is.null(category.names)) category.names<-data.frame(Category=1:(ncat),Name=0:(ncat-1))
   if(is.null(cutpoints)) cutpoints<-minimum:(maximum-1)
+  ncat<-length(cutpoints)+1
+  if(is.null(category.names)) category.names<-data.frame(Category=1:(ncat),Name=0:(ncat-1))
 
   column.numbers<-sapply(variables.to.combine,function(x) do$variables[[x]]$column.number)
 

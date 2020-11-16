@@ -4,12 +4,16 @@
 \alias{get.variable.names}
 \title{Get variable names}
 \usage{
-get.variable.names(do, items = NULL)
+get.variable.names(do, items = NULL, only.items = F, only.exos = F)
 }
 \arguments{
 \item{do}{A digram.object}
 
 \item{items}{The variable.numbers of the items or exogenous variables to provide the names for}
+
+\item{only.items}{Boolean. Only return items.}
+
+\item{only.exos}{Boolean. Only return exos}
 }
 \value{
 Returns the variable.names of the items/exogenous variables .

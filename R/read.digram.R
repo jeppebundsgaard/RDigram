@@ -105,7 +105,7 @@ read.digram<-function(project=NULL,path=""){
 #' Kreiner, S. (2003). *Introduction to DIGRAM*. Dept. of Biostatistics, University of Copenhagen.
 write.digram<-function(do=NULL,path="",filename=do$project){
   # Helper functions
-  e<-function(t) {gsub("\\x0d\\x0a","\r\n",stringi::stri_encode(t,to="cp865"))} # Encode to ASCII Nordic https://www.ascii-codes.com/cp865.html#extended_character_set
+  e<-function(t) {gsub("\\x0d\\x0a","\r\n",stringi::stri_encode(gsub("\\h"," ",t,perl=T),to="cp865"))} # Encode to ASCII Nordic https://www.ascii-codes.com/cp865.html#extended_character_set
   l<-function(a) { if(recodelabs) { substr(c865,a,a)} else do$variables[[a]]$variable.label}
 
   if(!class(do)=="digram.object") stop("You need to provide a digram.object")
@@ -139,30 +139,32 @@ write.digram<-function(do=NULL,path="",filename=do$project){
 
   nvar<-length(do$variables)
   items<-1:do$recursive.structure[1]
-  maxcat<-max(sapply(items,function(i) do$variables[[i]]$ncat))
+  maxcat<-max(sapply(do$variables[items],function(x) x$ncat))
   cat(e(paste0(nvar,"\r\n")),file = varfile)
   cat(e(paste(sapply(1:length(do$variables),function(i) {
     x<-do$variables[[i]]
-    if(x$ncat>maxcats) {  # Recode when too many categories
+    if(length(x$cutpoints)>maxcats) {  # Recode when too many categories
       vardata<-unique(as.numeric(do$data[,x$column.number]))
       ordereddata<-vardata[order(vardata)]
       catsize<-floor(x$maximum/maxcats)
       #print(catsize)
       largecat<-x$maximum-catsize*maxcats
-      cats<-(1:(maxcats-1-largecat))*catsize
+      cats<-(0:(maxcats-1-largecat))*catsize
       if(largecat>1)
         cats<-c(cats,((maxcats-1-largecat+1):(maxcats-1))*(catsize+1))
       x$cutpoints<-cats
       x$ncat<-maxcats
     }
-    if(x %in% items && x$ncat!=maxcat) { # Create dummy categories
-      x$cutpoints<-c(x$cutpoints,(x$ncat-1):(maxcat-2))
-      x$maximum<-maxcat-1
+    if(i %in% items && x$ncat!=maxcat) { # Create dummy categories
+      x$cutpoints<-c(x$cutpoints,(max(x$cutpoints)+1):(max(x$cutpoints)+maxcat-x$ncat))
+      x$maximum<-max(x$cutpoints)+1
+      x$ncat<-maxcat
     }
-    paste0(l(i)," ",x$column.number," ",x$ncat," ",ifelse(x$variable.type=="nominal",2,3),"\r\n",x$minimum," ",paste(as.vector(x$cutpoints),collapse = " ")," ",x$maximum)
+    paste0(l(i)," ",x$column.number," ",x$ncat," ",ifelse(x$variable.type=="nominal",2,3),"\r\n",
+           x$minimum," ",paste(as.vector(x$cutpoints),collapse = " ")," ",x$maximum)
   }),collapse = "\r\n")),file = varfile,append = T)
   cat(e(paste0("\r\n",do$recursive.blocks,"\r\n",paste(do$recursive.structure,collapse = " "),"\r\n")),file = varfile,append = T)
-  cat(e(paste0(do$comments,"\r\n")),file=varfile,append = T)
+  cat(e(paste0(gsub("[\r\n]+","\r\n",do$comments),"\r\n")),file=varfile,append = T)
   cat(e(paste("VARIABLES\r\n")),file = varfile,append = T)
   vars<-paste0(sapply(1:length(do$variables),function(i) {paste(l(i),do$variables[[i]]$variable.name)}),collapse = "\r\n")
   cat(e(vars),file = varfile,append = T)

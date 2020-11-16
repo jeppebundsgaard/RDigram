@@ -5,10 +5,13 @@
 #' @param do an object of class \code{digram.object}
 #' @param resp A data.frame or matrix of recoded data (only used if \code{do} is \code{NULL})
 #' @param items A vector of columns from the recoded data to include as items in the analysis *or* a character vector of variable labels
+#' @param do.testlets Bolean. If TRUE, testlets are combined to superitems.
+#' @param do.split Bolean. If TRUE, items coded as split are split.
 #' @param exo A vector of columns from the recoded data to include as exogenous variables in the analysis *or* a character vector of variable labels
 #' @param max.name.length Maximum length of item names (to be printed in tables)
 #' @param accept.na A boolean. Include cases with missing values in responses
 #' @param verbose Print results
+#' @param extra.verbose Print warnings in PDF and HTML-output
 #' @export
 #' @details
 #' First step in item screening: Analysis of consistency (Positive correlations)
@@ -25,7 +28,11 @@
 #' item.correlations(do)
 #' @references
 #' Kreiner, S. & Christensen, K.B. (2011). Item Screening in Graphical Loglinear Rasch Models. *Psychometrika*, vol. 76, no. 2, pp. 228-256. DOI: 10.1007/s11336-9203-Y
-item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.length=30,accept.na=F,verbose=T){
+item.correlations<-function(do=NULL,resp=NULL,items=NULL,do.testlets=T,do.split=T,exo=NULL,max.name.length=30,accept.na=F,verbose=T,extra.verbose=F,
+                            caption.items=paste("Item correlations for",ifelse(is.null(do),"items",do$project)),
+                            caption.rest=paste("Item-rest correlations for",ifelse(is.null(do),"items",do$project)),
+                            caption.exo=paste("Correlations between items and exogenous variables for",ifelse(is.null(do),"items",do$project))
+                            ){
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
     resp<-do$recoded
@@ -41,7 +48,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
   item.names<-get.variable.names(do,items)
 
   all.olditems<-c()
-  if(!is.null(do$testlets)) {
+  if(do.testlets && !is.null(do$testlets)) {
     for(testlet in do$testlets){
       olditems<-which(items %in% testlet$testlet)
       if(length(olditems)>0) {
@@ -58,7 +65,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
     }
   }
 
-  if(!is.null(do$split)) {
+  if(do.split && !is.null(do$split)) {
     if(!accept.na) {
       warning("Set accept.na to TRUE if you want to get information on split items.")
     } else {
@@ -120,7 +127,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
   BH.items <- matrix(p.adjust(pval.matrix, "BH"),nrow=num.items)
 
 
-  items.print<-print.corr.matrix(corr.matrix = corr.items,pvals = BH.items,cnames = item.labels,rnames=paste(item.labels,item.names,sep = ": "),verbose = verbose)
+  items.print<-print.corr.matrix(corr.matrix = corr.items,pvals = BH.items,cnames = item.labels,rnames=paste(item.labels,item.names,sep = ": "),verbose = verbose,caption=caption.items)
   neg.corr<-which(corr.items<0)
   no.corr<-which(BH.items>0.05)
   if(length(neg.corr)>0) {
@@ -129,7 +136,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
       r<-((i-1) %% num.items)+1
       rels<-c(rels,paste(item.names[r],"and",item.names[ceiling(i/num.items)]))
     }
-    warning(paste0(header,"\nNegative correlation between\n",paste(rels,collapse = "\n")))
+    RDigram.warning(paste0(header,"\nNegative correlation between\n",paste(rels,collapse = "\n")),extra.verbose=extra.verbose)
   }
   if(length(no.corr)>0) {
     rels<-c()
@@ -137,7 +144,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
       r<-((i-1) %% num.items)+1
       rels=c(rels,paste(item.names[r],"and",item.names[ceiling(i/num.items)]))
     }
-    warning(paste0(header,"\nNo significant correlation between\n",paste(rels,collapse = "\n")))
+    RDigram.warning(paste0(header,"\nNo significant correlation between\n",paste(rels,collapse = "\n")),extra.verbose=extra.verbose)
 
   } else if(length(neg.corr)==0) {
     cat("\nAll correlations are significantly positive.")
@@ -147,14 +154,14 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
   pval.rest<-corr.rest<-rep(NA,num.items)
   for(i in 1:(num.items)) {
       item<-selected[,i]
-      rest<-apply(selected[,-i],1,sum,na.rm=T)
+      rest<-apply(array(selected[,-i]),1,sum,na.rm=T)
       tab<-table(item,rest)
       acor<-MESS::gkgamma(tab,conf.level = 0.95)
       corr.rest[i]<-acor$estimate
       pval.rest[i]<-acor$p.value
   }
   BH.rest <- p.adjust(pval.rest, "BH")
-  rest.print<-print.corr.matrix(corr.rest,BH.rest,item.names,verbose = verbose)
+  rest.print<-print.corr.matrix(corr.rest,BH.rest,item.names,verbose = verbose,caption=caption.rest)
   neg.rest<-which(corr.rest<0)
   no.rest<-which(BH.rest>0.05)
   if(length(neg.rest)>0) {
@@ -163,7 +170,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
       r<-((i-1) %% num.items)+1
       rels<-c(rels,paste(item.names[r],"and",item.names[ceiling(i/num.items)]))
     }
-    warning(paste0(header,"\nNegative correlation between\n",paste(rels,collapse = "\n")))
+    RDigram.warning(paste0(header,"\nNegative correlation between\n",paste(rels,collapse = "\n")),extra.verbose=extra.verbose)
   }
   if(length(no.rest)>0) {
     rels<-c()
@@ -171,7 +178,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
       r<-((i-1) %% num.items)+1
       rels=c(rels,paste(item.names[r],"and",item.names[ceiling(i/num.items)]))
     }
-    warning(paste0(header,"\nNo significant correlation between\n",paste(rels,collapse = "\n")))
+    RDigram.warning(paste0(header,"\nNo significant correlation between\n",paste(rels,collapse = "\n")),extra.verbose=extra.verbose)
 
   } else if(length(neg.rest)==0) {
     cat("\nAll correlations are significantly positive.")
@@ -201,7 +208,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
       }
     }
     BH.exo <- matrix(p.adjust(pval.exo, "BH"),nrow = num.items)
-    exo.print<-print.corr.matrix(corr.exo,BH.exo,cnames= exo.names,rnames=item.names,verbose = verbose)
+    exo.print<-print.corr.matrix(corr.exo,BH.exo,cnames= exo.names,rnames=item.names,verbose = verbose,caption=caption.exo)
     # stargazer::stargazer(corr.exo,na.print = "",type = "text",rownames = T,colnames = T)
     neg.exo<-which(corr.exo<0)
     pos.exo<-which(corr.exo>0)
@@ -221,7 +228,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
           relspos<-c(relspos,paste(item.names[r],"and",exo.names[ceiling(i/num.items)]))
         }
         if(!is.null(relsneg) && !is.null(relspos))
-          warning(paste0(header,"\nNegative correlation between\n",paste(relsneg,collapse = "\n"),"\nBut positive correlation between\n",paste(relspos,collapse = "\n")))
+          RDigram.warning(paste0(header,"\nNegative correlation between\n",paste(relsneg,collapse = "\n"),"\nBut positive correlation between\n",paste(relspos,collapse = "\n")),extra.verbose=extra.verbose)
       }
     }
     if(length(no.exo)>0) {
@@ -230,7 +237,7 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,max.name.lengt
         r<-((i-1) %% num.items)+1
         rels=c(rels,paste(item.names[r],"and",exo.names[ceiling(i/num.items)]))
       }
-      warning(paste0(header,"\nNo significant correlation between\n",paste(rels,collapse = "\n")))
+      RDigram.warning(paste0(header,"\nNo significant correlation between\n",paste(rels,collapse = "\n")),extra.verbose=extra.verbose)
 
     } else if(length(neg.exo)==0) {
       cat("\nAll correlations are significantly positive.")

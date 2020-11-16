@@ -11,7 +11,8 @@ person.fit.pattern(
   item.params = matrix(),
   param.type = c("pcm", "log.item.score", "multiplicative", "xsi"),
   num.montecarlo = 0,
-  verbose = T
+  verbose = T,
+  extra.verbose = F
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ person.fit.pattern(
 \item{num.montecarlo}{the number of iterations if the calculation of alternative patterns should be done using a montecarlo solution. 0 to do all patterns.}
 
 \item{verbose}{set to TRUE if you want to follow the progression}
+
+\item{extra.verbose}{Print warnings in PDF and HTML-output}
 }
 \value{
 Returns a list of results for each respondent, consisting of response pattern probability and the p-value of getting this pattern or a pattern of lower probability.

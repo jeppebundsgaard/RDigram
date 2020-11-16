@@ -13,6 +13,10 @@ item.correlations(do=NULL,resp=NULL,items=1:do$recursive.structure[1],exo=(do$re
 
 \item{items}{A vector of columns from the recoded data to include as items in the analysis \emph{or} a character vector of variable labels}
 
+\item{do.testlets}{Bolean. If TRUE, testlets are combined to superitems.}
+
+\item{do.split}{Bolean. If TRUE, items coded as split are split.}
+
 \item{exo}{A vector of columns from the recoded data to include as exogenous variables in the analysis \emph{or} a character vector of variable labels}
 
 \item{max.name.length}{Maximum length of item names (to be printed in tables)}
@@ -20,6 +24,8 @@ item.correlations(do=NULL,resp=NULL,items=1:do$recursive.structure[1],exo=(do$re
 \item{accept.na}{A boolean. Include cases with missing values in responses}
 
 \item{verbose}{Print results}
+
+\item{extra.verbose}{Print warnings in PDF and HTML-output}
 }
 \value{
 Returns a list of correlations
