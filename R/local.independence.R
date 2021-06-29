@@ -13,6 +13,8 @@
 #' @param summarize.testlets If true, don't collapse testlets, but summarize number of local dependent item pairs (both ways) in each testlet. Asterisk (*) indicates one or more negative gamme correlations.
 #' @param verbose Print results
 #' @param extra.verbose Print warnings in PDF and HTML-output
+#' @param list.LD List item pairs being locally dependent
+#' @param draw.graph Draw graph of Local Dependencies
 #' @param saved.result To avoid repeated calculation, you can provide a saved version of the analysis (returned from local.independence())
 #' @param caption Caption for the LD table (in Rmarkdown)
 #' @export
@@ -41,7 +43,7 @@
 #' local.independence(DHP)
 #' @references
 #' Kreiner, S. & Christensen, K.B. (2011). Item Screening in Graphical Loglinear Rasch Models. *Psychometrika*, vol. 76, no. 2, pp. 228-256. DOI: 10.1007/s11336-9203-Y
-local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("holm","BH","hochberg", "hommel", "bonferroni", "BY", "none"),digits=2,max.name.length=30,only.significant=F,use.names=F,summarize.testlets=F,verbose=T,extra.verbose=F,saved.result=NULL,caption=paste(ifelse(summarize.testlets,"Summary of",""),"Local dependence of",ifelse(is.null(do),"items",do$project))){
+local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("holm","BH","hochberg", "hommel", "bonferroni", "BY", "none"),digits=2,max.name.length=30,only.significant=F,use.names=F,summarize.testlets=F,verbose=T,extra.verbose=F,draw.graph=T,list.LD=T,saved.result=NULL,caption=paste(ifelse(summarize.testlets,"Summary of",""),"Local dependence of",ifelse(is.null(do),"items",do$project))){
   p.adj <- match.arg(p.adj)
   if(!is.null(do)) {
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
@@ -88,7 +90,7 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("holm","BH","
     num.col<-ncol(dep.matrix)
 
     is.dependant<-which(result$p.adj<0.05)
-    if(length(is.dependant)>0) {
+    if(list.LD && length(is.dependant)>0) {
       item1<-unique(result$Item1[is.dependant])
       rels<-paste(item1,"and",sapply(item1,function(x) paste(result$Item2[!is.na(result$p.adj) & result$p.adj<0.05 & result$Item1 == x],collapse = ", ")))
       warning(paste0("\nLocal dependence between\n",paste(rels,collapse = "\n")))
@@ -138,20 +140,22 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("holm","BH","
       print.corr.matrix(corr.matrix=dep.matrix[order.names,order.names,"gamma"],pvals = dep.matrix[order.names,order.names,"p.adj"],cnames = item.labels,rnames=if(use.names) item.labels else paste(item.labels,item.names,sep = ": "),digits = digits,caption=caption)
 
     # Draw graph
-    # Remove NaN's
-    result<-result[!is.nan(result$gamma),]
-    dograph<-as_tbl_graph(do,items=items,LD=result[result$p.adj<0.05,1:3],summarize.testlets = summarize.testlets)
-    p<-
-      ggraph::ggraph(dograph,layout="fr")+
-      ggraph::geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),round(gamma,digits),""),alpha=ifelse(!is.na(gamma),abs(gamma),.4),color=is.na(gamma)),
-                     angle_calc="along",label_dodge=unit(.25,"cm"),end_cap = ggraph::square(.5, 'cm'),start_cap = ggraph::square(.5, 'cm'),arrow = arrow(angle=10,length=unit(.2,"cm")))+
-      ggraph::geom_node_label(mapping = aes(label=if(use.names) name else label,color=type)) +
-      theme_void()+
-      theme(legend.position = "none")+
-      ggraph::scale_edge_color_brewer(palette = "Set1" ,limits=c(FALSE,TRUE))+
-      scale_color_brewer(palette = "Set2")# ,limits=c(FALSE,TRUE))
+    if(draw.graph){
+      # Remove NaN's
+      result<-result[!is.nan(result$gamma),]
+      dograph<-as_tbl_graph(do,items=items,LD=result[result$p.adj<0.05,1:3],summarize.testlets = summarize.testlets)
+      p<-
+        ggraph::ggraph(dograph,layout="fr")+
+        ggraph::geom_edge_link(mapping=aes(label=ifelse(!is.na(gamma),round(gamma,digits),""),alpha=ifelse(!is.na(gamma),abs(gamma),.4),color=is.na(gamma)),
+                       angle_calc="along",label_dodge=unit(.25,"cm"),end_cap = ggraph::square(.5, 'cm'),start_cap = ggraph::square(.5, 'cm'),arrow = arrow(angle=10,length=unit(.2,"cm")))+
+        ggraph::geom_node_label(mapping = aes(label=if(use.names) name else label,color=type)) +
+        theme_void()+
+        theme(legend.position = "none")+
+        ggraph::scale_edge_color_brewer(palette = "Set1" ,limits=c(FALSE,TRUE))+
+        scale_color_brewer(palette = "Set2")# ,limits=c(FALSE,TRUE))
 
-     print(p)
+       print(p)
+    }
     invisible(orig.result)
   }
 }

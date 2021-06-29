@@ -1,7 +1,7 @@
 #' Not exported
-header.format<-function(t="",margin=0) {
+header.format<-function(t="",margin=0,print.in.knitr=F) {
   if(knitr::is_latex_output() || knitr::is_html_output()) {
-    cat("\n\n",rep("#",4-margin)," ",t,sep="")
+    if(print.in.knitr) cat("\n\n",rep("#",4-margin)," ",t,sep="")
   } else {
     tw<-stringr::str_length(t)
     cat("\n+",rep("-",tw+2),"+",rep(paste("\n|",stringr::str_pad(" ",tw),"|",collapse=""),margin),"\n| ",t," |\n",rep(paste("|",stringr::str_pad(" ",tw),"|\n",collapse=""),margin),"+",rep("-",tw+2),"+\n",sep="")
@@ -99,4 +99,24 @@ item.names.shorten<-function(item.names,max.name.length) {
 }
 RDigram.warning<-function(warn,extra.verbose=F) {
   if(extra.verbose && (knitr::is_html_output() || knitr::is_latex_output())) cat("\n\n",gsub("\n","\n\n",warn),"\n\n") else warning(warn)
+}
+
+
+#' Get category values and names
+#'
+#' @param do A digram.object
+#' @param items The variable.numbers of the items or exogenous variables to provide the category names for
+#' @param only.items Boolean. Only return items.
+#' @param only.exos Boolean. Only return exos
+#'
+#' @return Returns the variable.names of the items/exogenous variables .
+#' @export
+#'
+#' @examples
+#' get.category.names(DHP,1:2)
+get.category.names<-function(do,items=NULL,only.items=F,only.exos=F) {
+  if(only.items) items<-1:do$recursive.structure[1]
+  else if(only.exos) items<-(do$recursive.structure[1]+1):length(do$variables)
+  else items<-1:do$recursive.structure[length(do$recursive.structure)]
+  for(x in do$variables[items]) {cat("\n",x$variable.name,"\n") ;print(x$category.names)}
 }

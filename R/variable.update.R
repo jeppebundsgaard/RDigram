@@ -13,6 +13,7 @@
 #' Category 2: cutpoint(1) < values <= cutpoint(2)
 #' ...
 #' Category N: cutpoint(n) < values <= maximum
+#' @param reverse Boolean. Reverse values (after cutpoints applied).
 #' @export
 #' @details A set of variables can be updated by providing a vector of variable names/numbers to update and ordered lists with their new properties. For variable.type, cutpoints, minimum and maximum you can provide one property to give all variables.
 #' @return Returns a DIGRAM object with (an) updated variable(s)
@@ -24,7 +25,7 @@
 #'
 #' @references
 #' Kreiner, S. (2003). *Introduction to DIGRAM*. Dept. of Biostatistics, University of Copenhagen.
-variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,variable.label=NULL,category.names=NULL,variable.type=NULL,minimum=NULL,maximum=NULL,cutpoints=NULL) {
+variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,variable.label=NULL,category.names=NULL,variable.type=NULL,minimum=NULL,maximum=NULL,cutpoints=NULL,reverse=NULL) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   if(is.null(variable.to.update)) stop("You need to provide a number or name of the variable to update")
   #data<-as.data.frame(data)
@@ -34,7 +35,7 @@ variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,var
   if(!is.null(maximum) && !inherits(maximum,"list")) maximum<-rep(x = list(maximum),times=length(variable.to.update))
 
   for(i in 1:length(variable.to.update)) {
-    variable.num<-if(inherits(variable.to.update[i],"integer")) variable.to.update[i] else which(sapply(do$variables,function(x) x[["variable.name"]]==variable.to.update[i]))
+    variable.num<-if(inherits(variable.to.update[i],"numeric")) variable.to.update[i] else which(sapply(do$variables,function(x) x[["variable.name"]]==variable.to.update[i]))
     variable<-do$variables[[variable.num]]
     if(!is.null(variable.type[[i]])) match.arg(variable.type[[i]],c("nominal","ordinal"))
     do$variables[[variable.num]]<-list(variable.name=ifelse(is.null(variable.name[i]),variable$variable.name,variable.name[i]),
@@ -45,7 +46,8 @@ variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,var
          variable.type=ifelse(is.null(variable.type[[i]]),variable$variable.type,variable.type[[i]]),
          minimum=ifelse(is.null(minimum[[i]]),variable$minimum,minimum[[i]]),
          maximum=ifelse(is.null(maximum[[i]]),variable$maximum,maximum[[i]]),
-         cutpoints=if(is.null(cutpoints[[i]])) variable$cutpoints else cutpoints[[i]])
+         cutpoints=if(is.null(cutpoints[[i]])) variable$cutpoints else cutpoints[[i]],
+         reverse=ifelse(is.null(reverse),ifelse(is.null(variable$reverse)||!variable$reverse,F,T),reverse))
     colnames(do$data)[variable.num]<-do$variables[[variable.num]]$variable.name
   }
   do$recoded<-digram.recode(do)

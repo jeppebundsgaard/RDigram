@@ -46,7 +46,7 @@ digram.estimate<-function(do,items=NULL,groups=NULL,ncases=0,constraint = "cases
   colnames(Q)<-paste("Dimension",1:length(digram.objects))
 
   for(do in digram.objects) {
-    items<-NULL
+    # items<-NULL
     if(!inherits(do,"digram.object")) stop("do needs to be of class digram.object")
     resp<-do$recoded
     if(ncases>0) resp<-resp[sample(1:nrow(resp),ncases),]

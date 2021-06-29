@@ -87,6 +87,7 @@ digram.recode<-function(do) {
       )
     })
 
+    if(!is.null(x$reverse) && x$reverse) datacol<-car::recode(datacol,paste(tos,rev(tos),sep = "=",collapse = ";"))
     if(!is.null(filter.conditions)) {
       minmax<-filter.conditions[filter.conditions$variable.number==column.number,2:3]
       if(nrow(minmax)>0) {
@@ -95,7 +96,8 @@ digram.recode<-function(do) {
         datacol<-car::recode(datacol,paste0("lo:",(minval-.000001),"=NA;",(maxval+.000001),":hi=NA"))
       }
     }
-    recoded<-data.frame("col"=car::recode(datacol,recodestr))
+    datacol<-car::recode(datacol,recodestr)
+    recoded<-data.frame("col"=datacol)
     colnames(recoded)<-x$variable.name
     return(recoded)
   }))
@@ -324,6 +326,8 @@ code.split<-function(do,split.var,split.on,append=F) {
   exos<-strsplit(x = split.on, split =" *, *")[[1]]
   exo.nums<-sapply(exos,get.column.no,do=do)
   do$splits<-rbind(splits,expand.grid(var=var.nums,exo=exo.nums))
+  # TODO: Update testlets
+
   do
 }
 

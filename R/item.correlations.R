@@ -12,6 +12,9 @@
 #' @param accept.na A boolean. Include cases with missing values in responses
 #' @param verbose Print results
 #' @param extra.verbose Print warnings in PDF and HTML-output
+#' @param caption.items Caption of items table
+#' @param caption.rest Caption of item-rest table
+#' @param caption.exo Caption of exogenous variables table
 #' @export
 #' @details
 #' First step in item screening: Analysis of consistency (Positive correlations)
