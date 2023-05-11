@@ -10,7 +10,7 @@
 #' @param accept.na A boolean. Include cases with missing values in responses
 #' @param rownamewidth Width of item names column
 #' @export
-#' @return Returns NULL.
+#' @return Returns an object of items.scores,scoredist,meansum,score.distribution, and score.groups.
 #' Prints Average item scores and score distribution and Score groups for tests of Rasch models
 #' @author Jeppe Bundsgaard <jebu@@edu.au.dk>
 #' @examples score.information(do,items="abcdef")

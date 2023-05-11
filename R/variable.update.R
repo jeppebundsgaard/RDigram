@@ -35,7 +35,7 @@ variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,var
   if(!is.null(maximum) && !inherits(maximum,"list")) maximum<-rep(x = list(maximum),times=length(variable.to.update))
 
   for(i in 1:length(variable.to.update)) {
-    variable.num<-if(inherits(variable.to.update[i],"numeric")) variable.to.update[i] else which(sapply(do$variables,function(x) x[["variable.name"]]==variable.to.update[i]))
+    variable.num<-if(inherits(variable.to.update[i],c("numeric","integer"))) variable.to.update[i] else which(sapply(do$variables,function(x) x[["variable.name"]]==variable.to.update[i]))
     variable<-do$variables[[variable.num]]
     if(!is.null(variable.type[[i]])) match.arg(variable.type[[i]],c("nominal","ordinal"))
     do$variables[[variable.num]]<-list(variable.name=ifelse(is.null(variable.name[i]),variable$variable.name,variable.name[i]),

@@ -157,7 +157,8 @@ item.correlations<-function(do=NULL,resp=NULL,items=NULL,do.testlets=T,do.split=
   pval.rest<-corr.rest<-rep(NA,num.items)
   for(i in 1:(num.items)) {
       item<-selected[,i]
-      rest<-apply(array(selected[,-i]),1,sum,na.rm=T)
+      #rest<-apply(array(selected[,-i]),1,sum,na.rm=T)
+      rest<-apply(selected[,-i],1,sum,na.rm=T)
       tab<-table(item,rest)
       acor<-MESS::gkgamma(tab,conf.level = 0.95)
       corr.rest[i]<-acor$estimate
