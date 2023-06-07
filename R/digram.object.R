@@ -72,7 +72,7 @@ digram.recode<-function(do) {
     cutpoints2<-matrix(c(x$minimum,x$cutpoints+.000001,x$cutpoints,x$maximum),ncol = 2,byrow = F)
     froms<-apply(cutpoints2,1,paste,collapse=":")
     tos<-0:(length(x$cutpoints))
-    recodestr<-paste(apply(matrix(c(froms,tos),ncol=2,byrow = F),1,paste,collapse="="),collapse=";")
+    recodestr<-paste(c(apply(matrix(c(froms,tos),ncol=2,byrow = F),1,paste,collapse="="),paste0(x$maximum+.000001,":hi=NA")),collapse=";")
     column.number<-x$column.number
     datacol<-data[,column.number]
     # If this is a combined variable, add the columns together

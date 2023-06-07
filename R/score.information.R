@@ -101,7 +101,7 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
   if(knitr::is_latex_output() || knitr::is_html_output()){
     print(knitr::kable(items.scores,col.names = c("Items","n","Mean","n","Mean","Item range"),caption = caption,booktabs=T,longtable=T,format.args = list(scientific=F,digits=2))%>%
             kableExtra::kable_styling() %>%
-            kableExtra::add_header_above(c(" " = 3, "Complete cases" = 2, " " = 1)) %>%
+            kableExtra::add_header_above(c(" " = 2, "Complete cases" = 2, " " = 1)) %>%
             column_spec(1, width = rownamewidth))
   } else stargazer::stargazer(items.scores,type = "text",summary = F,digit.separator = "",digits = 2,rownames = F)
 
