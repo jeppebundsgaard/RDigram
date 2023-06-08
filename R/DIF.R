@@ -101,7 +101,7 @@ item.DIF<-function(do=NULL,resp=NULL,items=NULL,exo=NULL,p.adj=c("BH","holm", "h
   exo<-exos$exo
   # Remove exos with no cases
   exoselected<-as.data.frame(exoselected[,apply(exoselected,2,sum)>0])
-  sink("/dev/null")
+  sink(nullfile())
   result<-if(is.null(saved.result)) partgam_DIF(dat.items = selected,dat.exo = exoselected,p.adj = p.adj) else saved.result
   orig.result<-result
   sink()
