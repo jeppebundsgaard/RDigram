@@ -115,7 +115,7 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
     sapply(0:maxall,function(j) sum(selectednona[,i]==j,na.rm = accept.na))
   })))
   category.names.1<-do$variables[[items[1]]]$category.names$Name
-  same.category.names<-all(sapply(do$variables[items],function(x) length(x$category.names$Name)==length(category.names.1) && x$category.names$Name==category.names.1))
+  same.category.names<-all(sapply(do$variables[items],function(x) length(x$category.names$Name)==length(category.names.1) && all(x$category.names$Name==category.names.1)))
   if(same.category.names) {
     if(knitr::is_latex_output() || knitr::is_html_output()) {colnames(scoredist)<-category.names.1} else
     colnames(scoredist)<-paste(0:maxall,paste("(",category.names.1,")",sep = ""),sep = " ")
