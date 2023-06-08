@@ -31,7 +31,7 @@ digram.wrightmap<-function(mod,do=NULL,dimname=NULL,cols=collist,colscheme="(.*)
     mod$B<-mod$B[,,1]
     dim(mod$B)[3]<-1
   }
-  if(!verbose) sink("/dev/null")
+  if(!verbose) sink(nullfile())
   wle<-TAM::tam.wle(mod,progress = F)
   if(!verbose) sink()
 
