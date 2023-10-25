@@ -12,6 +12,8 @@ as_tbl_graph(do)
 \item{LD}{A data.frame with columns for item1, item2 and gamma coefficient. Items can be variable.names, variable.columns or item numbers.}
 
 \item{DIF}{A data.frame with columns for item, exogenous variable and gamma coefficient. Items and exogenous variables can be variable.names, variable.columns or item numbers.}
+
+\item{summarize.testlets}{If true, don't collapse testlets, but summarize number of local dependent item pairs (both ways) in each testlet.}
 }
 \value{
 Returns a tbl_graph

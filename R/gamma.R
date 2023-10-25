@@ -1,19 +1,19 @@
 
 #' Gammas of item.parameters given total score using patterns - inefficient
 #'
-#' @param item.params a matrix of item parameters (using the PCM parametrisation). Items in rows, threshold values in columns
+#' @param item.params a matrix of item parameters. Items in rows, threshold values in columns
 #' @param R The total score for which to calculate the gamma parameter
-#' @param param.type Type of item parameters given. One of pcm (RUMM2030), log.item.score (?), multiplicative (DIGRAM or RDigram, xsi (Conquest or TAM))
+#' @param param.type Type of item parameters given. One of pcm (RUMM2030), multiplicative (DIGRAM or RDigram, xsi (Conquest or TAM))
 #'
 #' @return Returns gamma for the given total score.
-#' @details Always use gamma.matrix instead of gamma.pattern. It is far more efficient.
+#' @details Always use gamma_matrix instead of gamma.pattern. It is far more efficient.
 #' @export
 #' @author Jeppe Bundsgaard & Svend Kreiner
 #' @references Jeppe Bundsgaard & Svend Kreiner (2019). *Undersøgelse af De Nationale Tests måleegenskaber*. 2nd Ed. Copenhagen: DPU, Aarhus University.
 #' @examples
 #' item.params<-matrix(c(1,.5,1,1,1,2,1,4),nrow=4)
-#' gamma.pattern(item.params,"multiplicative",3)
-gamma.pattern<-function(item.params,param.type=c("pcm","log.item.score","multiplicative","xsi"),R=0) {
+#' gamma_pattern(item.params,"multiplicative",3)
+gamma_pattern<-function(item.params,param.type=c("pcm","log.item.score","multiplicative","xsi"),R=0) {
   item.params<-item.param.convert(item.params = item.params,from = param.type,to = "multiplicative")
   # Get the maximum score of the items in the response pattern xs
   maxscores<-apply(item.params,1,function(y) sum(!is.na(y))-1)
@@ -44,7 +44,7 @@ gamma.pattern<-function(item.params,param.type=c("pcm","log.item.score","multipl
 #' @param target target total score
 #'
 #' @return Returns a matrix of all possible patterns. If target is set, only patterns with at total score of target is returned
-#' @details This function quickly gets very resource intensive. On a 8 core, 16 GB computer, 25 items are too heavy.
+#' @details This function quickly gets very resource intensive. On an 8 core, 16 GB computer, 25 items are too heavy.
 #' @export
 #' @author Jeppe Bundsgaard & Svend Kreiner
 #' @references Jeppe Bundsgaard & Svend Kreiner (2019). *Undersøgelse af De Nationale Tests måleegenskaber*. 2nd Ed. Copenhagen: DPU, Aarhus University.
@@ -71,20 +71,29 @@ internal.patterns<-function(maxscores=c(),pattern=matrix(data=0,ncol = length(ma
 }
 #' Gammas of item.parameters given total score using matrix calculations
 #'
-#' @param item.params a matrix of item parameters (using the PCM parametrisation). Items in rows, threshold values in columns
+#' @param item.params a matrix of item parameters. Items in rows, threshold values in columns
 #' @param R The total score for which to calculate the gamma parameter (set to NULL to get gammas for all possible total scores)
-#' @param param.type Type of item parameters given. One of pcm (RUMM2030), log.item.score (?), multiplicative (DIGRAM or RDigram, xsi (Conquest or TAM))
+#' @param param.type Type of item parameters given. One of pcm (RUMM2030), log.item.score (?), andersen/multiplicative (DIGRAM or RDigram, xsi (Conquest or TAM))
 #'
 #' @return Returns gamma for the given total score.
 #' @details Always use gamma.matrix instead of gamma.pattern. It is far more efficient.
 #' @export
 #' @author Jeppe Bundsgaard & Svend Kreiner
 #' @references Jeppe Bundsgaard & Svend Kreiner (2019). *Undersøgelse af De Nationale Tests måleegenskaber*. 2nd Ed. Copenhagen: DPU, Aarhus University.
+#' Svend Kreiner (January 26 2020) *Beregning af gamma polynomier* Unpublished email.
 #' @examples
-#' item.params<-matrix(c(1,.5,1,1,1,2,1,4),nrow=4)
-#' gamma.matrix(item.params,"multiplicative",3)
-gamma.matrix<-function(item.params=NULL,param.type=c("pcm","log.item.score","multiplicative","xsi"),R=NULL) {
-  item.params<-item.param.convert(item.params = item.params,from = param.type,to = "multiplicative")
+#' item.params<-matrix(c(
+#' 1.00000,5.81321,2.87179,0.76421,
+#' 1.00000,1.59070,1.16592,0.74982,
+#' 1.00000,2.19527,1.44144,0.30854,
+#' 1.00000,23.75866,19.51002,5.65624
+#' ),nrow=4,byrow=T)
+#' gamma_matrix(item.params,"multiplicative")
+gamma_matrix<-function(item.params=NULL,param.type=c("multiplicative","andersen","pcm","log.item.score","xsi"),R=NULL) {
+  param.type<-match.arg(param.type)
+  if(param.type!="multiplicative") item.params<-item.param.convert(item.params = item.params,from = param.type,to = "multiplicative")
+  if(!is.matrix(item.params)) item.params<-matrix(item.params)
+  if(ncol(item.params)==1 || !all(item.params[,1]==1)) item.params<-cbind(matrix(rep(1,nrow(item.params)),ncol = 1),item.params)
   if(nrow(item.params)==0) return(1)
   # Initializing by setting gamma to the first item parameters - this is also a special case.
   gamma<-item.params[1,!is.na(item.params[1,])]
@@ -110,7 +119,7 @@ gamma.matrix<-function(item.params=NULL,param.type=c("pcm","log.item.score","mul
 #' Draw plausible responses based on item parameters
 #'
 #' @param item.params a matrix of item parameters (items in rows, thresholds in columns)
-#' @param param.type Type of item parameters. One of pcm (RUMM2030), log.item.score (?), multiplicative (DIGRAM or RDigram, xsi (Conquest or TAM))
+#' @param param.type Type of item parameters. One of pcm (RUMM2030), multiplicative (DIGRAM or RDigram, xsi (Conquest or TAM))
 #' @param R Total score of the response
 #' @param num.responses The number of response patterns to return
 #'
@@ -120,7 +129,7 @@ gamma.matrix<-function(item.params=NULL,param.type=c("pcm","log.item.score","mul
 #' @examples
 #' item.params<-matrix(c(1,.5,1,1,1,2,1,4),nrow=4)
 #' draw.plausible.response(item.params=item.params,param.type="multiplicative",R=2,num.responses=10)
-draw.plausible.response<-function(item.params,param.type=c("pcm","log.item.score","multiplicative","xsi"),R=0,num.responses=1) {
+draw.plausible.response<-function(item.params,param.type=c("pcm","multiplicative","xsi"),R=0,num.responses=1) {
   item.params<-item.param.convert(item.params = item.params,from = param.type,to = "multiplicative")
  #  Needed? Helpful? Maybe...
   # item.params<-item.params[,apply(item.params,2,function(x) any(!is.na(x)))]

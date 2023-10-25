@@ -29,6 +29,8 @@ variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,var
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   if(is.null(variable.to.update)) stop("You need to provide a number or name of the variable to update")
   #data<-as.data.frame(data)
+  do$commandsrun<-append(do$commandsrun,sys.call())
+
   if(!is.null(cutpoints) && !inherits(cutpoints,"list")) cutpoints<-rep(x = list(cutpoints),times=length(variable.to.update))
   if(!is.null(variable.type) && !inherits(variable.type,"list")) variable.type<-rep(x = list(variable.type),times=length(variable.to.update))
   if(!is.null(minimum) && !inherits(minimum,"list")) minimum<-rep(x = list(minimum),times=length(variable.to.update))
@@ -75,6 +77,8 @@ variable.update<-function(do=NULL,variable.to.update=NULL,variable.name=NULL,var
 variable.delete<-function(do=NULL,variable.to.delete=NULL) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   if(is.null(variable.to.delete)) stop("You need to provide a number or name of the variable to delete")
+  do$commandsrun<-append(do$commandsrun,sys.call())
+
   variable.to.delete<-get.column.no(do,variable.to.delete)
   var.names<-get.variable.names(do,variable.to.delete)
   do$variables<-do$variables[-variable.to.delete]
@@ -129,6 +133,8 @@ variable.delete<-function(do=NULL,variable.to.delete=NULL) {
 variables.combine<-function(do=NULL,variables.to.combine=NULL,variable.name=NULL,variable.label=NULL,category.names=NULL,combine.type=c("sum","or","xor","and","onlyif"),minimum=NULL,maximum=NULL,cutpoints=NULL) {
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   if(is.null(variables.to.combine) | length(variables.to.combine)<2) stop("You need to provide numbers or names of 2 or more variables to combine")
+  do$commandsrun<-append(do$commandsrun,sys.call())
+
   combine.type<-match.arg(combine.type)
   variables.to.combine<-get.column.no(do,variables.to.combine)
   for(i in variables.to.combine) if(do$variables[[i]]$variable.type!="ordinal") stop("Variables need to be of type ordninal.")

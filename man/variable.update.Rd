@@ -13,7 +13,8 @@ variable.update(
   variable.type = NULL,
   minimum = NULL,
   maximum = NULL,
-  cutpoints = NULL
+  cutpoints = NULL,
+  reverse = NULL
 )
 }
 \arguments{
@@ -36,6 +37,8 @@ Category 1: minimum <= values <= cutpoint(1)
 Category 2: cutpoint(1) < values <= cutpoint(2)
 ...
 Category N: cutpoint(n) < values <= maximum}
+
+\item{reverse}{Boolean. Reverse values (after cutpoints applied).}
 }
 \value{
 Returns a DIGRAM object with (an) updated variable(s)

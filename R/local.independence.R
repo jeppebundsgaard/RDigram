@@ -110,7 +110,7 @@ local.independence<-function(do=NULL,resp=NULL,items=NULL,p.adj= c("holm","BH","
       item.labels.sign<-item.labels
       for(tlist in do$testlets){
         testlet<-tlist$testlet
-        testlet<-(testlet[testlet %in% items])
+        testlet<-(which(items %in% testlet))
         if(length(testlet)>0) {
           num.sign<-cbind(num.sign,rowSums(num.sign[,testlet],na.rm = T))
           num.sign<-rbind(num.sign,colSums(num.sign[testlet,],na.rm = T))

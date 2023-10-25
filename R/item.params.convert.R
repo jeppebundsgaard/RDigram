@@ -196,7 +196,7 @@ delta.to.conquest.item<-function(single.item.params) {
 #'
 #' @param from.model A model of class TAM or eRm.
 #' @param item.params A matrix of item parameters (items in rows, thresholds in columns) (not needed if from.model is given)
-#' @param from,to Type of item parameters. One of pcm, pcm.cent, andersen, psd, conquest (from not needed if from.model is given).
+#' @param from,to Type of item parameters. One of pcm, pcm.cent, andersen (or multiplicative), psd, conquest (from not needed if from.model is given).
 #' @param return.vector Get result as a vector of category values instead of the default data.frame
 #' @return Returns item parameters in the parametrization specified in *to*.
 #' @export
@@ -206,7 +206,7 @@ delta.to.conquest.item<-function(single.item.params) {
 #'   \item{Power series distribution parametrization (psd)}{\cr
 #'     \eqn{\xi^x\gamma_x \over G(\xi,\gamma_1 ... \gamma_k)}, where \eqn{\xi} is the person parameter (ability), and \eqn{\gamma_x} are the item parameters. Related through \eqn{\xi=exp(\theta)} and \eqn{\gamma_x=exp(\delta_x)} to the Andersen parametrization
 #'   }
-#'   \item{Andersen parametrization (andersen)} {\cr
+#'   \item{Andersen or multiplicative parametrization (andersen)} {\cr
 #'     \eqn{exp(x\theta+\delta_x) \over G(\theta,\delta_1 ... \delta_k)}, where \eqn{\theta} is the person parameter (ability), and \eqn{\delta_x} are the item (easiness) parameters
 #'   }
 #'   \item{Partial Credit Model (PCM)/Masters' parametrization (pcm)} {\cr
@@ -239,7 +239,9 @@ delta.to.conquest.item<-function(single.item.params) {
 #' @examples
 #' item.params<-matrix(c(0,1,2,3,1,2,3,4),nrow=4)
 #' item.params.convert(item.params=item.params,from="conquest",to="psd")
-item.params.convert<-function(from.model=NULL,item.params=c(),from=c("pcm","pcm.cent","andersen","psd","conquest"),to=c("pcm","pcm.cent","andersen","psd","conquest"), return.vector=F) {
+item.params.convert<-function(from.model=NULL,item.params=c(),
+                              from=c("pcm","pcm.cent","andersen","multiplicative","psd","conquest"),
+                              to=c("pcm","pcm.cent","andersen","multiplicative","psd","conquest"), return.vector=F) {
   if(is.null(from.model)) {
     if(!is.null(attributes(item.params)$par.type)) {
       from<-attributes(item.params)$par.type
@@ -251,6 +253,8 @@ item.params.convert<-function(from.model=NULL,item.params=c(),from=c("pcm","pcm.
   if(inherits(item.params,"numeric")) {item.params<-matrix(item.params,nrow=1)}
   if(!inherits(item.params,"matrix")) {item.params<-as.matrix(item.params)}
   to<-match.arg(to)
+  if(to=="multiplicative") to<-"andersen"
+  if(from=="multiplicative") from<-"andersen"
   if(from==to) {return(item.params)}
   item.params<-switch(from,
          "conquest"=switch(to,

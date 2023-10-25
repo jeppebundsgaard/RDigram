@@ -18,9 +18,11 @@ score.information(do=NULL,resp=NULL,items=1:length(do$variables),accept.na = F)
 \item{do.split}{Bolean. If TRUE, items coded as split are split.}
 
 \item{accept.na}{A boolean. Include cases with missing values in responses}
+
+\item{rownamewidth}{Width of item names column}
 }
 \value{
-Returns NULL.
+Returns an object of items.scores,scoredist,meansum,score.distribution, and score.groups.
 Prints Average item scores and score distribution and Score groups for tests of Rasch models
 }
 \description{

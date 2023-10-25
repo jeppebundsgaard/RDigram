@@ -1,6 +1,6 @@
 #' Estimate RDigram object using TAM
 #'
-#' @param do A digram.object
+#' @param do A digram.object or a combined digram.object
 #' @param items The items to include in the analysis
 #' @param groups Names or column numbers of exogenous variables to use for grouping in TAM. If more names are given, all combinations of values are calculated and used as grouping variables.
 #' @param ncases Number of cases to sample for the estimation (0 uses all cases)
@@ -17,6 +17,7 @@
 #' Uses either the package TAM or eRm to estimate the model.
 #' If items have been coded as testlets, a bifactorial model is used in TAM ([tam.fa()]). Otherwise [tam.mml()] is used for estimation.
 #' In eRm, testlets are managed by creating an interaction parameter between the testlet items. In this case [LPCM()] is used for estimation. This is also the case, if groups are provided. Otherwise [PCM()] is used for estimation.
+#' If a combined digram.object (multiple objects) is provided, a multidimensional analysis is run in TAM. This can be very computationally intensive.
 #' @export
 #' @seealso [tam.mml()], [tam.fa()], [PCM()], [LPCM()]
 #' @references
@@ -34,7 +35,7 @@
 #' mod1$deviance
 #' mod2$deviance
 #' mod1$deviance-mod2$deviance
-digram.estimate<-function(do,items=NULL,groups=NULL,ncases=0,constraint = "cases",use.package=c("TAM","eRm"),collapse.testlets=F,init.model=NULL,tam.control=list(),sum0=T,verbose=T,...) {
+digram.estimate<-function(do,items=NULL,groups=NULL,ncases=0,constraint = "cases",use.package=c("TAM","eRm"),collapse.testlets=F,init.model=NULL,tam.control=list(snodes=1000),sum0=T,verbose=T,...) {
   use.package<-match.arg(use.package)
   if(use.package=="TAM") tam.control$progress <- verbose
   cdo<-if(inherits(do,what = "combined.digram.objects")) do else digram.objects.combine(do)

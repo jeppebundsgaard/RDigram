@@ -23,9 +23,6 @@ describe.items(
 
 \item{file.name}{Filename of the output csv-file.}
 }
-\value{
-
-}
 \description{
 Describe items
 }

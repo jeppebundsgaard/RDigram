@@ -47,11 +47,11 @@ pp<-function(rgb,procent) {
   n<-procent/100
   apply(as.matrix(rgb),1,function(x) {round((n*x+(1-n)*255))})
 }
-h<-function(rgb) {
+h<-function(rgbcolors) {
   ret<-c()
-  for(i in 1:(length(rgb)/3)) {
+  for(i in 1:(length(rgbcolors)/3)) {
     int<-(i-1)*3+1
-    ret<-c(ret,paste0("#",paste0(as.hexmode(rgb[int:(int+2)]),collapse = "")))
+    ret<-c(ret,rgb(rgbcolors[int]/256,rgbcolors[int+2]/256,rgbcolors[int+2]/256))
   }
   return(ret)
 }

@@ -49,6 +49,7 @@
 #' @param items.rect.color See header
 #' @param item.description.seperator Character(s) to insert between item descriptions (\\n is newline)
 #' @param item.description.bullet Character(s) to insert before item descriptions
+#' @param item.description.indent Number of spaces to insert after linebreak
 #' @param items.description.family  See header
 #' @param items.description.size See header
 #' @param items.description.fontface See header
@@ -113,7 +114,7 @@ proficiency.scale<-function(mod=NULL,dontplot=F,font.base.size = 10 / .pt,
                             # Items
                             items.include.categories=NULL,
                             items.rect.width=2,items.rect.fill=ifelse(color.palette=="Blackwhite","white",hcl.colors(4,palette=color.palette)[3]),items.rect.color=ifelse(color.palette=="Blackwhite","black","white"),
-                            item.description.seperator="\n",item.description.bullet="* ",
+                            item.description.seperator="\n",item.description.bullet="* ",item.description.indent=3,
                             items.description.family="serif",items.description.size=font.base.size,items.description.fontface="plain",item.description.color=ifelse(color.palette=="Blackwhite","black","white"),items.description.nudge_x=.02,items.description.nudge_y=.1,items.description.linelength=30,items.description.hjust="left",
                             # Persons
                             person.parameters=ifelse(is.null(mod),null,mod$person$EAP),person.middle=F,
@@ -155,7 +156,7 @@ proficiency.scale<-function(mod=NULL,dontplot=F,font.base.size = 10 / .pt,
   thresholds<-thresholds[inorder]
   item.descriptions<-item.descriptions[inorder]
   # Combine item descriptions in levels
-  items.in.level<-linebreak(sapply(1:nlevels,function(l) paste0(item.description.bullet,paste(linebreak(item.descriptions[!is.na(thresholds) & thresholds>=level.lims[l] & thresholds<level.lims[l+1]],len = ifelse(grepl("\n",item.description.seperator),items.description.linelength,0)),collapse = paste0(item.description.seperator,item.description.bullet)))),len = ifelse(grepl("\n",item.description.seperator),0,items.description.linelength))
+  items.in.level<-linebreak(sapply(1:nlevels,function(l) paste0(item.description.bullet,paste(linebreak(item.descriptions[!is.na(thresholds) & thresholds>=level.lims[l] & thresholds<level.lims[l+1]],len = ifelse(grepl("\n",item.description.seperator),items.description.linelength,0),indent=item.description.indent),collapse = paste0(item.description.seperator,item.description.bullet)))),len = ifelse(grepl("\n",item.description.seperator),0,items.description.linelength))
 
   # Warn if unused items
   items.out.of.level<-!is.na(thresholds) & (thresholds>=level.lims[nlevels+1] | thresholds<level.lims[1])
@@ -311,7 +312,7 @@ proficiency.scale<-function(mod=NULL,dontplot=F,font.base.size = 10 / .pt,
 #' @param outdir Where to save the output file.
 #' @param file.name Filename of the output csv-file.
 #'
-#' @return
+#' @return NULL
 #' @export
 #'
 #' @examples
@@ -390,7 +391,7 @@ read.item.descriptions<-function(mod,file.name="item.descriptions.csv") {
 }
 
 
-linebreak<-function(x,len=45) { if(len==0) x else apply(as.matrix(x),1,function(y) paste(strwrap(y,len),collapse="\n")) }
+linebreak<-function(x,len=45,indent=0) { if(len==0) x else apply(as.matrix(x),1,function(y) paste(strwrap(x = y,width = len,exdent = indent),collapse="\n")) }
 
 # library(rhandsontable)
 # library(shiny)

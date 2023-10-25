@@ -23,9 +23,15 @@ local.independence(do=NULL,resp=NULL,items=1:do$recursive.structure[1],digits=2,
 
 \item{use.names}{Use item names instead of item labels as node labels}
 
+\item{summarize.testlets}{If true, don't collapse testlets, but summarize number of local dependent item pairs (both ways) in each testlet. Asterisk (*) indicates one or more negative gamme correlations.}
+
 \item{verbose}{Print results}
 
 \item{extra.verbose}{Print warnings in PDF and HTML-output}
+
+\item{draw.graph}{Draw graph of Local Dependencies}
+
+\item{list.LD}{List item pairs being locally dependent}
 
 \item{saved.result}{To avoid repeated calculation, you can provide a saved version of the analysis (returned from local.independence())}
 

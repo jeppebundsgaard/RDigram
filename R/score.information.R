@@ -30,7 +30,7 @@ score.information<-function(do=NULL,resp=NULL,items=1:do$recursive.structure[1],
       if(length(olditems)>0) {
         newitem<-ncol(resp)+1
         items<-c(items,newitem)
-        all.olditems<-c(all.olditems,olditems)
+        all.olditems<-c(all.olditems,newitem)
         # Recode
         resp[,newitem]<-apply(resp[,testlet$testlet],1,sum)#,na.rm=T)
         # Combine names and item.labels

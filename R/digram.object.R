@@ -18,7 +18,7 @@
 #' Kreiner, S. (2003). *Introduction to DIGRAM*. Dept. of Biostatistics, University of Copenhagen.
 digram.object<-function(project=NULL,data=data.frame(),variables=NULL,filter.conditions=NULL,recursive.structure=NULL,comments="") {
   if(is.null(project)) stop("You need to provide a project name")
-  #data<-as.data.frame(data)
+  #if(inherits(data,"tbl_df")) data<-as.data.frame(data)
   if(!inherits(variables,"list")) {
     vars<-if(is.null(variables)) colnames(data) else if(inherits(variables,c("numeric","integer"))) colnames(data)[variables] else variables
     num.vars<-length(vars)
@@ -31,9 +31,13 @@ digram.object<-function(project=NULL,data=data.frame(),variables=NULL,filter.con
       for(j in numletters:1) {r<-(k%%26);variable.label<-paste0(LETTERS[r+ifelse(numletters<2||j>1,1,0)],variable.label); k<-floor(k/26)}
       variable.name<-vars[i]
       column.number<-which(colnames(data)%in%vars[i])
-      # Test for integer/float/character...
-      categories<-na.omit(unique(data[,vars[i]]))
-      categories<-categories[order(categories)]
+      if(!is.null(attr(data[,vars[i]], "labels"))) {
+        categories<-attr(data[,vars[i]], "labels")
+      } else {
+        # Test for integer/float/character...
+        categories<-na.omit(unique(data[,vars[i]]))
+        categories<-categories[order(categories)]
+      }
       ncat<-length(categories)
       variable.type<-ifelse(inherits(categories,"numeric") | inherits(categories,"integer"),"ordinal","nominal")
       minimum<-if(variable.type=="ordinal") min(categories) else 0
@@ -44,7 +48,8 @@ digram.object<-function(project=NULL,data=data.frame(),variables=NULL,filter.con
       # Categories
       if(ncat<1) stop(paste("Not enough categories in",variable.name))
       category.names<-data.frame(Category=0:(ncat-1),Name=categories)
-      if(!(class(data[,vars[i]]) %in% c("integer","numeric"))) {
+      if((inherits(data[,vars[i]],c("double")))) data[,vars[i]]<-as.integer(data[,vars[i]])
+      if(!(inherits(data[,vars[i]],c("integer","numeric")))) {
         r2<-paste(apply(category.names,1,function(x) {
           paste0("'",x["Name"],"'=",x["Category"])
         }),collapse = ";")
@@ -57,8 +62,9 @@ digram.object<-function(project=NULL,data=data.frame(),variables=NULL,filter.con
   # The number of recursive blocks should appear on a separate record.
   if(is.null(recursive.structure)) recursive.structure<-length(variables)
   recursive.blocks<-length(recursive.structure)
-  do<-list(project=project,data=data,recoded=NULL,variables=variables,filter.conditions=filter.conditions,recursive.blocks=recursive.blocks,recursive.structure=recursive.structure,comments=comments)
+  do<-list(project=project,data=data,recoded=NULL,variables=variables,filter.conditions=filter.conditions,recursive.blocks=recursive.blocks,recursive.structure=recursive.structure,comments=comments,commandsrun=c())
   class(do)<-"digram.object"
+  # print(do)
   do$recoded<-digram.recode(do)
   do
 }
@@ -232,6 +238,7 @@ as_tbl_graph.digram.object<-function(do,items=NULL,exo.names=NULL,exo.labels=exo
 #' data(DHP)
 #' do<-code.testlet(do=DHP,testlet=c("ab,dhp36 dhp37,5 6"))
 code.testlet<-function(do,testlet=NULL,names=NULL,labels=NULL,append=F) {
+  do$commandsrun<-append(do$commandsrun,sys.call())
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   if(is.null(testlet)) stop("You need to provide a list of variables which are local dependent")
   testlet.strs<-ifelse(grepl("\"",testlet),strsplit(x = testlet, split ='(?<=")\\s*,\\s*(?=")',perl = T),testlet.strs<-strsplit(x = testlet, split ="\\s*,\\s*"))[[1]]
@@ -309,13 +316,14 @@ collapse.testlets<-function(){
 #' @param split.on String. The exogenous variables to split on (causing DIF). A comma separated list of exogenous variable numbers, labels or names.
 #' @param append Logical.
 #' @details If more variables and exogenous variables are given, all possible combinations of these are split.
-#' @return
+#' @return a modified digram.object
 #' @export
 #'
 #' @examples
 #' data(DHP)
 #' do<-code.split(DHP,"a,b","under60")
 code.split<-function(do,split.var,split.on,append=F) {
+  do$commandsrun<-append(do$commandsrun,sys.call())
   if(!inherits(do,"digram.object")) stop("do needs to be a digram.object")
   if(is.null(split.var)) stop("You need to provide one or more variables to split")
   if(is.null(split.on)) stop("You need to provide one or more exogenous variables to split on")

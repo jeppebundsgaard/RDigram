@@ -26,6 +26,12 @@ item.correlations(do=NULL,resp=NULL,items=1:do$recursive.structure[1],exo=(do$re
 \item{verbose}{Print results}
 
 \item{extra.verbose}{Print warnings in PDF and HTML-output}
+
+\item{caption.items}{Caption of items table}
+
+\item{caption.rest}{Caption of item-rest table}
+
+\item{caption.exo}{Caption of exogenous variables table}
 }
 \value{
 Returns a list of correlations

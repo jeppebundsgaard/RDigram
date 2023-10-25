@@ -46,5 +46,6 @@ print.digram.object <- function(do=NULL) {
   if(!is.null(do$splits)) {
     cat("\n\nSplit items:\n *",paste(apply(do$split,1,function(x) paste(do$variables[[x[["var"]]]]$variable.name,"by",do$variables[[x[["exo"]]]]$variable.name)),collapse = "\n * "))
   }
+  if(length(do$commandsrun)>0) cat("\n\nCommands run on original digram object:\n\n ",paste(do$commandsrun,collapse = "\n\n"))
 }
 #print(do)

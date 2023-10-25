@@ -4,7 +4,7 @@
 \alias{header.format}
 \title{Not exported}
 \usage{
-header.format(t = "", margin = 0)
+header.format(t = "", margin = 0, print.in.knitr = F)
 }
 \description{
 Not exported

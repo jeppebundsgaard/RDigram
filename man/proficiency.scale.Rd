@@ -18,52 +18,70 @@ proficiency.scale(
   item.params = NULL,
   item.descriptions = NULL,
   item.names.include = F,
-  grid.color = "gray",
+  grid.color = ifelse(color.palette == "Blackwhite", "black", "gray"),
+  relative.level.rect.heights = F,
+  same.level.rect.heights = F,
+  level.rect.heights = level.lims,
   level.rect.width = 1,
-  level.rect.fill = hcl.colors(4, palette = color.palette)[2],
-  level.rect.color = "white",
+  level.rect.fill = ifelse(color.palette == "Blackwhite", "white", hcl.colors(4, palette
+    = color.palette)[2]),
+  level.rect.color = ifelse(color.palette == "Blackwhite", "black", "white"),
+  include.level.interval = F,
+  level.interval.family = "serif",
+  level.interval.size = font.base.size * 1.1,
+  level.interval.fontface = "bold",
+  level.interval.color = ifelse(color.palette == "Blackwhite", "black", "white"),
+  level.interval.hjust = "right",
+  level.interval.nudge_x = level.rect.width - 0.02,
+  level.interval.nudge_y = 0.1,
   level.name.family = "serif",
   level.name.size = font.base.size * 1.1,
   level.name.fontface = "bold",
-  level.name.color = "white",
+  level.name.color = ifelse(color.palette == "Blackwhite", "black", "white"),
   level.name.hjust = "left",
   level.name.nudge_x = 0.02,
   level.name.nudge_y = 0.1,
+  level.name.linelength = 30,
   level.description.family = "serif",
   level.description.size = font.base.size,
   level.description.fontface = "plain",
-  level.description.color = "white",
+  level.description.color = ifelse(color.palette == "Blackwhite", "black", "white"),
   level.description.nudge_x = 0.02,
   level.description.nudge_y = 0.2,
   level.description.linelength = 30,
   level.description.hjust = "left",
   items.include.categories = NULL,
   items.rect.width = 2,
-  items.rect.fill = hcl.colors(4, palette = color.palette)[3],
-  items.rect.color = "white",
+  items.rect.fill = ifelse(color.palette == "Blackwhite", "white", hcl.colors(4, palette
+    = color.palette)[3]),
+  items.rect.color = ifelse(color.palette == "Blackwhite", "black", "white"),
   item.description.seperator = "\\n",
   item.description.bullet = "* ",
   items.description.family = "serif",
   items.description.size = font.base.size,
   items.description.fontface = "plain",
-  item.description.color = "white",
+  item.description.color = ifelse(color.palette == "Blackwhite", "black", "white"),
   items.description.nudge_x = 0.02,
   items.description.nudge_y = 0.1,
   items.description.linelength = 30,
   items.description.hjust = "left",
+  person.parameters = ifelse(is.null(mod), null, mod$person$EAP),
+  person.middle = F,
   ngroups = nlevels,
   person.dist.type = c("in.levels", "none"),
-  person.probability.0 = hcl.colors(4, palette = color.palette)[4],
-  person.probability.100 = hcl.colors(4, palette = color.palette)[1],
+  person.probability.0 = ifelse(color.palette == "Blackwhite", "white", hcl.colors(4,
+    palette = color.palette)[4]),
+  person.probability.100 = ifelse(color.palette == "Blackwhite", "white", hcl.colors(4,
+    palette = color.palette)[1]),
   person.width = level.width,
   person1.base = level1.base,
   person.lims = person1.base + (0:ngroups) * person.width,
   person.rect.width = 0.2,
-  person.rect.color = "white",
+  person.rect.color = ifelse(color.palette == "Blackwhite", "black", "white"),
   person.family = "serif",
   person.size = font.base.size,
   person.fontface = "plain",
-  person.color = "white",
+  person.color = ifelse(color.palette == "Blackwhite", "black", "white"),
   person.nudge_x = person.rect.width/10,
   person.nudge_y = 0.1,
   person.hjust = "center",
@@ -73,7 +91,7 @@ proficiency.scale(
   header.show.percentage.in.group = T,
   header.heigth = 0.2,
   header.rect.color = "white",
-  header.rect.fill = "lightgray",
+  header.rect.fill = ifelse(color.palette == "Blackwhite", "white", "lightgray"),
   header.hjust = "center",
   header.nudge_x = 0,
   header.nudge_y = 0.05,
@@ -99,7 +117,7 @@ proficiency.scale(
 
 \item{level.lims}{A vector of level limits (lower limit, middle levels ..., higher limit) (if you want equal sized levels, use level.width and level1.base)}
 
-\item{color.palette}{hcl-palette to use as colorscheme. Get all available names: \code{\link[=hcl.pals]{hcl.pals()}}. See five colors from all palettes here: https://developer.r-project.org/Blog/public/2019/04/01/hcl-based-color-palettes-in-grdevices/}
+\item{color.palette}{"Blackwhite" or name of hcl-palette to use as colorscheme. Get all available names: \code{\link[=hcl.pals]{hcl.pals()}}. See five colors from all palettes here: https://developer.r-project.org/Blog/public/2019/04/01/hcl-based-color-palettes-in-grdevices/}
 
 \item{level.names}{A vector of names of levels}
 
@@ -111,11 +129,33 @@ proficiency.scale(
 
 \item{item.names.include}{Boolean: Include item names before the description.}
 
+\item{relative.level.rect.heights}{Boolean: Set the level heights relative to the texts.}
+
+\item{same.level.rect.heights}{Boolean: Let the level heights be equal no matter the logit intervals.}
+
+\item{level.rect.heights}{A vector of heights of the levels. Heights are relative to other heights.}
+
 \item{level.rect.width}{Width of the level descriptions. Width are relative to other widths.}
 
 \item{level.rect.fill}{See header}
 
 \item{level.rect.color}{See header}
+
+\item{include.level.interval}{Boolean. Include interval of the level (in logits)}
+
+\item{level.interval.family}{See header}
+
+\item{level.interval.size}{See header}
+
+\item{level.interval.fontface}{See header}
+
+\item{level.interval.color}{See header}
+
+\item{level.interval.hjust}{See header}
+
+\item{level.interval.nudge_x}{See header}
+
+\item{level.interval.nudge_y}{See header}
 
 \item{level.name.family}{See header}
 
@@ -130,6 +170,8 @@ proficiency.scale(
 \item{level.name.nudge_x}{See header}
 
 \item{level.name.nudge_y}{See header}
+
+\item{level.name.linelength}{Length of description in characters before new line.}
 
 \item{level.description.family}{See header}
 
@@ -174,6 +216,10 @@ proficiency.scale(
 \item{items.description.linelength}{Length of description in characters before new line.}
 
 \item{items.description.hjust}{See header}
+
+\item{person.parameters}{Person abillities in logits.}
+
+\item{person.middle}{Boolean. Use person parameter in the middle of the group interval for calculations of person.probabilities (Default is to use person in the bottom of the group)}
 
 \item{ngroups}{Number of person groups}
 

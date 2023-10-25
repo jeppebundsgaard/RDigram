@@ -15,9 +15,6 @@ code.split(do, split.var, split.on, append = F)
 
 \item{append}{Logical.}
 }
-\value{
-
-}
 \description{
 Code items to be split (as having DIF)
 }
